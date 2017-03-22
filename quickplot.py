@@ -133,11 +133,11 @@ show_symm_atoms = True
 # Cut-off for atoms out of plane:
 atom_cut = 0.2
 [bonds]
-show_bonds = True
+show_bonds = False
 bond_color = k
 bond_thickness = 2
 #Bonds between symmetry generated atoms
-show_symm_bonds = True 
+show_symm_bonds = False
 [labels]
 label_atoms = True
 # Atoms has to be plotted to show label 
@@ -191,11 +191,11 @@ def makeResMap(saveFilename = None):
     atom_cut = 0.2
     
     #[bonds]
-    show_bonds = True
+    show_bonds = False
     bond_color = 'k'
     bond_thickness = 2
     #Bonds between symmetry generated atoms
-    show_symm_bonds = True 
+    show_symm_bonds = False
     
     #[labels]
     label_atoms = True
@@ -247,7 +247,7 @@ def makeResMap(saveFilename = None):
             print (sys.argv[1] + " not found!\nPlease specify grd file and the optional parameter file!\n")
             sys.exit(0)
     
-    filename = '/home/matt/Dev/XDToolkit/test/serine/xd_fou.grd'
+    #filename = '/home/matt/Dev/XDTStuff/test/carba/xd_fou.grd'
     ################################################################################
     # Retrive atom colors and covalent radii
     a_color = atomdata.get_atom_color()
@@ -420,7 +420,6 @@ def makeResMap(saveFilename = None):
     plt.axis([x[3], x[4], y[3], y[4]])
     plt.xticks([])
     plt.yticks([])   
-    
     if saveFilename:   
         print('saving') 
         print(saveFilename)
@@ -431,7 +430,6 @@ def makeResMap(saveFilename = None):
     #print ('%s_%s%s%s.%s saved in %s/' % (func, atoms[0][0], atoms[1][0], \
      #     atoms[2][0], save_as, os.getcwd()))
     plt.show()
-    
 
     return fig
     

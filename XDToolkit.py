@@ -25,6 +25,7 @@ from wizard import Ui_wizard
 from resmap import Ui_resmap
 from sendBug import Ui_sendBug
 from sendSugg import Ui_sendSugg
+from splash import Ui_splash
 from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QDialogButtonBox, QPushButton, QApplication, QDialog, QLineEdit, QFileDialog, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QSettings, QThread, pyqtSignal
 from PyQt5.QtGui import QPixmap
@@ -50,6 +51,46 @@ def resetmas():
 '''	
 #-------------------UTILITIES----------------------------------------
 '''
+def rawInput2Labels(rawInput):
+    return formatLabels(labels2list(rawInput))
+
+def labels2list(inputText):
+    inputText = inputText.upper()
+    if ',' in inputText:
+        inputText = inputText.replace(' ','').strip(',')
+        inputAtomList = inputText.split(',')
+    elif ' ' in inputText:
+        inputAtomList = inputText.split()
+    else:
+        inputAtomList = [inputText]
+        
+    return inputAtomList
+
+def formatLabels(inputAtomList):
+    '''
+    Convert labels c1 to c(1).
+    '''
+    elements = findElements()
+    inputNewAtomList = []
+    
+    for atomLab in inputAtomList:
+        newAtomLab = ''
+        if '(' not in atomLab:
+            if atomLab[:2] in elements:
+                newAtomLab = '{0}({1})'.format(atomLab[:2], atomLab[2:])
+            elif atomLab[:1] in elements:
+                newAtomLab = '{0}({1})'.format(atomLab[:1], atomLab[1:])
+            elif atomLab[:3] == 'DUM':
+                newAtomLab = atomLab
+            
+            if newAtomLab:
+                inputNewAtomList.append(newAtomLab)
+
+        else:
+            inputNewAtomList.append(atomLab)
+    
+    return inputNewAtomList
+
 
 def sendEmail(body = '', email = '', attachments = [], subject = ''):
     '''
@@ -391,16 +432,6 @@ def getNumAtoms():
     '''
     i = 0
     
-#    if os.path.isfile('shelx.ins'):
-#        with open('shelx.ins','r') as ini:
-#
-#            for line in ini:
-#        
-#                if line.startswith('UNIT'):
-#                    row = str.split(line)
-#                    i = int(row[6])
-#                    break
-            
     if os.path.isfile('xd.inp'):
         with open('xd.inp','r') as inp:
             
@@ -411,7 +442,20 @@ def getNumAtoms():
                     i = int(row[1])
                     break
                 
-    return (i)
+    elif os.path.isfile('shelx.ins'):
+        
+        with open('shelx.ins','r') as ins:
+
+            for line in ins:
+                if line.startswith('HKLF') or line.startswith('REM'):
+                    atomBool = False
+        
+                if atomBool and line[:1].isalpha() and not line.startswith('AFIX'):
+                    i+=1
+        
+                if line.startswith('FVAR'):
+                    atomBool = True
+    return (int(i))
 
         
 def totalEstTime():
@@ -767,9 +811,7 @@ def ins2all():
             if tupPos not in addedPos:
 
                 newLab = pair[1] +'.dum' + str(i)
-                bondDist = getBondDist(newPos, specAtomPos[splitLab[0] + ',asym'][0],a,b,c,alpha,beta,gamma)
-                #if bondDist < (covradii[pair[0][:2].strip('(')] + covradii[pair[1][:2].strip('(')] + 0.5):
-                 #   asymNeebs.setdefault(splitLab[0], []).append((newPos, newLab))     #(pos, specLabel)
+                asymNeebs.setdefault(splitLab[0], []).append((newPos, newLab))     #(pos, specLabel)
                 specAtomPos[newLab] = (newPos, invSymOp)
 
                 specDistances[frozenset([newLab, splitLab[0] + ',asym'])] = getBondDist(newPos, specAtomPos[splitLab[0] + ',asym'][0],a,b,c,alpha,beta,gamma)
@@ -814,8 +856,6 @@ def ins2all():
             addedPos = addedPosDict[splitLab[0]]
             if tupPos not in addedPos:
                 newLab = pair[0] + '.dum' + str(i)
-                #bondDist = getBondDist(newPos, specAtomPos[splitLab[0] + ',asym'][0],a,b,c,alpha,beta,gamma)
-                #if bondDist < (covradii[pair[0][:2].strip('(')] + covradii[pair[1][:2].strip('(')] + 0.5):
                 asymNeebs.setdefault(splitLab[0], []).append((newPos, newLab))     #(pos, specLabel)
                 specAtomPos[newLab] = (newPos, invSymOp)
 
@@ -837,7 +877,6 @@ def ins2all():
 #        print(specAtomPos[item[1].split('.')[0]])
 #        print('---------------------------------------------------')
 
-    
     #Get neighbour type dictionary
     for atom, neebs in asymNeebs.items():
         neebTypes[atom] = []
@@ -2321,30 +2360,34 @@ def FOUcell():
     os.rename('xdnew.mas','xd.mas') #Rename xdnew.mas to xd.mas
 
  
+def getDumNeebs():
+    '''
+    Find neighbouring dummy atoms. Return all neighbours as asym or dummy atoms.
+    '''
+    global globAtomLabs
+    
+    atomLabsRaw = copy.copy(globAtomLabs)
+    dumNeebs = {}
+    
+    for atom, neebs in atomLabsRaw.items():
+        dumNeebs[atom] = [spec2masLab(neeb) for neeb in neebs]
+        
+    return dumNeebs
+        
+    
 def FOU3atoms(atom):
     '''
     Setup XDFOUR instructions in xd.mas to run on the plane of a given atom and 2 of its neighbours.
     '''
-    try:
-        mas = open('xd.mas','r')            #Open xd.mas
-        newmas = open('xdnew.mas','w')      #Open new file to write to then rename as xd.mas
-        
-        atom = atom.upper()                 #Convert atom given in argument to uppercase to avoid problems with upper/lower
-        Hpresent = False
-        fouBool = False                     #Bool to detect start of XDFOUR instructions
-        neebsRaw = copy.copy(globAtomLabs)   #Get dict of nearest neighbours with labels for each atom
-        neebs = {}
-        
-        for lab, neebors in neebsRaw.items():
-            neebs[lab] = [item.split(',')[0] for item in neebors if item.split(',')[1] == 'asym']
-            
-        if atom[:2] == 'H(':                #If input atom is H, find it's nearest neighbour so 3 atoms can be added to instructions
-            for line in mas:                #Go through mas file line by line
-                if line.startswith(atom):   #Find the line in the atom table with the H atom
-                    row = str.split(line)   #Split line into list
-                    atom = row[1]           #Make atom the nearest neighbour to the H atom
-                    Hpresent = True         #Update bool to True so function knows that H is the atom in question
-                    break                   #End the for loop so the program doesn't go through the key table and update atom to something wrong
+    atom = atom.upper()                 #Convert atom given in argument to uppercase to avoid problems with upper/lower
+    fouBool = False                     #Bool to detect start of XDFOUR instructions
+    neebsRaw = copy.copy(globAtomLabs)   #Get dict of nearest neighbours with labels for each atom
+    neebs = {}
+    
+    for lab, neebors in neebsRaw.items():
+        neebs[lab] = [item.split(',')[0] for item in neebors if item.split(',')[1] == 'asym'] 
+    
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
         
         for line in mas:                    #Go through mas file line by line
             
@@ -2358,18 +2401,53 @@ def FOU3atoms(atom):
                 newmas.write(rowStr + '\n') 
                 
                 if len(neebs[atom]) > 1:
-                    rowStr = '{0}{1:7}{2}'.format('ATOM  label ', neebs[atom][0], 'symm  1 trans 0 0 0 *mark on plot') #If H isn't the target atom add first 2 nearest neighbours in neighbour dict as they will be most likely non-H
-                    newmas.write(rowStr + '\n') 
+                    print(atom)
+                    print(neebs[atom][0])
+                    print(neebs[atom][1])
+                    rowStr = '{0}{1:7}{2}\n'.format('ATOM  label ', neebs[atom][0], 'symm  1 trans 0 0 0 *mark on plot') #If H isn't the target atom add first 2 nearest neighbours in neighbour dict as they will be most likely non-H
+                    newmas.write(rowStr) 
                                                                                                   
-                    rowStr = '{0}{1:7}{2}'.format('ATOM  label ', neebs[atom][1], 'symm  1 trans 0 0 0 *mark on plot')
-                    newmas.write(rowStr + '\n') 
+                    rowStr = '{0}{1:7}{2}\n'.format('ATOM  label ', neebs[atom][1], 'symm  1 trans 0 0 0 *mark on plot')
+                    newmas.write(rowStr) 
     
+                elif len(neebsRaw[atom]) > 1:
+                    print(atom)
+                    print('elif')
+                    
+                    i = 0
+                    
+                    for neeb in neebsRaw[atom][:2]:
+                        splitLab = neeb.split(',')
+        
+                        pos = globAtomPos[neeb][0]
+                        print(pos)
+                        x = pos[0]
+                        y = pos[1]
+                        z = pos[2]
+                        rowStr = 'XYZ (label {0}) {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
+                        newmas.write(rowStr) 
+                        if i == 1:
+                            break
+                        i+=1
+                
+                #1 neighbour atoms
                 else:
-                    rowStr = '{0}{1:7}{2}'.format('ATOM  label ', neebs[atom][0], 'symm  1 trans 0 0 0 *mark on plot') #If H is the target atom add last 2 nearest neighbours in neighbour dict as they will be most likely H
-                    newmas.write(rowStr + '\n') 
-                                                                                                  
-                    rowStr = '{0}{1:7}{2}'.format('ATOM  label ', neebs[neebs[atom][0]][0], 'symm  1 trans 0 0 0 *mark on plot')
-                    newmas.write(rowStr + '\n') 
+                    print('else')
+                    neighbour = neebsRaw[atom][0]
+                    pos = globAtomPos[neighbour][0]
+                    x,y,z = pos[0], pos[1], pos[2]
+                    splitLab = neighbour.split(',')
+                    rowStr = 'XYZ (label {0}) {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
+                    newmas.write(rowStr) 
+                    for neeb in neebsRaw[neighbour.split(',')[0]]:
+                        if neeb.split(',')[0] != atom:
+                            nextNeighbour = neeb
+                            break
+                    pos = globAtomPos[nextNeighbour][0]
+                    x,y,z = pos[0],pos[1],pos[2]
+                    splitLab = nextNeighbour.split(',')
+                    rowStr = 'XYZ (label {0}) {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
+                    newmas.write(rowStr) 
                         
                 newmas.write('LIMITS xmin -2.0 xmax  2.0 nx  50\n')     #Finish writing appropriate XDFOUR instructions
                 newmas.write('LIMITS ymin -2.0 ymax  2.0 ny  50\n')
@@ -2382,16 +2460,8 @@ def FOU3atoms(atom):
             if line.startswith('   END XDFOUR'):    #Change fouBool at end of XDFOUR instructions to resume writing lines unchanged.
                 fouBool = False
             
-            
-        mas.close()                         #Close files
-        newmas.close()
-        
-        os.remove('xd.mas')                 #Remove xd.mas
-        os.rename('xdnew.mas','xd.mas')     #Rename xdnew.mas to xd.mas
-
-    finally:
-        mas.close()
-        newmas.close()
+    os.remove('xd.mas')                 #Remove xd.mas
+    os.rename('xdnew.mas','xd.mas')     #Rename xdnew.mas to xd.mas
 
 
 def grd2values():
@@ -2407,7 +2477,7 @@ def grd2values():
         for line in grd.readlines():
 
             values.extend([float(item) for item in str.split(line)])
-                
+
     return values
 
 
@@ -4985,8 +5055,7 @@ class XDFOUR(QThread):
         self.xdfourRunning = subprocess.Popen(xdfourAbsPath, shell = False, cwd = os.getcwd())
         self.startSignal.emit()
         self.xdfourRunning.wait()
-        self.finishedSignal.emit()
-        
+        self.finishedSignal.emit()        
         
 class XDFFT(QThread):
     '''
@@ -5148,6 +5217,11 @@ class XDINI(QThread):
         '''
         fixBrokenLabels()
         
+
+        
+        self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd())
+        self.startSignal.emit()
+        
         try:
             if os.path.exists('shelx.ins'):
                 x = ins2all()
@@ -5166,8 +5240,6 @@ class XDINI(QThread):
         except Exception:
             pass
         
-        self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd())
-        self.startSignal.emit()
         self.xdiniRunning.wait() 
         removePhantomAtoms()
         self.finishedSignal.emit()
@@ -5244,22 +5316,35 @@ class prefGui(QDialog, Ui_pref):
         folder = str(QFileDialog.getExistingDirectory(None, "Select XD Folder"))
         xdFolder = ''
         
-        if sys.platform == 'win32':
-            if 'xdlsm.exe' not in os.listdir(folder):
-                if 'bin' in os.listdir(folder) and 'xdlsm.exe' in os.listdir(folder + '/bin'):
-                    xdFolder = folder + '/bin'
-            else:
-                xdFolder = folder
-                
-        elif sys.platform.startswith('linux'):
-            if 'xdlsm' not in os.listdir(folder):
-                if 'bin' in os.listdir(folder) and 'xdlsm' in os.listdir(folder + '/bin'):
-                    xdFolder = folder + '/bin'
-            else:
-                xdFolder = folder
-        
-        self.xdpath = xdFolder
-        self.settingsXDLab.setText('Current path: ' + self.xdpath)
+        if folder:
+            if sys.platform == 'win32':
+                if 'xdlsm.exe' not in os.listdir(folder):
+                    if 'bin' in os.listdir(folder) and 'xdlsm.exe' in os.listdir(folder + '/bin'):
+                        xdFolder = folder + '/bin'
+                else:
+                    xdFolder = folder
+                    
+                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
+                self.envMsg = QMessageBox()
+                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                self.envMsg.setText(self.msg)
+                self.envMsg.show()
+                    
+            elif sys.platform.startswith('linux'):
+                if 'xdlsm' not in os.listdir(folder):
+                    if 'bin' in os.listdir(folder) and 'xdlsm' in os.listdir(folder + '/bin'):
+                        xdFolder = folder + '/bin'
+                else:
+                    xdFolder = folder
+                    
+                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
+                self.envMsg = QMessageBox()
+                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                self.envMsg.setText(self.msg)
+                self.envMsg.show()
+    
+            self.xdpath = xdFolder
+            self.settingsXDLab.setText('Current path: ' + self.xdpath)
         
     def chooseMCQt(self):
         '''
@@ -5301,6 +5386,13 @@ class prefGui(QDialog, Ui_pref):
         except Exception:
             self.chooseTextPathLab.setText('Current path: ')
             
+class Splash(QDialog, Ui_splash):
+    '''
+    DOESN'T WORK: Splash screen.
+    '''
+    def __init__(self, parent=None):
+        super(Splash, self).__init__(parent)
+        self.setupUi(self)
 
 class resmap(QWidget, Ui_resmap):
     '''
@@ -5338,7 +5430,59 @@ class resmap(QWidget, Ui_resmap):
         if filename[0]:
             makeResMap(filename[0])
             self.saveLab.setText('Residual map saved to <i>"{}"</i>'.format(filename[0]))
+
+class NPP(QWidget, Ui_resmap):
+    '''
+    Show normal probability plot in new window.
+    '''
+    def __init__(self, parent=None):
+
+        super(NPP, self).__init__(parent)
+        self.setupUi(self)
+        self.setup()
+
+    
+    def setup(self):
+        '''
+        Setup normal probability plot window.
+        '''
+        self.values = grd2values()
+
+        fig = plt.figure(facecolor = '#dddddd', figsize=(7,5), dpi=80)
+        ax = fig.add_subplot(1,1,1)
+        probplot(self.values, plot = plt)
+        plt.title('Normal probability plot')
+        ax.get_lines()[0].set_marker('.')
+        ax.get_lines()[0].set_markersize(0.8)
+        canvas = FigureCanvas(fig)
+        saveBut = QPushButton('Save PNG file')
+        saveBut.clicked.connect(self.savePng)
+        saveBut.setFixedWidth(150)
+        self.saveLab = QLabel()
+        self.resmapLayout.addWidget(canvas, 0)
+        self.resmapLayout.addWidget(saveBut,1)
+        self.resmapLayout.addWidget(self.saveLab,2)
+        self.setLayout(self.resmapLayout)
+
+        # prevent the canvas to shrink beyond a point
+        # original size looks like a good minimum size
+        canvas.setMinimumSize(canvas.size())
         
+    def savePng(self):
+        '''
+        Save residual density map as png file.
+        '''
+        filename = QFileDialog.getSaveFileName(self,"PNG of normal probability plot",os.getcwd(), "PNG Files (*.png)")
+        if filename[0]:
+            fig = plt.figure(facecolor = '#dddddd', figsize=(11,9), dpi=80)
+            ax = fig.add_subplot(1,1,1)
+            probplot(self.values, plot = plt)
+            plt.title('Normal probability plot')
+            ax.get_lines()[0].set_marker('.')
+            ax.get_lines()[0].set_markersize(0.8)
+            plt.savefig(filename[0])
+            self.saveLab.setText('Normal probability plot saved to <i>"{}"</i>'.format(filename[0]))
+
         
 class aboutBox(QWidget, Ui_aboutBox):
     '''
@@ -5381,7 +5525,7 @@ class wizardRunning(QDialog, Ui_wizard):
         self.finishedSignal.emit()
         event.accept()
     
-    def xdWiz(self):
+    def xdWiz(self, backupFolder):
         '''
         Start XD Wizard.
         '''
@@ -5392,11 +5536,8 @@ class wizardRunning(QDialog, Ui_wizard):
         resStr = '<br>{0:47}{1:24}{2:14}{3:16}{4}<br>'.format('Refinement', 'RF<sup>2</sup>', 'Convergence', 'Average DMSDA', 'Max DMSDA')
         resStr = '<pre>' + resStr + '</pre>'
         self.wizResLab.setText(resStr)
-        k = 1
-        while os.path.isdir('Backup/XD Wizard Run ' + str(k)):
-            k += 1
-
-        self.folder = 'XD Wizard Run ' + str(k)
+        
+        self.folder = backupFolder
         os.makedirs('Backup/' + self.folder)
         if os.path.isfile('shelx.ins'):
             self.xdini.finishedSignal.connect(self.xdWizRef)
@@ -5509,9 +5650,8 @@ class wizardRunning(QDialog, Ui_wizard):
                         
         try:
             if self.i == len(self.refList):
-                print('finished')
+                self.wizStatusLab.setText('Making normal probability plot...')
                 self.xdlsm.finishedSignal.disconnect(self.xdWizRef)
-                self.wizStatusLab.setText('XD Wizard finished. View results in main window')
                 self.finishedSignal.emit()
                 return
             
@@ -5614,6 +5754,70 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
         
+        self.settings = QSettings('prefs')
+        self.initialiseSettings()	#Load user preferences
+        
+        #Give user options not to load last project
+        if 'shelx.ins' in os.listdir(os.getcwd()):
+            if getNumAtoms() > 20:
+                msg = 'Load last project?\n\n{}'.format(os.getcwd())
+                loadLastProj = QMessageBox.question(self, 'Load last project', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+    
+                if loadLastProj == QMessageBox.Yes:
+                    
+                    initialiseGlobVars()
+                    self.changeUserIns()	
+                else:
+                    os.chdir(os.path.expanduser('~'))
+            else:
+                initialiseGlobVars()
+      
+                self.changeUserIns()
+        
+        
+        #Check for XD files and if they are not there prompt user to find directory.
+        if not self.settings.value('xdpath'):
+            msg = '''Couldn't find folder containing the XD programs. Select folder now?'''
+            findXD = QMessageBox.question(self, 'Find XD programs', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            
+            if findXD == QMessageBox.Yes:
+
+                folder = str(QFileDialog.getExistingDirectory(None, "Select XD Folder"))
+                xdFolder = ''
+                
+                if sys.platform == 'win32':
+                    if 'xdlsm.exe' not in os.listdir(folder):
+                        if 'bin' in os.listdir(folder) and 'xdlsm.exe' in os.listdir(folder + '/bin'):
+                            xdFolder = folder + '/bin'
+                        warningMsg = QMessageBox.warning(self, 'Warning', 'Invalid folder chosen.<br><br>Change folder in preferences.')
+                    else:
+                        xdFolder = folder
+                        
+                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
+                    self.envMsg = QMessageBox()
+                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                    self.envMsg.setText(self.msg)
+                    self.envMsg.show()
+                        
+                elif sys.platform.startswith('linux'):
+                    if 'xdlsm' not in os.listdir(folder):
+                        if 'bin' in os.listdir(folder) and 'xdlsm' in os.listdir(folder + '/bin'):
+                            xdFolder = folder + '/bin'
+                        else:
+                            warningMsg = QMessageBox.warning(self, 'Warning', 'Invalid folder chosen.<br><br>Change folder in preferences.')
+                            
+                    else:
+                        xdFolder = folder
+                        
+                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
+                    self.envMsg = QMessageBox()
+                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                    self.envMsg.setText(self.msg)
+                    self.envMsg.show()
+    
+            self.settings.setValue('xdpath', xdFolder)
+            self.initialiseSettings()
+                
         self.addedLocCoords = {}
         self.ins = ''
         self.forbiddenChars = ['*', '?', '"', '/', '\\', '<', '>', ':', '|']
@@ -5622,7 +5826,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.permErrorMsg = 'Close MoleCoolQT and try again.'
         self.lstMissingErrorMsg = 'Select add shelx.ins to project folder and try again.'
         self.backupConfirmStr = 'Current files backed up to: '
-        self.labList = [self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
+        self.labList = [self.resNPPLab, self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
         #Display current working directory on startup.
         self.statusbar.showMessage('Current working directory: ' + os.getcwd())
         self.toolbarRefreshCwd.triggered.connect(self.refreshFolder)
@@ -5632,6 +5836,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.menuSendSugg.triggered.connect(self.sendSuggDialog)
         #Run addDUM() with user input when button is pressed.
         self.dumBut.clicked.connect(self.addDUMPress)
+        self.DUMnum.returnPressed.connect(self.addDUMPress)
         self.alcsBut.clicked.connect(self.alcs)
         self.alcsLocSymInput.returnPressed.connect(self.alcs)
         #Run multipoleKeyTable() when button is pressed.
@@ -5672,23 +5877,25 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.autoResetBondBut.clicked.connect(self.autoResetBondPress)
         #Add XDFOUR instructions when button pressed
         self.setupFOURBut.clicked.connect(self.addFOURIns)
+        self.setupFOURInputText.returnPressed.connect(self.addFOURIns)
+        self.setupFOURInputText.textChanged.connect(lambda: self.setupFOURInputBox.setChecked(True))
         self.delResetBondBut.clicked.connect(self.delResetBondPress)
         self.getResBut.clicked.connect(self.getResPress)
         #Dorb pops
         self.getDpopsBut.clicked.connect(self.getDpops)
+        self.resNPPBut.clicked.connect(self.makeNPP)
         #Open project folder
         self.menuOpenCwd.triggered.connect(self.openCwd)
         #Open settings dialog
         self.menuLoadIAM.triggered.connect(self.loadIAM)
         self.menuPref.triggered.connect(self.openPrefs)
         self.toolbarSettings.triggered.connect(self.openPrefs)
-        self.settings = QSettings('prefs')
         self.menuManual.triggered.connect(lambda: os.startfile('XD Toolkit Manual.pdf'))
         self.menuAbout.triggered.connect(self.openAbout)
         self.killXDLSMBut.clicked.connect(self.killXDLSM)
         self.fixCuValBut.clicked.connect(lambda: initialiseMas())
         #Run xdlsm.exe
-        self.xdProgButs = [self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
+        self.xdProgButs = [self.resNPPBut, self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
                           self.pkgXDGRAPHBut, self.pkgXDPDFBut, self.pkgXDLSMBut, self.pkgXDPROPBut, self.xdWizINIBut, self.xdWizardBut, self.runXDLSMBut, self.runXDINIBut, self.setupFOURBut, self.getDpopsBut]
         self.xdlsm = XDLSM()
         self.runXDLSMBut.clicked.connect(lambda: self.xdlsm.start())
@@ -5717,12 +5924,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         #self.lsmProgUpdate = checkLSMOUT()
         #self.lsmProgUpdate.updateSignal.connect(lambda: self.XDLSMLab.setText(self.lsmProgUpdate.statusMsg))
         self.xdWizardTestBut.clicked.connect(self.wizTest)
-        self.wiz2ndStageObjects = [self.xdWizardBut, self.wizReuseMasBut, self.wizUniSnlMax, self.xdWizardTestBut, self.wizHighSnlMin, self.wizHighSnlMax, self.wizLowSnlMin, self.wizLowSnlMax]
+        self.wiz2ndStageObjects = [self.wizBackupInput, self.xdWizardBut, self.wizReuseMasBut, self.wizUniSnlMax, self.xdWizardTestBut, self.wizHighSnlMin, self.wizHighSnlMax, self.wizLowSnlMin, self.wizLowSnlMax]
         self.wizSnlInput = [self.wizHighSnlMin, self.wizHighSnlMax, self.wizLowSnlMin, self.wizLowSnlMax]
         self.xdWizINIBut.clicked.connect(self.xdWizINI)
         self.xdWizardBut.clicked.connect(self.xdWizRun)
         self.xdWizCmpID.returnPressed.connect(self.xdWizINI)
         self.wizReuseMasBut.clicked.connect(self.wizReuseMas)
+        self.changeWizBackup()
         #Manual refinement
         self.manRefDropMenu.currentIndexChanged.connect(self.refChosen)
         self.manRefSetupBut.clicked.connect(self.setupRef)
@@ -5737,8 +5945,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                           self.pkgXDGRAPHBut, self.pkgXDLSMBut, self.pkgXDPROPBut]
         self.pkgXDLSMBut.clicked.connect(lambda: self.xdlsm.start())
         
-        self.XDFOURButs = [self.setupFOURBut, self.pkgXDFOURBut]
-        self.XDFOURLabs = [self.setupFOURStatusLab, self.pkgXDLab]
+        self.XDFOURButs = [self.setupFOURBut, self.pkgXDFOURBut, self.resNPPBut]
+        self.XDFOURLabs = [self.setupFOURStatusLab, self.pkgXDLab, self.resNPPLab]
         self.pkgXDFOURBut.clicked.connect(lambda: self.xdfour.start())
         
         self.XDFFTButs = [self.setupFOURBut, self.pkgXDFFTBut]
@@ -5776,7 +5984,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.TOPXDLabs = [self.pkgXDLab]
         self.TOPXDButs = [self.pkgTOPXDBut]
         self.pkgTOPXDBut.clicked.connect(lambda: self.topxd.start())
-        
         
 #--------------------EMAIL-----------------------------------------------
 
@@ -5837,6 +6044,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.thanks.show()
 
 #--------------------WIZARD----------------------------------------------
+
+    def changeWizBackup(self):
+        
+        k = 1
+        while os.path.isdir('Backup/XD Wizard Run ' + str(k)):
+            k += 1
+        self.wizBackupFolder = 'XD Wizard Run ' + str(k)
+        self.wizBackupInput.setText(self.wizBackupFolder)
 
     def xdWizINI(self):
         '''
@@ -6037,7 +6252,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             copyfile('xd.mas','xdwiz.mas')
             
             self.xdWizRunning.show()
-            self.xdWizRunning.xdWiz()        
+            self.xdWizRunning.xdWiz(str(self.wizBackupInput.text()))        
             
             
     def xdWizFinished(self):
@@ -6054,9 +6269,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         results = self.xdWizRunning.finalRes
         FOUcell()
         self.xdfour.start()
-        self.xdWizRunning.wizStatusLab.setText('Running XDFOUR...')
-        self.xdfour.wait()
         self.xdWizRunning.wizStatusLab.setText('Making normal probability plot...')
+        self.xdfour.wait()
+        
         values = grd2values()
         try:
             self.wizLayout.removeWidget(self.nppCanvas)
@@ -6088,7 +6303,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.xdWizRunning.tfin = time.time()
             runningTime = self.xdWizRunning.tfin - self.xdWizRunning.tzero
             with open(timeFileAbsPath,'a') as lsmTimes:
-                lsmTimes.write('{0:10}{1:15.2f}{2:10}{3}'.format('WIZ', runningTime, getNumAtoms(), len(self.xdWizRunning.refList), sys.platform))
+                lsmTimes.write('{0:10}{1:<15}{2:<13.2f}{3:<13}{4}'.format('WIZ', getNumAtoms(), runningTime,  len(self.xdWizRunning.refList), sys.platform))
         self.xdWizRunning.accept()
         
         
@@ -6239,7 +6454,22 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             
         self.xdfour.finishedSignal.connect(self.finishedXDFOUR)   #Sets up the finishedSignal in case XDFOUR.exe was killed the last time and the finishedSignal was disconnected
         self.disableXDButs(survivors = self.XDFOURButs)
-
+        
+    def resetXDFOURButs(self):
+        '''
+        Reset all XDFOUR buts to their default text and connections.
+        '''
+        for but in self.XDFOURButs:
+            but.disconnect()
+            
+        self.setupFOURBut.setText('Make residual density map')
+        self.resNPPBut.setText('Make normal probability plot')
+        self.pkgXDFOURBut.setText('Run XDFOUR')
+        
+        self.setupFOURBut.clicked.connect(self.addFOURIns) #Sets button back to starting XDFOUR
+        self.pkgXDFOURBut.clicked.connect(lambda: self.xdfour.start())
+        self.resNPPBut.clicked.connect(self.makeNPP)
+        
     def finishedXDFOUR(self):
         '''
         Handle XDFOUR finishing.
@@ -6248,12 +6478,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         for lab in self.XDFOURLabs:
             lab.setText('XDFOUR finished')                         #Sets status label to 'XDFOUR finished'
         
-        for but in self.XDFOURButs:
-            but.setText('Run XDFOUR')                           #Sets button back to 'Run XDFOUR'
-            but.disconnect()
-            
-        self.pkgXDFOURBut.clicked.connect(lambda: self.xdfour.start())
-        self.setupFOURBut.clicked.connect(self.addFOURIns)    #Sets up button again to make XDFOUR instructions and run XDFOUR
+        self.resetXDFOURButs()
     
         self.pkgXDLab.setText('XDFOUR finished')
     
@@ -6265,16 +6490,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.xdfour.finishedSignal.disconnect() #Disconnects finished signal so that QThread doesn't changes status label to 'XDFOUR finished'. Finished signal reconnected in startXDFOUR()
             self.xdfour.xdfourRunning.terminate()             #Kills XDFOUR.exe
             
-            for but in self.XDFOURButs:
-                but.setText('Run XDFOUR')           #Sets XDFOUR button back to 'Run XDFOUR'
-                but.disconnect()
-            
             for lab in self.XDFOURLabs:
                 lab.setText('XDFOUR terminated')       #Sets status label to 'XDFOUR terminated'
             
-            self.setupFOURBut.clicked.connect(self.addFOURIns) #Sets button back to starting XDFOUR
-            self.pkgXDFOURBut.clicked.connect(lambda: self.xdfour.start())
-            
+            self.resetXDFOURButs()
         except Exception:
             pass
         
@@ -6636,6 +6855,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         
         try:
             os.chdir(folder)
+            self.changeWizBackup()
             self.statusbar.showMessage('Current working directory: ' + os.getcwd())
             self.resetLabels()
             self.check4res()
@@ -6710,7 +6930,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Add dummy atom from user input.
         '''
         inputDUMI = str(self.DUMnum.text())
-        x = addDUM(str(self.Atom1.text()), str(self.Atom2.text()), inputDUMI) #Add dummy atom and store index actually used to x
+    
+        atom1 = rawInput2Labels(str(self.Atom1.text()))[0]
+        atom2 = rawInput2Labels(str(self.Atom2.text()))[0]
+        x = addDUM(atom1, atom2, inputDUMI) #Add dummy atom and store index actually used to x
         if x == inputDUMI:
             self.addDUMLab.setText('DUM{0} added to xd.mas.'.format(inputDUMI))
         else:
@@ -6723,10 +6946,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             Patom = str(self.alcsPAtomInput.text())
+            Patom = rawInput2Labels(Patom)
             axis1 = str(self.alcsAxis1Input.currentText())
             atom1 = str(self.alcsAtom1Input.text())
+            atom1 = rawInput2Labels(atom1)
             axis2 = str(self.alcsAxis2Input.currentText())
             atom2 = str(self.alcsAtom2Input.text())
+            atom2 = rawInput2Labels(atom2)
             sym = str(self.alcsLocSymInput.text())
             
             x = addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym)
@@ -6820,6 +7046,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             
         if self.settings.value('textedpath'):
             textEdAbsPath = self.settings.value('textedpath')
+        else:
+            if sys.platform.startswith('linux'):
+                if os.path.isfile('/usr/bin/gedit'):
+                    textEdAbsPath = '/usr/bin/gedit'
+                    self.settings.setValue('textedpath','/usr/bin/gedit')
+            elif sys.platform == 'win32':
+                if os.path.isfile('C:/Windows/System32/notepad.exe'):
+                    textEdAbsPath = 'C:/Windows/System32/notepad.exe'
+                    self.settings.setValue('textedpath','C:/Windows/System32/notepad.exe')
         
         if not self.settings.value('senddata'):
             msg = '''Would you like to send anonymous usage data to help improve XD Toolkit?<br><br>
@@ -7380,13 +7615,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         elif self.chooseElementCHEMCON.isChecked() == True:
             
             inputText = str(self.inputElementCHEMCON.text().upper())
-            if ',' in inputText:
-                inputText = inputText.replace(' ','').strip(',')
-                inputElementList = inputText.split(',')
-            elif ' ' in inputText:
-                inputElementList = inputText.split()
-            else:
-                inputElementList = inputText.strip()
+            inputElementList = labels2list(inputText)
             try:
                 writeCHEMCON(findCHEMCONbyInputElement(inputElementList))
                 self.CHEMCONStatusLab.setText('{} {}'.format('CHEMCON added and xd.mas updated for elements', ', '.join(inputElementList).strip(', ')))
@@ -7410,32 +7639,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.CHEMCONStatusLab.setText('xd.mas reset to test file')
             
             else:
-                if ',' in inputText:
-                    inputText = inputText.replace(' ','').strip(',')
-                    inputAtomList = inputText.split(',')
-                elif ' ' in inputText:
-                    inputAtomList = inputText.split()
-                else:
-                    inputAtomList = [inputText]
-                elements = findElements()
-                inputNewAtomList = []
-                chemconAddedStr = ''
-                for atomLab in inputAtomList:
-                    if '(' not in atomLab:
-                        if atomLab[:2] in elements:
-                            newAtomLab = '{0}({1})'.format(atomLab[:2], atomLab[2:])
-                        elif atomLab[:1] in elements:
-                            newAtomLab = '{0}({1})'.format(atomLab[:1], atomLab[1:])
-                        inputNewAtomList.append(newAtomLab)
-                        chemconAddedStr += (atomLab + ', ')
-                    else:
-                        inputNewAtomList.append(atomLab)
+                inputAtomList = rawInput2Labels(inputText)
                 
                 atomLabs = copy.copy(globAtomLabs)  
                 atomLabs = atomLabs.keys()
 
-                if inputNewAtomList:
-                    inputAtomList = inputNewAtomList
                 inputAtomList = sorted(list(set(inputAtomList)))
                 wrongLabs = [atom for atom in inputAtomList if atom not in atomLabs]
 
@@ -7592,7 +7800,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Show residual density map from xd_fou.grd.
         '''
         print('showresdensmap')
-        self.xdfour.finishedSignal.disconnect(self.showResDensMap)
+        try:
+            self.xdfour.finishedSignal.disconnect(self.showResDensMap)
+        except Exception:
+            pass
         self.resmap = resmap()
         self.resmap.show()
         
@@ -7601,7 +7812,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Handle 'Run XDFOUR' button press in 'Results' tab.
         '''
         if self.setupFOURInputBox.isChecked() == True:
-            atom = str(self.setupFOURInputText.text())
+            rawInput = str(self.setupFOURInputText.text()).strip().upper()
+            atom = rawInput2Labels(rawInput)[0]
             try:
                 FOU3atoms(atom)
                 self.xdfour.finishedSignal.connect(self.showResDensMap)
@@ -7621,16 +7833,47 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.setupFOURStatusLab.setText('An error occurred.')
 
-
-        elif self.FOUcellBox.isChecked():
+        elif self.quickplotGrdBox.isChecked():
             try:
-                FOUcell()
-                self.xdfour.start()
-            except PermissionError:
-                self.setupFOURStatusLab.setText(self.permErrorMsg)
+                self.showResDensMap()
             except Exception:
                 self.setupFOURStatusLab.setText('An error occurred.')
+
         
+    def makeNPP(self):
+        '''
+        Handle user pressing 'Make normal probability plot' button.
+        '''
+        try:
+            FOUcell()
+            self.xdfour.finishedSignal.connect(self.showNPP)
+            self.xdfour.start()
+            self.resNPPLab.setText('Running XDFOUR...')
+            self.resNPPBut.setText('Cancel')
+            self.resNPPBut.clicked.connect(self.killXDFOUR)
+            
+
+        except Exception:
+            self.resNPPLab.setText('An error occurred.')
+            
+    def showNPP(self):
+        '''
+        Show normal probability plot.
+        '''
+        try:
+            self.xdfour.finishedSignal.disconnect(self.showNPP)
+        except Exception:
+            pass
+        if not hasattr(self, 'npp'):
+            self.npp = NPP()
+            self.npp.show()
+        elif not hasattr(self, 'npp2'):
+            self.npp2 = NPP()
+            self.npp2.show()
+        else:
+            self.npp3 = NPP()
+            self.npp3.show()
+            
         
     def getDpops(self):
         '''
@@ -7785,8 +8028,9 @@ class mercury(QThread):
                 self.mercuryOpen = subprocess.Popen([globMercAbsPath], shell = False, cwd = os.getcwd())
         
         except Exception:
+
             webbrowser.open('https://www.ccdc.cam.ac.uk/support-and-resources/Downloads/')
-  
+
             
 class molecool(QThread):
     '''
@@ -7817,17 +8061,17 @@ class molecool(QThread):
             
 #Run GUI
 if __name__ == '__main__':
+
     app = QApplication(sys.argv)
     prog = XDToolGui()
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
-    prog.initialiseSettings()	#Load user preferences
-    initialiseGlobVars()
-    prog.changeUserIns()		#Change user instructions based on mas and lst files.
     prog.show()
     sys.exit(app.exec_())
-#os.chdir('/home/matt/dev/XDToolkit/test/data/urea')
+#os.chdir('/home/matt/dev/XDTstuff/test/serine')
 #initialiseGlobVars()
-#getDorbs()
+#
+#x = rawInput2Labels('dum1')
+#print(x)
 
 
 

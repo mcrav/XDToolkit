@@ -444,7 +444,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.1.0</string>
+   <string>XD Toolkit 0.2.0</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>6</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -583,7 +583,7 @@
              <x>0</x>
              <y>0</y>
              <width>723</width>
-             <height>521</height>
+             <height>552</height>
             </rect>
            </property>
            <property name="autoFillBackground">
@@ -952,6 +952,49 @@
                    <bool>true</bool>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label_13">
+                    <property name="text">
+                     <string>Backup folder name:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="wizBackupInput">
+                    <property name="minimumSize">
+                     <size>
+                      <width>500</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>0</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_3">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </item>
@@ -1620,7 +1663,7 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="page_11">
              <property name="geometry">
@@ -2062,8 +2105,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>479</width>
-               <height>325</height>
+               <width>697</width>
+               <height>318</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2153,10 +2196,29 @@
                   </item>
                   <item>
                    <widget class="QLineEdit" name="resetLengthInput">
+                    <property name="maximumSize">
+                     <size>
+                      <width>100</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>1.09</string>
                     </property>
                    </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_4">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
                   </item>
                  </layout>
                 </item>
@@ -2333,8 +2395,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>332</width>
-               <height>108</height>
+               <width>697</width>
+               <height>318</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2344,16 +2406,16 @@
               <item row="0" column="0">
                <layout class="QVBoxLayout" name="verticalLayout_36">
                 <property name="leftMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <widget class="QPushButton" name="delResetBondBut">
@@ -2448,8 +2510,14 @@
            <widget class="QLineEdit" name="inputElementCHEMCON">
             <property name="minimumSize">
              <size>
-              <width>0</width>
+              <width>400</width>
               <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>400</width>
+              <height>16777215</height>
              </size>
             </property>
             <property name="placeholderText">
@@ -2533,6 +2601,528 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_6">
+       <attribute name="title">
+        <string>Results</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_16">
+        <item row="0" column="0">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="leftMargin">
+           <number>20</number>
+          </property>
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <property name="rightMargin">
+           <number>20</number>
+          </property>
+          <property name="bottomMargin">
+           <number>20</number>
+          </property>
+          <item>
+           <widget class="QToolBox" name="toolBox_2">
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="page_18">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>697</width>
+               <height>289</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Get current LSM output</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_27">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <property name="leftMargin">
+                 <number>10</number>
+                </property>
+                <property name="topMargin">
+                 <number>10</number>
+                </property>
+                <property name="rightMargin">
+                 <number>10</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>10</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="getResBut">
+                  <property name="maximumSize">
+                   <size>
+                    <width>300</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Read output from xd_lsm.out</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="getResLab">
+                  <property name="textFormat">
+                   <enum>Qt::AutoText</enum>
+                  </property>
+                  <property name="textInteractionFlags">
+                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_11">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_6">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>684</width>
+               <height>110</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Get LSM output from backup</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_13">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout_32">
+                <property name="leftMargin">
+                 <number>20</number>
+                </property>
+                <property name="topMargin">
+                 <number>20</number>
+                </property>
+                <property name="rightMargin">
+                 <number>20</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>20</number>
+                </property>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout">
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="resBackupBut">
+                    <property name="minimumSize">
+                     <size>
+                      <width>310</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>300</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Show results of one refinement backup</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="resBackupSumBut">
+                    <property name="minimumSize">
+                     <size>
+                      <width>302</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>300</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Show summary of entire backup folder</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_2">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resBackupLab">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_10">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_10">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>697</width>
+               <height>289</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Make residual density maps</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_25">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout_16">
+                <property name="leftMargin">
+                 <number>20</number>
+                </property>
+                <property name="topMargin">
+                 <number>20</number>
+                </property>
+                <property name="rightMargin">
+                 <number>20</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>20</number>
+                </property>
+                <item>
+                 <widget class="QRadioButton" name="setupFOURFFTBox">
+                  <property name="text">
+                   <string>Produce map around atom with highest peak in XDFFT output (run XDFFT first).</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_9">
+                  <item>
+                   <widget class="QRadioButton" name="setupFOURInputBox">
+                    <property name="text">
+                     <string>Produce map around given atom:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="setupFOURInputText">
+                    <property name="maximumSize">
+                     <size>
+                      <width>180</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="placeholderText">
+                     <string>Atom label, i.e. C(2)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_5">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="quickplotGrdBox">
+                  <property name="text">
+                   <string>Produce map from current xd_fou.grd file.</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="setupFOURBut">
+                  <property name="maximumSize">
+                   <size>
+                    <width>300</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Make residual density map</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="setupFOURStatusLab">
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resFourMap">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_9">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>697</width>
+               <height>289</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Make normal probability plot</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_9">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout_18">
+                <property name="leftMargin">
+                 <number>10</number>
+                </property>
+                <property name="topMargin">
+                 <number>10</number>
+                </property>
+                <property name="rightMargin">
+                 <number>10</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>10</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="resNPPBut">
+                  <property name="maximumSize">
+                   <size>
+                    <width>300</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Make normal probability plot</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="resNPPLab">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_16">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_9">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>697</width>
+               <height>289</height>
+              </rect>
+             </property>
+             <attribute name="label">
+              <string>Get d-orbital populations</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_17">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout_14">
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,0">
+                  <property name="leftMargin">
+                   <number>10</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>10</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>10</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>10</number>
+                  </property>
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_30">
+                    <property name="rightMargin">
+                     <number>20</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="getDpopsBut">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>350</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>300</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Run XDPROP and get d-orbital populations</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_22">
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_41">
+                    <item>
+                     <widget class="QLabel" name="getDpopsStatusLab">
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_23">
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_21">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="Line" name="line_2">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
         <string>Tools</string>
@@ -2561,7 +3151,7 @@
              <number>1</number>
             </property>
             <property name="currentIndex">
-             <number>5</number>
+             <number>0</number>
             </property>
             <property name="tabSpacing">
              <number>6</number>
@@ -2571,7 +3161,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>405</width>
+               <width>683</width>
                <height>274</height>
               </rect>
              </property>
@@ -2906,8 +3496,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>258</width>
-               <height>290</height>
+               <width>697</width>
+               <height>260</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3298,8 +3888,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>697</width>
-               <height>260</height>
+               <width>257</width>
+               <height>188</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3369,445 +3959,6 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_6">
-       <attribute name="title">
-        <string>Results</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_16">
-        <item row="0" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <property name="leftMargin">
-           <number>20</number>
-          </property>
-          <property name="topMargin">
-           <number>20</number>
-          </property>
-          <property name="rightMargin">
-           <number>20</number>
-          </property>
-          <property name="bottomMargin">
-           <number>20</number>
-          </property>
-          <item>
-           <widget class="QToolBox" name="toolBox_2">
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <widget class="QWidget" name="page_18">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>697</width>
-               <height>318</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Get current LSM output</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_27">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout">
-                <property name="leftMargin">
-                 <number>10</number>
-                </property>
-                <property name="topMargin">
-                 <number>10</number>
-                </property>
-                <property name="rightMargin">
-                 <number>10</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>10</number>
-                </property>
-                <item>
-                 <widget class="QPushButton" name="getResBut">
-                  <property name="maximumSize">
-                   <size>
-                    <width>300</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Read output from xd_lsm.out</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="getResLab">
-                  <property name="textFormat">
-                   <enum>Qt::AutoText</enum>
-                  </property>
-                  <property name="textInteractionFlags">
-                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_11">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="page_6">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>697</width>
-               <height>318</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Get LSM output from backup</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_13">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_32">
-                <property name="leftMargin">
-                 <number>20</number>
-                </property>
-                <property name="topMargin">
-                 <number>20</number>
-                </property>
-                <property name="rightMargin">
-                 <number>20</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>20</number>
-                </property>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout">
-                  <property name="topMargin">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QPushButton" name="resBackupBut">
-                    <property name="minimumSize">
-                     <size>
-                      <width>310</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>300</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Show results of one refinement backup</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="resBackupSumBut">
-                    <property name="minimumSize">
-                     <size>
-                      <width>302</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>300</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Show summary of entire backup folder</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_2">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="QLabel" name="resBackupLab">
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_10">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="page_10">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>677</width>
-               <height>214</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Setup XDFour instructions</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_25">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_16">
-                <property name="leftMargin">
-                 <number>20</number>
-                </property>
-                <property name="topMargin">
-                 <number>20</number>
-                </property>
-                <property name="rightMargin">
-                 <number>20</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>20</number>
-                </property>
-                <item>
-                 <widget class="QRadioButton" name="FOUcellBox">
-                  <property name="text">
-                   <string>Run XDFOUR for whole unit cell.</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QRadioButton" name="setupFOURFFTBox">
-                  <property name="text">
-                   <string>Produce map around atom with highest peak in XDFFT output (run XDFFT first).</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_9">
-                  <item>
-                   <widget class="QRadioButton" name="setupFOURInputBox">
-                    <property name="text">
-                     <string>Produce map around given atom:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="setupFOURInputText">
-                    <property name="placeholderText">
-                     <string>Atom label, i.e. C(2)</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="setupFOURBut">
-                  <property name="maximumSize">
-                   <size>
-                    <width>200</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Run XDFOUR</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="setupFOURStatusLab">
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="resFourMap">
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_9">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="page_9">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>439</width>
-               <height>86</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Get d-orbital populations</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_17">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_14">
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0,0">
-                  <property name="leftMargin">
-                   <number>10</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>10</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>10</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>10</number>
-                  </property>
-                  <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_30">
-                    <property name="rightMargin">
-                     <number>20</number>
-                    </property>
-                    <item>
-                     <widget class="QPushButton" name="getDpopsBut">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>350</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>300</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="text">
-                       <string>Run XDPROP and get d-orbital populations</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="verticalSpacer_22">
-                      <property name="orientation">
-                       <enum>Qt::Vertical</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>20</width>
-                        <height>40</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                  <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_41">
-                    <item>
-                     <widget class="QLabel" name="getDpopsStatusLab">
-                      <property name="text">
-                       <string/>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="verticalSpacer_23">
-                      <property name="orientation">
-                       <enum>Qt::Vertical</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>20</width>
-                        <height>40</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_21">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="Line" name="line_2">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
         <string>Backup</string>
@@ -3833,7 +3984,7 @@
              <number>1</number>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <property name="tabSpacing">
              <number>6</number>
@@ -3907,8 +4058,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>177</width>
-               <height>90</height>
+               <width>697</width>
+               <height>376</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3961,6 +4112,12 @@
                   </item>
                   <item>
                    <widget class="QLineEdit" name="customBackupInput">
+                    <property name="minimumSize">
+                     <size>
+                      <width>500</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string/>
                     </property>
@@ -3968,6 +4125,19 @@
                      <string>Folder name for backup </string>
                     </property>
                    </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_6">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
                   </item>
                  </layout>
                 </item>
@@ -4008,7 +4178,7 @@
       </widget>
       <widget class="QWidget" name="tab_8">
        <attribute name="title">
-        <string>XD 2016</string>
+        <string>XD Programs</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
