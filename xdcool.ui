@@ -582,7 +582,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>703</width>
+             <width>723</width>
              <height>552</height>
             </rect>
            </property>
@@ -1201,7 +1201,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLineEdit" name="cmpdIDInput">
+                   <widget class="QLineEdit" name="manRefIDInput">
                     <property name="maximumSize">
                      <size>
                       <width>181</width>
@@ -2127,8 +2127,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>479</width>
-               <height>325</height>
+               <width>697</width>
+               <height>318</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2652,8 +2652,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>257</width>
-               <height>88</height>
+               <width>697</width>
+               <height>289</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3183,7 +3183,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>405</width>
+               <width>683</width>
                <height>274</height>
               </rect>
              </property>
@@ -4080,8 +4080,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>673</width>
-               <height>90</height>
+               <width>697</width>
+               <height>376</height>
               </rect>
              </property>
              <attribute name="label">

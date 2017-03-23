@@ -5289,7 +5289,7 @@ class prefGui(QDialog, Ui_pref):
         '''
         file = QFileDialog.getOpenFileName(None, "Select MoleCoolQt executable", (os.path.expanduser('~')))
         
-        if file:
+        if file[0]:
             self.molecoolpath = file[0]
   
         try:
@@ -5303,7 +5303,7 @@ class prefGui(QDialog, Ui_pref):
         '''
         file = QFileDialog.getOpenFileName(None, "Select mercury executable", (os.path.expanduser('~')))
 
-        if file:
+        if file[0]:
             self.mercurypath = file[0]
         try:
             self.chooseMercPathLab.setText('Current path: ' + self.mercurypath)
@@ -5589,6 +5589,7 @@ class wizardRunning(QDialog, Ui_wizard):
                         
         try:
             if self.i == len(self.refList):
+                
                 self.wizStatusLab.setText('Making normal probability plot...')
                 krauseParam = getKrauseParam()
                 if krauseParam:
@@ -5820,11 +5821,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.xdini.finishedSignal.connect(self.finishedXDINI)
         self.xdini.warningSignal.connect(self.badLabelWarning)
         self.runXDINIBut.clicked.connect(self.runXDINI)
-        self.cmpdIDInput.returnPressed.connect(self.runXDINI)
+        self.manRefIDInput.returnPressed.connect(self.runXDINI)
         self.molecoolqt = molecool()
-        self.toolbarMolecool.triggered.connect(lambda: self.molecoolqt.start())
+        self.toolbarMolecool.triggered.connect(self.openMolecool)
         self.mercury = mercury()
-        self.toolbarMercury.triggered.connect(lambda: self.mercury.start())
+        self.toolbarMercury.triggered.connect(self.openMerc)
         self.toolbarRes2Inp.triggered.connect(self.res2inpPress)
         #self.lsmProgUpdate = checkLSMOUT()
         #self.lsmProgUpdate.updateSignal.connect(lambda: self.XDLSMLab.setText(self.lsmProgUpdate.statusMsg))
@@ -6183,7 +6184,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         results = self.xdWizRunning.finalRes
         FOUcell()
         self.xdfour.start()
-        self.xdWizRunning.wizStatusLab.setText('Making normal probability plot...')
         self.xdfour.wait()
         
         values = grd2values()
@@ -6232,6 +6232,40 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 #--------------------UTILITIES-------------------------------------------
     
+    def openMerc(self):
+        if self.settings.value('mercurypath'):
+            self.mercury.start()
+        else:
+            msg = '''Can't find Mercury. Download or select executable file below.'''
+            mercMsg = QMessageBox()
+            mercMsg.setText(msg)
+
+            mercMsg.addButton(QPushButton('Download'), QMessageBox.YesRole)
+            mercMsg.addButton(QPushButton('Select Mercury executable file'), QMessageBox.NoRole)
+            result = mercMsg.exec_()
+
+            if result == 0:
+                webbrowser.open('https://www.ccdc.cam.ac.uk/support-and-resources/Downloads/')
+            elif result == 1:
+                self.openPrefs()
+                
+    def openMolecool(self):
+        if self.settings.value('molecoolpath'):
+            self.molecool.start()
+        else:
+            msg = '''Can't find MoleCoolQt. Download or select executable file below.'''
+            moleMsg = QMessageBox()
+            moleMsg.setText(msg)
+
+            moleMsg.addButton(QPushButton('Download'), QMessageBox.YesRole)
+            moleMsg.addButton(QPushButton('Select MoleCoolQt executable file'), QMessageBox.NoRole)
+            result = moleMsg.exec_()
+
+            if result == 0:
+                webbrowser.open('http://www.molecoolqt.de/dl.php')
+            elif result == 1:
+                self.openPrefs()
+                
     def findXD(self):
         msg = '''Couldn't find folder containing the XD programs. Select folder now?'''
         findXD = QMessageBox.question(self, 'Find XD programs', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
@@ -6731,7 +6765,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Run XDINI with compound ID in manual refinement.
         '''
         global compoundID4XDINI
-        compoundID4XDINI = str(self.cmpdIDInput.text())
+        compoundID4XDINI = str(self.manRefIDInput.text())
         if compoundID4XDINI.strip() != '':
             self.disableXDButs()
             self.xdini.finishedSignal.connect(self.enableXDButs)
@@ -6762,6 +6796,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         removePhantomAtoms()
         self.runXDINIBut.disconnect()                         #Sets button back to 'Run XDINI'
         self.runXDINIBut.clicked.connect(self.runXDINI)    #Sets up button again to start XDINI
+        
+        for item in self.wiz2ndStageObjects:
+            item.setEnabled(True)
     
     def killXDINI(self):
         '''
@@ -7990,23 +8027,11 @@ class mercury(QThread):
     def run(self):
         '''
         Open shelx.ins in Mercury.
-        '''
-        try:
-#            if os.path.exists(os.getcwd() + '/xd_lsm.cif'):
-#                self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'xd_lsm.cif'], shell = False, cwd = os.getcwd())
-#            
-#            elif os.path.exists(os.getcwd() + '/xd_geo.cif'):
-#                self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'xd_geo.cif'], shell = False, cwd = os.getcwd())
-#            
-            if os.path.exists(os.getcwd() + '/shelx.ins'):
-                self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'shelx.ins'], shell = False, cwd = os.getcwd())
-            else:
-                self.mercuryOpen = subprocess.Popen([globMercAbsPath], shell = False, cwd = os.getcwd())
-        
-        except Exception:
-
-            webbrowser.open('https://www.ccdc.cam.ac.uk/support-and-resources/Downloads/')
-
+        ''' 
+        if os.path.exists(os.getcwd() + '/shelx.ins'):
+            self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'shelx.ins'], shell = False, cwd = os.getcwd())
+        else:
+            self.mercuryOpen = subprocess.Popen([globMercAbsPath], shell = False, cwd = os.getcwd())
             
 class molecool(QThread):
     '''
@@ -8023,19 +8048,14 @@ class molecool(QThread):
         '''
         Open xd.res/xd.inp in MoleCoolQt.
         '''
-        try:
-            print(molecoolQtAbsPath)
-            if os.path.exists(os.getcwd() + '/xd.res'):
-                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.res'], shell = False, cwd = os.getcwd())
-            elif os.path.exists(os.getcwd() + '/xd.inp'):
-                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.inp'], shell = False, cwd = os.getcwd())
-            else:
-                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
-        
-        except Exception:
-            webbrowser.open('http://www.molecoolqt.de/dl.php')
-            
-##Run GUI
+        if os.path.exists(os.getcwd() + '/xd.res'):
+            self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.res'], shell = False, cwd = os.getcwd())
+        elif os.path.exists(os.getcwd() + '/xd.inp'):
+            self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.inp'], shell = False, cwd = os.getcwd())
+        else:
+            self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
+
+#Run GUI
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
