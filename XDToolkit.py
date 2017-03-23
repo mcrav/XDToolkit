@@ -399,7 +399,7 @@ def fixBrokenLabels():
                         atomLab = row[0]
                         newLab = atomLab.replace('(','').replace(')','')
                         #Fix labels that are just N or C or Co with no number
-                        if newLab in elements and not newLab[:1] in elements:       #N Na error
+                        if newLab in elements:       #N Na error
                             newerLab = newLab + str(i)
                             while newerLab in neebs:
                                 i += 1
@@ -2060,6 +2060,7 @@ def findCHEMCONbyNeebors():
         #In atom table make CHEMCON dictionary
         if atomTab:
             row = str.split(line)
+            row = [item.upper() for item in row]
             if line[0:1] != 'H':
                 
                 
@@ -2102,7 +2103,8 @@ def findCHEMCONbyNeebors():
                     neebStr = row[1][0:2].upper()
                 else:
                     neebStr = row[1][0:1]
-                    chemconSig = neebStr + line[0:1]
+                chemconSig = neebStr + line[0:1]
+
                     #If first two characters are letters i.e. Co, check to see if it is the first time that chemconSig has appeared
                 if chemconSig not in usedSigs:
                     usedSigs.append(chemconSig)
@@ -2561,7 +2563,64 @@ def getRF2(folder=None):
     #Only return anything if R-value has been found, for error handling in the button function
     if rFound == True:
         return (rf2*100)
- 	
+
+def getNumMultipoles():
+    '''
+    Get number of multipoles with significant populations from xd.res.
+    '''
+    i = 30
+    j = 0
+    
+    with open('xd.res','r') as res:
+             
+        for line in res:
+
+            row = str.split(line)
+            if '(' in row[0]:
+                i = 0
+                
+            if 1 < i < 5:
+                for item in row:
+                    if float(item) > 0.02:
+                        j+=1
+                
+            i += 1
+                
+    return j
+
+def getNumLowAngRefl():
+    '''
+    Get number of reflections with sin(theta/lambda) from xd_lsm.out.'
+    '''
+    i = 0
+    
+    with open('xd_lsm.out','r') as lsm:
+        obs = False
+        
+        for line in lsm:
+            if line.startswith('   NO.   H   K   L SINTHL'):
+                obs = True
+                
+            if obs:
+                row = str.split(line)
+                if row[0].isdigit():
+                    if float(row[4]) < 0.5:
+                        i+=1
+                
+            if line.startswith(' Condition(s) met:'):
+                obs = False
+                
+    return i
+
+def getKrauseParam():
+    '''
+    Return Krause parameter. If there are no low angle reflections, return None.
+    '''
+    refl = getNumLowAngRefl()
+    mult = getNumMultipoles()
+    
+    if refl > 0:
+        return float(mult/refl) 	
     
 def getConvergence(lsmFile):
     '''
@@ -2967,6 +3026,7 @@ def kapMonRef():
     setupmas()
     resetKeyTable()
     i = getEleNum()
+
     kapInpRes('xd.res', range(1, i+1), i)
     kapInpRes('xd.inp', range(1, i+1), i)
     
@@ -3519,7 +3579,7 @@ def setupmas():
             #Add convcrit    
             elif row[0:2] == ['SELECT','cycle']:
                 
-                row[2] = '20'
+                row[2] = '25'
                 row[11] = '*convcrit' 
                 row[12] = '0.1E-3'
                 rowStr = ' '.join(row)
@@ -5014,6 +5074,7 @@ class XDLSM(QThread):
     '''
     startSignal = pyqtSignal()
     finishedSignal = pyqtSignal()
+    warningSignal = pyqtSignal()
     
     def __init__(self):
         QThread.__init__(self)
@@ -5025,177 +5086,55 @@ class XDLSM(QThread):
         '''
         Run XDLSM and add unit cell parameters to xd_lsm.cif afterwards.
         '''
-        print('XDLSM called')
-        
-        self.xdlsmRunning = subprocess.Popen(xdlsmAbsPath, shell = False, cwd = os.getcwd())
-        print('XDLSM running')
-        self.startSignal.emit()
-        self.xdlsmRunning.wait()
-        fixLsmCif()
-        self.finishedSignal.emit()
-        
-        
-class XDFOUR(QThread):
-    '''
-    XDFOUR
-    '''
-    startSignal = pyqtSignal()
-    finishedSignal = pyqtSignal()
-    
-    def __init__(self):
-        QThread.__init__(self)
-        
-    def __del__(self):
-        self.wait()
 
-    def run(self):
-        '''
-        Run XDFOUR
-        '''
-        self.xdfourRunning = subprocess.Popen(xdfourAbsPath, shell = False, cwd = os.getcwd())
-        self.startSignal.emit()
-        self.xdfourRunning.wait()
-        self.finishedSignal.emit()        
-        
-class XDFFT(QThread):
-    '''
-    XDFFT
-    '''
-    startSignal = pyqtSignal()
-    finishedSignal = pyqtSignal()
-    
-    def __init__(self):
-        QThread.__init__(self)
-        
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        '''
-        Run XDFFT
-        '''
-        self.xdfftRunning = subprocess.Popen(xdfftAbsPath, shell = False, cwd = os.getcwd())
-        self.startSignal.emit()
-        self.xdfftRunning.wait()
-        self.finishedSignal.emit()
-        
-class XDPROP(QThread):
-    '''
-    XDPROP
-    '''
-    startSignal = pyqtSignal()
-    finishedSignal = pyqtSignal()
-    
-    def __init__(self):
-        QThread.__init__(self)
-        
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        '''
-        Run XDPROP
-        '''
-        self.xdpropRunning = subprocess.Popen(xdpropAbsPath, shell = False, cwd = os.getcwd())
-        self.startSignal.emit()
-        self.xdpropRunning.wait()
-        self.finishedSignal.emit()
-        
-class XDGEOM(QThread):
-    '''
-    XDGEOM
-    '''
-    startSignal = pyqtSignal()
-    finishedSignal = pyqtSignal()
-    
-    def __init__(self):
-        QThread.__init__(self)
-        
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        '''
-        Run XDGEOM
-        '''
-        self.xdgeomRunning = subprocess.Popen(xdgeomAbsPath, shell = False, cwd = os.getcwd())
-        self.startSignal.emit()
-        self.xdgeomRunning.wait()
-        self.finishedSignal.emit()
-        
-        
-class XDGRAPH(QThread):
-    '''
-    XDGRAPH
-    '''
-    startSignal = pyqtSignal()
-    finishedSignal = pyqtSignal()
-    
-    def __init__(self):
-        QThread.__init__(self)
-        
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        '''
-        Run XDGRAPH
-        '''
-        self.xdgraphRunning = subprocess.Popen(xdgraphAbsPath, shell = False, cwd = os.getcwd())
-        self.startSignal.emit()
-        self.xdgraphRunning.wait()
-        self.finishedSignal.emit()
-        
-        
-class TOPXD(QThread):
-    '''
-    TOPXD
-    '''
-    startSignal = pyqtSignal()
-    finishedSignal = pyqtSignal()
-    
-    def __init__(self):
-        QThread.__init__(self)
-        
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        '''
-        Run TOPXD
-        '''
-        msg = 'TOPXD can take several hours to run. Do you want to continue?'
-        
-        warningMsg = QMessageBox.question(self, 'Warning', msg, QMessageBox.Yes, QMessageBox.No)
-        if warningMsg == QMessageBox.Yes:
-            self.topxdRunning = subprocess.Popen(topxdAbsPath, shell = False, cwd = os.getcwd())
+        try:
+            self.xdlsmRunning = subprocess.Popen(xdlsmAbsPath, shell = False, cwd = os.getcwd())
             self.startSignal.emit()
-            self.topxdRunning.wait()
+            self.xdlsmRunning.wait()
+            fixLsmCif()
             self.finishedSignal.emit()
- 
-    
-class XDPDF(QThread):
+        
+        except Exception:
+            self.warningSignal.emit()
+       
+class XDProg(QThread):
     '''
-    XDPDF
-    '''
+    Run XD Program in QThread.
+    '''        
     startSignal = pyqtSignal()
     finishedSignal = pyqtSignal()
+    warningSignal = pyqtSignal()
     
-    def __init__(self):
+    def __init__(self, prog):
         QThread.__init__(self)
+        self.xdProgName = prog
+        
+        global xdProgAbsPaths
+        try:
+            self.xdProg = xdProgAbsPaths[prog]  
+
+        except Exception:
+            self.xdProg = ''
         
     def __del__(self):
         self.wait()
 
     def run(self):
         '''
-        Run XDPDF
+        Run XD program
         '''
-        self.xdpdfRunning = subprocess.Popen(xdpdfAbsPath, shell = False, cwd = os.getcwd())
-        self.startSignal.emit()
-        self.xdpdfRunning.wait()
-        self.finishedSignal.emit()
+        
+        if self.xdProg:
+            try:
+                self.xdProgRunning = subprocess.Popen(self.xdProg, shell = False, cwd = os.getcwd())
+                self.startSignal.emit()
+                self.xdProgRunning.wait()
+                self.finishedSignal.emit()       
             
+            except Exception:
+                pass
+        else:
+            self.warningSignal.emit()
     
 class XDINI(QThread):
     '''
@@ -5216,8 +5155,6 @@ class XDINI(QThread):
         Run XDINI
         '''
         fixBrokenLabels()
-        
-
         
         self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd())
         self.startSignal.emit()
@@ -5532,17 +5469,22 @@ class wizardRunning(QDialog, Ui_wizard):
         if self.collectDat:
             self.tzero = time.time()
         print('wiz called')
+        print(backupFolder)
         self.i = 0
-        resStr = '<br>{0:47}{1:24}{2:14}{3:16}{4}<br>'.format('Refinement', 'RF<sup>2</sup>', 'Convergence', 'Average DMSDA', 'Max DMSDA')
+        resStr = '<br>{0:47}{1:23}{2:14}{3:16}{4}<br>'.format('Refinement', 'RF<sup>2</sup>', 'Convergence', 'Average DMSDA', 'Max DMSDA')
         resStr = '<pre>' + resStr + '</pre>'
         self.wizResLab.setText(resStr)
-        
+        print(resStr)
         self.folder = backupFolder
+        print(self.folder)
         os.makedirs('Backup/' + self.folder)
+        print('backup made')
         if os.path.isfile('shelx.ins'):
+            print('is shelx.ins')
+            self.wizStatusLab.setText('Initializing compound...')
             self.xdini.finishedSignal.connect(self.xdWizRef)
             self.xdini.start()
-            self.wizStatusLab.setText('Initializing compound...')
+            
         else:
             self.xdWizRef()
         
@@ -5629,18 +5571,15 @@ class wizardRunning(QDialog, Ui_wizard):
                         c = 'No'
                     try:
                         dmsda = getDMSDA('xd_lsm.out')
-                    except:
+                    except Exception:
                         dmsda = ['','']
                     
                     ref = self.refList[self.i-1]
-                    
-                    print(ref)
                     refSplit = ref.split()
-                    refNum = ' '.join(refSplit[:2])
                     refName = ' '.join(refSplit[2:])
-                    newRes = '<br>{0:>4} {1:40}{2:6.2f}{3:8}{4:14}{5:16}{6}'.format(refNum, refName, rf2, ' %', c, dmsda[0], dmsda[1])
+                    refNum = refSplit[0]
+                    newRes = '<br>{0:<4} {1:40}{2:6.2f}{3:8}{4:14}{5:16}{6}'.format(refNum, refName, rf2, ' %', c, dmsda[0], dmsda[1])
                     resStr = resStr[:-6] + newRes + '</pre>'
-                    
                     self.wizResLab.setText(resStr)
                     self.finalRes = resStr
                     if self.i < len(self.refList):
@@ -5651,6 +5590,9 @@ class wizardRunning(QDialog, Ui_wizard):
         try:
             if self.i == len(self.refList):
                 self.wizStatusLab.setText('Making normal probability plot...')
+                krauseParam = getKrauseParam()
+                if krauseParam:
+                    self.finalRes += '\nKrause parameter = {0:.2f}'.format(krauseParam)
                 self.xdlsm.finishedSignal.disconnect(self.xdWizRef)
                 self.finishedSignal.emit()
                 return
@@ -5759,7 +5701,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         
         #Give user options not to load last project
         if 'shelx.ins' in os.listdir(os.getcwd()):
-            if getNumAtoms() > 20:
+            if getNumAtoms() > 50:
                 msg = 'Load last project?\n\n{}'.format(os.getcwd())
                 loadLastProj = QMessageBox.question(self, 'Load last project', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
     
@@ -5777,46 +5719,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         
         #Check for XD files and if they are not there prompt user to find directory.
         if not self.settings.value('xdpath'):
-            msg = '''Couldn't find folder containing the XD programs. Select folder now?'''
-            findXD = QMessageBox.question(self, 'Find XD programs', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-            
-            if findXD == QMessageBox.Yes:
-
-                folder = str(QFileDialog.getExistingDirectory(None, "Select XD Folder"))
-                xdFolder = ''
-                
-                if sys.platform == 'win32':
-                    if 'xdlsm.exe' not in os.listdir(folder):
-                        if 'bin' in os.listdir(folder) and 'xdlsm.exe' in os.listdir(folder + '/bin'):
-                            xdFolder = folder + '/bin'
-                        warningMsg = QMessageBox.warning(self, 'Warning', 'Invalid folder chosen.<br><br>Change folder in preferences.')
-                    else:
-                        xdFolder = folder
-                        
-                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
-                    self.envMsg = QMessageBox()
-                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
-                    self.envMsg.setText(self.msg)
-                    self.envMsg.show()
-                        
-                elif sys.platform.startswith('linux'):
-                    if 'xdlsm' not in os.listdir(folder):
-                        if 'bin' in os.listdir(folder) and 'xdlsm' in os.listdir(folder + '/bin'):
-                            xdFolder = folder + '/bin'
-                        else:
-                            warningMsg = QMessageBox.warning(self, 'Warning', 'Invalid folder chosen.<br><br>Change folder in preferences.')
-                            
-                    else:
-                        xdFolder = folder
-                        
-                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
-                    self.envMsg = QMessageBox()
-                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
-                    self.envMsg.setText(self.msg)
-                    self.envMsg.show()
-    
-            self.settings.setValue('xdpath', xdFolder)
-            self.initialiseSettings()
+            self.findXD()
                 
         self.addedLocCoords = {}
         self.ins = ''
@@ -5901,13 +5804,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.runXDLSMBut.clicked.connect(lambda: self.xdlsm.start())
         self.xdlsm.startSignal.connect(self.startXDLSM)
         self.xdlsm.finishedSignal.connect(self.finishedXDLSM)
-        self.xdfour = XDFOUR()
+        self.xdlsm.warningSignal.connect(self.findXD)
+        self.xdfour = XDProg('xdfour')
         self.xdfour.startSignal.connect(self.startXDFOUR)
         self.xdfour.finishedSignal.connect(self.finishedXDFOUR)
-        self.xdfft = XDFFT()
+        
+        self.xdfft = XDProg('xdfft')
         self.xdfft.startSignal.connect(self.startXDFFT)
         self.xdfft.finishedSignal.connect(self.finishedXDFFT)
-        self.xdprop = XDPROP()
+        self.xdprop = XDProg('xdprop')
         self.xdprop.startSignal.connect(self.startXDPROP)
         self.xdprop.finishedSignal.connect(self.finishedXDPROP)
         self.xdini = XDINI()
@@ -5957,34 +5862,40 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.XDPROPLabs = [self.getDpopsStatusLab, self.pkgXDLab]
         self.pkgXDPROPBut.clicked.connect(lambda: self.xdprop.start())
         
-        self.xdgeom = XDGEOM()
+        self.xdgeom = XDProg('xdgeom')
         self.xdgeom.startSignal.connect(self.startXDGEOM)
         self.xdgeom.finishedSignal.connect(self.finishedXDGEOM)
         self.XDGEOMLabs = [self.pkgXDLab]
         self.XDGEOMButs = [self.pkgXDGEOMBut]
         self.pkgXDGEOMBut.clicked.connect(lambda: self.xdgeom.start())
         
-        self.xdgraph = XDGRAPH()
-        self.xdgraph.startSignal.connect(self.startXDGRAPH)
-        self.xdgraph.finishedSignal.connect(self.finishedXDGRAPH)
-        self.XDGRAPHLabs = [self.pkgXDLab]
-        self.XDGRAPHButs = [self.pkgXDGRAPHBut]
-        self.pkgXDGRAPHBut.clicked.connect(lambda: self.xdgraph.start())
+#        self.xdgraph = XDGRAPH()
+#        self.xdgraph.startSignal.connect(self.startXDGRAPH)
+#        self.xdgraph.finishedSignal.connect(self.finishedXDGRAPH)
+#        self.XDGRAPHLabs = [self.pkgXDLab]
+#        self.XDGRAPHButs = [self.pkgXDGRAPHBut]
+#        self.pkgXDGRAPHBut.clicked.connect(lambda: self.xdgraph.start())
         
-        self.xdpdf = XDPDF()
+        self.xdpdf = XDProg('xdpdf')
         self.xdpdf.startSignal.connect(self.startXDPDF)
         self.xdpdf.finishedSignal.connect(self.finishedXDPDF)
         self.XDPDFLabs = [self.pkgXDLab]
         self.XDPDFButs = [self.pkgXDPDFBut]
         self.pkgXDPDFBut.clicked.connect(lambda: self.xdpdf.start())
         
-        self.topxd = TOPXD()
+        self.topxd = XDProg('topxd')
         self.topxd.startSignal.connect(self.startTOPXD)
         self.topxd.finishedSignal.connect(self.finishedTOPXD)
         self.TOPXDLabs = [self.pkgXDLab]
         self.TOPXDButs = [self.pkgTOPXDBut]
         self.pkgTOPXDBut.clicked.connect(lambda: self.topxd.start())
         
+        self.xdProgsRunning = [self.xdgeom, self.xdfour, self.xdfft, 
+                               self.xdprop, self.xdpdf, self.topxd]
+        
+        for prog in self.xdProgsRunning:
+            prog.warningSignal.connect(self.findXD)
+            
 #--------------------EMAIL-----------------------------------------------
 
     def bugRepDialog(self):
@@ -6066,6 +5977,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.addedLocCoords = {}
                 self.disableXDButs()
                 self.xdini.finishedSignal.connect(self.enableXDButs)
+                self.xdini.finishedSignal.connect(self.wizCheckIni)
                 self.xdWizINILab.setText('Initializing compound...')
                 
             else:
@@ -6079,7 +5991,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Check that XDINI has created all files and test them.
         Unlock second stage of XD Wizard if all files are present, regardless of test result.
-        '''
+        '''        
         if os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl'):
             self.xdWizINILab.setText('XDINI ran successfully. Follow instructions below and click "Test".')
             try:
@@ -6089,6 +6001,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
             for item in self.wiz2ndStageObjects:
                 item.setEnabled(True)
+            
+            self.changeWizBackup()
         
         else:
             self.xdWizINILab.setText('An error occurred. Check xd_ini.out in project folder.')
@@ -6119,14 +6033,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         s = False
         f = os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl')
 
-        if findUnaddedSym():
+        multipoleMagician()
+        missingSym = findUnaddedSym()
+
+        if missingSym:
             m = False
-            multipoleMagician()
-            missingSym = findUnaddedSym()
             
         else:
             m = True
-            missingSym = ''
         
         try:
             for item in self.wizSnlInput:
@@ -6134,7 +6048,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             s = True
         except ValueError:
             s = False
-
+        
         if c and r and s and f and m:
             
             self.xdWizardBut.setEnabled(True)
@@ -6144,7 +6058,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             timeStr = '{0:.0f}hrs {1:.0f}mins {2:.0f}secs'.format(hours, minutes, seconds)
             wizStr = '{0} Estimated running time is {1}'.format('Ready to run XD Wizard.', timeStr)
             self.wizTestStatusLab.setText(wizStr)
-            
+        
         else: 
 
             wizStr = ''
@@ -6318,6 +6232,49 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 #--------------------UTILITIES-------------------------------------------
     
+    def findXD(self):
+        msg = '''Couldn't find folder containing the XD programs. Select folder now?'''
+        findXD = QMessageBox.question(self, 'Find XD programs', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        
+        if findXD == QMessageBox.Yes:
+
+            folder = str(QFileDialog.getExistingDirectory(None, "Select XD Folder"))
+            xdFolder = ''
+            
+            if sys.platform == 'win32':
+                if 'xdlsm.exe' not in os.listdir(folder):
+                    if 'bin' in os.listdir(folder) and 'xdlsm.exe' in os.listdir(folder + '/bin'):
+                        xdFolder = folder + '/bin'
+                    self.warningMsg = QMessageBox.warning(self, 'Warning', 'Invalid folder chosen.<br><br>Change folder in preferences.')
+                    self.warningMsg.show()
+                else:
+                    xdFolder = folder
+                    
+                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
+                self.envMsg = QMessageBox()
+                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                self.envMsg.setText(self.msg)
+                self.envMsg.show()
+                    
+            elif sys.platform.startswith('linux'):
+                if 'xdlsm' not in os.listdir(folder):
+                    if 'bin' in os.listdir(folder) and 'xdlsm' in os.listdir(folder + '/bin'):
+                        xdFolder = folder + '/bin'
+                    else:
+                        self.warningMsg = QMessageBox.warning(self, 'Warning', 'Invalid folder chosen.<br><br>Change folder in preferences.')
+                        self.warningMsg.show()
+                else:
+                    xdFolder = folder
+                    
+                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
+                self.envMsg = QMessageBox()
+                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                self.envMsg.setText(self.msg)
+                self.envMsg.show()
+
+            self.settings.setValue('xdpath', xdFolder)
+            self.initialiseSettings()
+
     def badLabelWarning(self):
         '''
         DOESN'T WORK: Warn user if labels in shelx.ins may cause confusion.
@@ -6415,6 +6372,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     self.xdlsm.start()
         
         self.pkgXDLab.setText('XDLSM finished')
+        self.xdWizardBut.disconnect()
+        self.xdWizardBut.clicked.connect(self.xdWizRun)
         
     
     def killXDLSM(self):
@@ -6422,19 +6381,20 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Kill XDLSM.
         '''
         try:
+            self.enableXDButs()
             self.xdlsm.finishedSignal.disconnect() #Disconnects finished signal so that QThread doesn't changes status label to 'XDLSM finished'. Finished signal reconnected in startXDLSM()
             self.xdlsm.xdlsmRunning.terminate()             #Kills xdlsm.exe
             for but in self.XDLSMButs:
                 but.setText('Run XDLSM')
                 but.disconnect()
                 but.clicked.connect(lambda: self.xdlsm.start())
-            self.xdWizardBut.setText('Run XD Wizard')
+            
             for lab in self.XDLSMLabs:
                 lab.setText('XDLSM terminated')       #Sets status label to 'XDLSM terminated'
-            self.xdWizStatusLab.setText('XD Wizard terminated.')
+
+            self.xdWizardStatusLab.setText('XD Wizard terminated.')
             self.xdWizardBut.disconnect()
-            self.xdWizardBut.clicked.connect(self.xdWiz)
-            
+            self.xdWizardBut.clicked.connect(self.xdWizRun)
             
         except Exception:
             pass
@@ -6786,6 +6746,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.XDINILab.setText('XDINI running')                  #Sets the status label to 'XDINI running'
         self.runXDINIBut.setText('Cancel')                      #Sets the button text to 'Cancel'
         self.runXDINIBut.clicked.connect(self.killXDINI)        #Makes the button kill XDINI.exe if clicked
+        self.xdini.finishedSignal.disconnect(self.finishedXDINI)
         self.xdini.finishedSignal.connect(self.finishedXDINI)   #Sets up the finishedSignal in case XDINI.exe was killed the last time and the finishedSignal was disconnected
 
     def finishedXDINI(self):
@@ -6794,9 +6755,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         self.XDINILab.setText('XDINI finished')                         #Sets status label to 'XDINI finished'
         self.refChosen()
-        self.wizCheckIni()
         self.runXDINIBut.setText('Run XDINI')  
         self.check4res()
+        self.enableXDButs()
         self.changeUserIns()
         removePhantomAtoms()
         self.runXDINIBut.disconnect()                         #Sets button back to 'Run XDINI'
@@ -6910,10 +6871,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if ins and hkl:
             os.chdir(projectFolder)
             self.statusbar.showMessage('Current working directory: ' + os.getcwd())
+            initialiseGlobVars()
             return True
         
         else:
-            print('no ifles')
+            print('no files')
             msg = QMessageBox()
             msgStr = ''
             if not ins:
@@ -6988,6 +6950,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global topxdAbsPath
         global xdpdfAbsPath
         global timeFileAbsPath
+        global xdProgAbsPaths
         
         timeFileAbsPath = os.getcwd() + '/lsmTimes.buckfast'
 
@@ -7032,7 +6995,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 xdpdfAbsPath = '{}/xdpdf.exe'.format(xdExecAbsPath)
                 topxdAbsPath = '{}/topxd.exe'.format(xdExecAbsPath)
                 xdgraphAbsPath = '{}/xdgraph.exe'.format(xdExecAbsPath)    #Can't find linux exec for xdgraph
-                
+
+        try:
+            xdProgAbsPaths = {'xdlsm':xdlsmAbsPath, 'xdfour':xdfourAbsPath, 'xdfft':xdfftAbsPath,
+                         'xdini':xdiniAbsPath, 'xdgeom':xdgeomAbsPath, 'xdprop':xdpropAbsPath,
+                         'xdpdf':xdpdfAbsPath, 'topxd': topxdAbsPath}    
+        
+        except Exception:
+            pass
+        
         if self.settings.value('molecoolpath'):
             molecoolQtAbsPath = self.settings.value('molecoolpath')
         elif sys.platform == 'win32':
@@ -8059,7 +8030,7 @@ class molecool(QThread):
         except Exception:
             webbrowser.open('http://www.molecoolqt.de/dl.php')
             
-#Run GUI
+##Run GUI
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
@@ -8068,7 +8039,8 @@ if __name__ == '__main__':
     prog.show()
     sys.exit(app.exec_())
 #os.chdir('/home/matt/dev/XDTstuff/test/serine')
-#initialiseGlobVars()
+##initialiseGlobVars()
+#x = getKrauseParam()
 #
 #x = rawInput2Labels('dum1')
 #print(x)
