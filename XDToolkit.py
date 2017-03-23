@@ -7143,17 +7143,22 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     self.manRefSetupLab.setText(failureStr)
                 
             elif refNum == 2:               #High angle non-H positions and ADPs
+   
                 try:
                     if snlMin and snlMax:               #Check snl isn't blank
+                        print('in snl if')    
                         if not r:
+                            print('in r if')
                             msg = rWarnMsg + procMsg
                             warningMsg = QMessageBox.question(self, 'Warning', 
-                            msg, QMessageBox.Yes, QMessageBox.No)
+                            msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                             
                             if warningMsg == QMessageBox.Yes:
                                 highAngleRef(snlMin, snlMax)
                                 self.manRefSetupLab.setText(successStr)
-                                
+                        else:
+                            highAngleRef(snlMin, snlMax)
+                            self.manRefSetupLab.setText(successStr)
 
                             
                         
@@ -8039,9 +8044,9 @@ if __name__ == '__main__':
     prog.show()
     sys.exit(app.exec_())
 #os.chdir('/home/matt/dev/XDTstuff/test/serine')
-##initialiseGlobVars()
-#x = getKrauseParam()
-#
+#initialiseGlobVars()
+#highAngleRef('0.7','2.0')
+
 #x = rawInput2Labels('dum1')
 #print(x)
 
