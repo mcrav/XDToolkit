@@ -8055,7 +8055,7 @@ class molecool(QThread):
         else:
             self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
 
-#Run GUI
+##Run GUI
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
