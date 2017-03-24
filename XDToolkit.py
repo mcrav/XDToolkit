@@ -622,9 +622,6 @@ def ins2all():
         specAtomPos = atomPosData[1]
         insInfo = ins2fracPos('shelx.ins')
 
-    elif os.path.isfile('xd.inp'):
-        insInfo = inp2fracPos()
-
     else:
         atomPos = insInfo[0]
 
@@ -684,7 +681,7 @@ def ins2all():
 #                    print(bondDist)
 #                    print((covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.57))
                     
-                if bondDist < (covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.57):
+                if bondDist < (covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.5):
                     distances[frozenset(tupPair)] = round(bondDist, 4)
                     specDistances[frozenset([pos1SpecialLab, pos2SpecialLab])] = round(bondDist, 4)
                     neebPairs.append(tupPair)   
@@ -876,6 +873,8 @@ def ins2all():
 #        print(item[1].split('.')[0])
 #        print(specAtomPos[item[1].split('.')[0]])
 #        print('---------------------------------------------------')
+    
+
 
     #Get neighbour type dictionary
     for atom, neebs in asymNeebs.items():
@@ -1575,7 +1574,6 @@ def autoAddResetBond():
     for atom,neebs in neighboursType.items():
 
         sig = ''.join(sorted(neebs))
-
         #If a C is found if it has the CHHH neebor signature then find the labels of the Hs and add them to methyl list
         if atom[0:2] == 'C(':
 
@@ -1659,6 +1657,7 @@ def autoAddResetBond():
                                    break
        
            elif ''.join(neebs) == 'HH':
+
                for atomLab in neighbourLabs[atom]:
                    H2OHList.append(atomLab)
                    
@@ -2803,11 +2802,12 @@ def lowAngleRef(sinthlMin,sinthlMax):
                 newmas.write(rowStr + '\n')
         
         elif line.startswith('RESET BOND'):
-            newmas.write('!' + line)
+#            newmas.write('!' + line)
+            newmas.write(line)
         
         elif line.startswith('SKIP'):
             row = str.split(line)
-            rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:0<5} {snlMax:0<5}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
+            rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.2f} {snlMax:<5.2f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
             newmas.write(rowStr + '\n')
         
         else:     
@@ -5018,9 +5018,9 @@ def wizAddCHEMCON():
     '''
     Add CHEMCON from xdwiz.mas to xd.mas.
     '''
-    try:
-        rb = open('xdwiz.mas', 'r')
-        ccstr = ''
+    with open('xdwiz.mas','r') as rb:
+       
+        cc = []
         atomTab = False
         
         for line in rb:
@@ -5028,41 +5028,46 @@ def wizAddCHEMCON():
                 atomTab = False
                 
             if atomTab:
-                ccstr += line
+                row = str.split(line)
+                if len(row) == 13:
+                    cc.append(row[12])
+                else:
+                    cc.append(' ')
                     
             
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True 
-        rb.close()
+
         
-        mas = open('xd.mas','r')
-        newmas = open('xdnew.mas','w')
+        with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+
+            i=0
+            for line in mas:
         
-        for line in mas:
-    
-            if line.startswith('END ATOM'):
-                atomTab = False
-                
-            if atomTab:
-                pass
-            
-            else:
-                newmas.write(line)
+                if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
+                    atomTab = False
                     
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-                newmas.write(ccstr)
+                if atomTab:
+                    row = str.split(line)
+                    if len(row) == 13:
+                        row[12] = cc(i)
+                    else:
+                        row.append(' ')
+                    rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}\n'.format(*row)
+                    newmas.write(rowStr)
                 
-            
-        mas.close()
-        newmas.close()
+                else:
+                    newmas.write(line)
+                        
+                if line.startswith('ATOM     ATOM0'):
+                    atomTab = True
+                    
+                i+=1
         
         os.remove('xd.mas')
         os.rename('xdnew.mas','xd.mas')
         
-    finally:
-        mas.close()
-        newmas.close()
+
 
 '''
 #--------------------GUI-------------------------------------------------
@@ -5376,6 +5381,7 @@ class NPP(QWidget, Ui_resmap):
 
         super(NPP, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle('Normal probability plot')
         self.setup()
 
     
@@ -5578,7 +5584,7 @@ class wizardRunning(QDialog, Ui_wizard):
                     refSplit = ref.split()
                     refName = ' '.join(refSplit[2:])
                     refNum = refSplit[0]
-                    newRes = '<br>{0:<4} {1:40}{2:6.2f}{3:8}{4:14}{5:16}{6}'.format(refNum, refName, rf2, ' %', c, dmsda[0], dmsda[1])
+                    newRes = '<br>{0:>2} - {1:40}{2:6.2f}{3:8}{4:14}{5:16}{6}'.format(refNum, refName, rf2, ' %', c, dmsda[0], dmsda[1])
                     resStr = resStr[:-6] + newRes + '</pre>'
                     self.wizResLab.setText(resStr)
                     self.finalRes = resStr
@@ -5744,7 +5750,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.alcsBut.clicked.connect(self.alcs)
         self.alcsLocSymInput.returnPressed.connect(self.alcs)
         #Run multipoleKeyTable() when button is pressed.
-        self.multKeyBut.clicked.connect(lambda: multipoleKeyTable())
+        self.multKeyBut.clicked.connect(self.multKeyPress)
         #Select working directory when button is pressed.
         self.dirBut.triggered.connect(self.setFolder)
         #Run resetBond() with user input when button is pressed.
@@ -5762,9 +5768,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         #Run writeCHEMCON() with argument based on user input
         self.addCHEMCONBut.clicked.connect(self.runCHEMCON)
-        #Fix ncst error if button is pressed
-        self.addNCSTBut.clicked.connect(lambda: addNCST())
-        #Run getRF2() when button is pressed
         #Run res2inp when button is pressed
         self.toolbarRes2Inp.triggered.connect(self.res2inpPress)
         #Backup buttons
@@ -5796,8 +5799,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.toolbarSettings.triggered.connect(self.openPrefs)
         self.menuManual.triggered.connect(lambda: os.startfile('XD Toolkit Manual.pdf'))
         self.menuAbout.triggered.connect(self.openAbout)
-        self.killXDLSMBut.clicked.connect(self.killXDLSM)
-        self.fixCuValBut.clicked.connect(lambda: initialiseMas())
         #Run xdlsm.exe
         self.xdProgButs = [self.resNPPBut, self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
                           self.pkgXDGRAPHBut, self.pkgXDPDFBut, self.pkgXDLSMBut, self.pkgXDPROPBut, self.xdWizINIBut, self.xdWizardBut, self.runXDLSMBut, self.runXDINIBut, self.setupFOURBut, self.getDpopsBut]
@@ -6153,16 +6154,16 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.xdWizRunning.refList = self.xdWizRunning.refList[:-2]
             
             global wizHighSnlMin
-            wizHighSnlMin = str(self.wizHighSnlMin.text())
+            wizHighSnlMin = float(str(self.wizHighSnlMin.text()))
             global wizHighSnlMax
-            wizHighSnlMax = str(self.wizHighSnlMax.text())
+            wizHighSnlMax = float(str(self.wizHighSnlMax.text()))
             global wizLowSnlMin
-            wizLowSnlMin = str(self.wizLowSnlMin.text())
+            wizLowSnlMin = float(str(self.wizLowSnlMin.text()))
             global wizLowSnlMax
-            wizLowSnlMax = str(self.wizLowSnlMax.text())
+            wizLowSnlMax = float(str(self.wizLowSnlMax.text()))
             global wizUniSnlMax
     
-            wizUniSnlMax = str(self.wizUniSnlMax.text())
+            wizUniSnlMax = float(str(self.wizUniSnlMax.text()))
             
             copyfile('xd.mas','xdwiz.mas')
             
@@ -6188,25 +6189,27 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         
         values = grd2values()
         try:
-            self.wizLayout.removeWidget(self.nppCanvas)
+            self.nppWizLayout.removeWidget(self.nppCanvas)
         except Exception:
-            pass
+            print('''couldn't remove canvas''')
 
-        fig = plt.figure(facecolor = '#dddddd', figsize=(5,3), dpi=80)
-        ax = fig.add_subplot(1,1,1)
+        self.fig = plt.figure(facecolor = '#dddddd', figsize=(5,3), dpi=80)
+
+        self.ax = self.fig.add_subplot(1,1,1)
+        
         probplot(values, plot = plt)
         plt.title('Normal probability plot')
-        ax.get_lines()[0].set_marker('.')
-        ax.get_lines()[0].set_markersize(0.8)
-        self.nppCanvas = FigureCanvas(fig)
+        self.ax.get_lines()[0].set_marker('.')
+        self.ax.get_lines()[0].set_markersize(0.8)
+        self.nppCanvas = FigureCanvas(self.fig)
 #        saveBut = QPushButton('Save PNG file')
 #        saveBut.clicked.connect(self.savePng)
 #        saveBut.setFixedWidth(150)
 #        self.saveLab = QLabel()
-        self.wizLayout.addWidget(self.nppCanvas, 0)
+        self.nppWizLayout.addWidget(self.nppCanvas, 0)
 #        self.wizLayout.addWidget(saveBut,1)
 #        self.wizLayout.addWidget(self.saveLab,2)
-        self.setLayout(self.wizLayout)
+        self.setLayout(self.nppWizLayout)
         # prevent the canvas to shrink beyond a point
         # original size looks like a good minimum size
         self.nppCanvas.setMinimumSize(self.nppCanvas.size())
@@ -6232,6 +6235,17 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 #--------------------UTILITIES-------------------------------------------
     
+    def multKeyPress(self):
+        '''
+        Handle user pressing 'Add multipoles to key table button.
+        '''
+        try:
+            multipoleKeyTable()
+            self.multKeyStatusLab.setText('Key table updated in xd.mas.')
+        
+        except Exception:
+            self.multKeyStatusLab.setText('An error occurred.')
+
     def openMerc(self):
         if self.settings.value('mercurypath'):
             self.mercury.start()
@@ -7848,6 +7862,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         elif self.quickplotGrdBox.isChecked():
             try:
+                self.setupFOURStatusLab.setText('')
                 self.showResDensMap()
             except Exception:
                 self.setupFOURStatusLab.setText('An error occurred.')
@@ -7990,17 +8005,19 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         self.settings.setValue('lastcwd', os.getcwd())
 
-        if self.settings.value('senddata') == 'yes':
-            
-            with open(timeFileAbsPath,'r') as lsmTimes:
-                x = len(lsmTimes.readlines())
-            
-            if x > 100:
-                sendEmail(subject = 'XD Toolkit: XDLSM times', attachments = [timeFileAbsPath])
-            
-            if x > 100:
-                with open(timeFileAbsPath, 'w') as lsmTimes:
-                    lsmTimes.write(' ')
+#        if self.settings.value('senddata') == 'yes':
+#            
+#            with open(timeFileAbsPath,'r') as lsmTimes:
+#                x = len(lsmTimes.readlines())
+#            
+#            if x > 100:
+#                try:
+#                    sendEmail(subject = 'XD Toolkit: XDLSM times', attachments = [timeFileAbsPath])
+#                    with open(timeFileAbsPath, 'w') as lsmTimes:
+#                        lsmTimes.write(' ')
+#                except Exception:
+#                    pass
+               
                 
         self.xdlsm.xdlsmRunning.terminate()
         event.accept()
@@ -8063,9 +8080,9 @@ if __name__ == '__main__':
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
     prog.show()
     sys.exit(app.exec_())
-#os.chdir('/home/matt/dev/XDTstuff/test/serine')
+#os.chdir('/home/matt/dev/XDTstuff/test/data/thiocoumarin')
 #initialiseGlobVars()
-#highAngleRef('0.7','2.0')
+#wizAddCHEMCON()
 
 #x = rawInput2Labels('dum1')
 #print(x)

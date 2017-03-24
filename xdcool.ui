@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>777</width>
+    <width>1131</width>
     <height>652</height>
    </rect>
   </property>
@@ -444,7 +444,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.3.0</string>
+   <string>XD Toolkit 0.3.1</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -582,8 +582,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>723</width>
-             <height>552</height>
+             <width>1077</width>
+             <height>568</height>
             </rect>
            </property>
            <property name="autoFillBackground">
@@ -596,7 +596,7 @@
                <number>10</number>
               </property>
               <property name="topMargin">
-               <number>20</number>
+               <number>10</number>
               </property>
               <property name="rightMargin">
                <number>10</number>
@@ -607,7 +607,7 @@
               <item>
                <widget class="QLabel" name="label_11">
                 <property name="text">
-                 <string>&lt;b&gt;Initialize Compound&lt;/b&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Initialize compound&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -625,6 +625,12 @@
                 </item>
                 <item>
                  <widget class="QLineEdit" name="xdWizCmpID">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>23</height>
+                   </size>
+                  </property>
                   <property name="maximumSize">
                    <size>
                     <width>150</width>
@@ -681,6 +687,12 @@
               </item>
               <item>
                <widget class="Line" name="line_3">
+                <property name="maximumSize">
+                 <size>
+                  <width>700</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -717,6 +729,12 @@
                    <widget class="QLineEdit" name="wizHighSnlMin">
                     <property name="enabled">
                      <bool>false</bool>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>23</height>
+                     </size>
                     </property>
                     <property name="maximumSize">
                      <size>
@@ -756,6 +774,12 @@
                    <widget class="QLineEdit" name="wizHighSnlMax">
                     <property name="enabled">
                      <bool>false</bool>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>23</height>
+                     </size>
                     </property>
                     <property name="maximumSize">
                      <size>
@@ -804,6 +828,12 @@
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>23</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
                       <width>150</width>
@@ -842,6 +872,12 @@
                    <widget class="QLineEdit" name="wizLowSnlMax">
                     <property name="enabled">
                      <bool>false</bool>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>23</height>
+                     </size>
                     </property>
                     <property name="maximumSize">
                      <size>
@@ -893,6 +929,12 @@
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>23</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
                       <width>150</width>
@@ -920,6 +962,12 @@
               </item>
               <item>
                <widget class="Line" name="line_4">
+                <property name="maximumSize">
+                 <size>
+                  <width>700</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -973,7 +1021,7 @@
                     <property name="minimumSize">
                      <size>
                       <width>500</width>
-                      <height>0</height>
+                      <height>23</height>
                      </size>
                     </property>
                     <property name="maximumSize">
@@ -1003,6 +1051,12 @@
               </item>
               <item>
                <widget class="Line" name="line_6">
+                <property name="maximumSize">
+                 <size>
+                  <width>700</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -1067,6 +1121,12 @@
               </item>
               <item>
                <widget class="Line" name="line_7">
+                <property name="maximumSize">
+                 <size>
+                  <width>700</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -1125,6 +1185,22 @@
                 </property>
                </spacer>
               </item>
+              <item>
+               <layout class="QVBoxLayout" name="nppWizLayout">
+                <property name="leftMargin">
+                 <number>10</number>
+                </property>
+                <property name="topMargin">
+                 <number>10</number>
+                </property>
+                <property name="rightMargin">
+                 <number>10</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>10</number>
+                </property>
+               </layout>
+              </item>
              </layout>
             </item>
            </layout>
@@ -1140,6 +1216,73 @@
        <layout class="QGridLayout" name="gridLayout_6">
         <item row="0" column="0">
          <widget class="QScrollArea" name="scrollArea_2">
+          <property name="palette">
+           <palette>
+            <active>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>255</red>
+                <green>255</green>
+                <blue>255</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Window">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>232</red>
+                <green>232</green>
+                <blue>232</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </active>
+            <inactive>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>255</red>
+                <green>255</green>
+                <blue>255</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Window">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>232</red>
+                <green>232</green>
+                <blue>232</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </inactive>
+            <disabled>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>232</red>
+                <green>232</green>
+                <blue>232</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Window">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>232</red>
+                <green>232</green>
+                <blue>232</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </disabled>
+           </palette>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
@@ -1148,8 +1291,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>735</width>
-             <height>472</height>
+             <width>1091</width>
+             <height>474</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_10">
@@ -1264,6 +1407,12 @@
               </item>
               <item>
                <widget class="Line" name="line_8">
+                <property name="maximumSize">
+                 <size>
+                  <width>700</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -1501,6 +1650,12 @@
               </item>
               <item>
                <widget class="Line" name="line_5">
+                <property name="maximumSize">
+                 <size>
+                  <width>700</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -1591,6 +1746,12 @@
               </item>
               <item>
                <widget class="Line" name="line_16">
+                <property name="maximumSize">
+                 <size>
+                  <width>700</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -1685,15 +1846,15 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="page_11">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>613</width>
-               <height>334</height>
+               <width>1051</width>
+               <height>318</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2127,7 +2288,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>697</width>
+               <width>1051</width>
                <height>318</height>
               </rect>
              </property>
@@ -2652,7 +2813,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>697</width>
+               <width>1051</width>
                <height>289</height>
               </rect>
              </property>
@@ -3183,8 +3344,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>683</width>
-               <height>274</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3247,6 +3408,19 @@
                    </spacer>
                   </item>
                  </layout>
+                </item>
+                <item>
+                 <widget class="Line" name="line_10">
+                  <property name="maximumSize">
+                   <size>
+                    <width>500</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_49">
@@ -3341,6 +3515,19 @@
                  </layout>
                 </item>
                 <item>
+                 <widget class="Line" name="line">
+                  <property name="maximumSize">
+                   <size>
+                    <width>500</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_54">
                   <item>
                    <widget class="QLabel" name="label_46">
@@ -3430,6 +3617,19 @@
                  </layout>
                 </item>
                 <item>
+                 <widget class="Line" name="line_9">
+                  <property name="maximumSize">
+                   <size>
+                    <width>500</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_56">
                   <item>
                    <widget class="QLabel" name="label_48">
@@ -3472,6 +3672,19 @@
                    </spacer>
                   </item>
                  </layout>
+                </item>
+                <item>
+                 <widget class="Line" name="line_12">
+                  <property name="maximumSize">
+                   <size>
+                    <width>500</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="alcsBut">
@@ -3518,8 +3731,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>258</width>
-               <height>290</height>
+               <width>1051</width>
+               <height>260</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3696,222 +3909,13 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="page_12">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>171</width>
-               <height>455</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Fix 'Runtime Error' when running XDLSM</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_21">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_29">
-                <property name="leftMargin">
-                 <number>10</number>
-                </property>
-                <property name="topMargin">
-                 <number>10</number>
-                </property>
-                <property name="rightMargin">
-                 <number>10</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>10</number>
-                </property>
-                <item>
-                 <widget class="QLabel" name="label_4">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If you close WinXD while XDLSM is running, XDLSM doesn't end, creating an error if you try and run it again. The button below will kill the 'xdlsm.exe' process and fix the problem.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;NOTE: If you have WinXD installed anywhere other than 'C:/WinXD' the button below will not work and you must end the xdlsm.exe process in Task Manager.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="killXDLSMBut">
-                  <property name="maximumSize">
-                   <size>
-                    <width>150</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Kill 'xdlsm.exe'</string>
-                  </property>
-                  <property name="checkable">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="page_7">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>410</width>
-               <height>87</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Fix 'parameter/NCST size should be increased' error</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_12">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_35">
-                <property name="leftMargin">
-                 <number>20</number>
-                </property>
-                <property name="topMargin">
-                 <number>20</number>
-                </property>
-                <property name="rightMargin">
-                 <number>20</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>20</number>
-                </property>
-                <item>
-                 <widget class="QPushButton" name="addNCSTBut">
-                  <property name="maximumSize">
-                   <size>
-                    <width>400</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Fix error by adding 'SIZE ncst 30' to xd.mas</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_7">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="page_8">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>523</width>
-               <height>88</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Fix Cu has no electrons in valence shell error</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_3">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_8">
-                <property name="leftMargin">
-                 <number>10</number>
-                </property>
-                <property name="topMargin">
-                 <number>10</number>
-                </property>
-                <property name="rightMargin">
-                 <number>10</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>10</number>
-                </property>
-                <item>
-                 <widget class="QLabel" name="label">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="text">
-                   <string>Only use this immediately after running XDINI and only for Cu!</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="fixCuValBut">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>400</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Update mas and inp with 10 d-electrons in valence shell</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_8">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
             <widget class="QWidget" name="page_5">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>257</width>
-               <height>188</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3919,7 +3923,7 @@
              </attribute>
              <layout class="QGridLayout" name="gridLayout_14">
               <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_7">
+               <layout class="QGridLayout" name="gridLayout_3">
                 <property name="leftMargin">
                  <number>10</number>
                 </property>
@@ -3932,21 +3936,14 @@
                 <property name="bottomMargin">
                  <number>10</number>
                 </property>
-                <item>
-                 <widget class="QLabel" name="multKeyLab">
-                  <property name="text">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list.&lt;br/&gt;Only works for NO, m, mm2 and cyl in SITESYM column.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
+                <item row="1" column="0">
                  <widget class="QPushButton" name="multKeyBut">
+                  <property name="minimumSize">
+                   <size>
+                    <width>300</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                   <property name="maximumSize">
                    <size>
                     <width>300</width>
@@ -3958,7 +3955,20 @@
                   </property>
                  </widget>
                 </item>
-                <item>
+                <item row="0" column="0" colspan="2">
+                 <widget class="QLabel" name="multKeyLab">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list. Only works for NO, m, mm2 and cyl in SITESYM column.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
                  <spacer name="verticalSpacer_5">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>
@@ -3970,6 +3980,37 @@
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item row="1" column="1">
+                 <spacer name="horizontalSpacer_8">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="2" column="0" colspan="2">
+                 <widget class="QLabel" name="multKeyStatusLab">
+                  <property name="minimumSize">
+                   <size>
+                    <width>300</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>
@@ -4006,7 +4047,7 @@
              <number>1</number>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <property name="tabSpacing">
              <number>6</number>
@@ -4016,8 +4057,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>231</width>
-               <height>108</height>
+               <width>1051</width>
+               <height>376</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4080,7 +4121,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>697</width>
+               <width>1051</width>
                <height>376</height>
               </rect>
              </property>
@@ -4218,102 +4259,134 @@
            <number>10</number>
           </property>
           <item>
-           <layout class="QGridLayout" name="gridLayout_8">
+           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="3,1">
             <property name="topMargin">
              <number>0</number>
             </property>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="pkgXDGEOMBut">
-              <property name="maximumSize">
+            <item>
+             <layout class="QGridLayout" name="gridLayout_8">
+              <property name="leftMargin">
+               <number>5</number>
+              </property>
+              <property name="topMargin">
+               <number>5</number>
+              </property>
+              <property name="rightMargin">
+               <number>5</number>
+              </property>
+              <property name="bottomMargin">
+               <number>5</number>
+              </property>
+              <property name="spacing">
+               <number>15</number>
+              </property>
+              <item row="2" column="0">
+               <widget class="QPushButton" name="pkgXDGEOMBut">
+                <property name="maximumSize">
+                 <size>
+                  <width>300</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Run XDGEOM</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QPushButton" name="pkgXDFOURBut">
+                <property name="maximumSize">
+                 <size>
+                  <width>300</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Run XDFOUR</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QPushButton" name="pkgXDPROPBut">
+                <property name="maximumSize">
+                 <size>
+                  <width>300</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Run XDPROP</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QPushButton" name="pkgXDFFTBut">
+                <property name="text">
+                 <string>Run XDFFT</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QPushButton" name="pkgXDLSMBut">
+                <property name="maximumSize">
+                 <size>
+                  <width>300</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Run XDLSM</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QPushButton" name="pkgXDGRAPHBut">
+                <property name="text">
+                 <string>Run XDGRAPH</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QPushButton" name="pkgTOPXDBut">
+                <property name="maximumSize">
+                 <size>
+                  <width>300</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Run TOPXD</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="pkgXDLab">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QPushButton" name="pkgXDPDFBut">
+                <property name="text">
+                 <string>Run XDPDF</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
                <size>
-                <width>300</width>
-                <height>16777215</height>
+                <width>40</width>
+                <height>20</height>
                </size>
               </property>
-              <property name="text">
-               <string>Run XDGEOM</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="pkgXDFOURBut">
-              <property name="maximumSize">
-               <size>
-                <width>300</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Run XDFOUR</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QPushButton" name="pkgXDPROPBut">
-              <property name="maximumSize">
-               <size>
-                <width>300</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Run XDPROP</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="pkgXDFFTBut">
-              <property name="text">
-               <string>Run XDFFT</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="pkgXDLSMBut">
-              <property name="maximumSize">
-               <size>
-                <width>300</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Run XDLSM</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QPushButton" name="pkgXDGRAPHBut">
-              <property name="text">
-               <string>Run XDGRAPH</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QPushButton" name="pkgTOPXDBut">
-              <property name="maximumSize">
-               <size>
-                <width>300</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Run TOPXD</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="pkgXDLab">
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QPushButton" name="pkgXDPDFBut">
-              <property name="text">
-               <string>Run XDPDF</string>
-              </property>
-             </widget>
+             </spacer>
             </item>
            </layout>
           </item>
@@ -4343,7 +4416,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>777</width>
+     <width>1131</width>
      <height>20</height>
     </rect>
    </property>

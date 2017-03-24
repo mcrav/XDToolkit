@@ -576,4 +576,412 @@ Hexadecapoles        14        0.58         linux
 Multipoles,an        14        0.83         linux
 Lowersymmetry        14        3.24         linux
 Finalrefineme        14        0.71         linux
-WIZ       14             18.15        12           linux
+WIZ       14             18.15        12           linuxScalefactors         14        0.40         linux
+Highanglenon-        14        0.34         linux
+LowangleHposi        14        0.30         linux
+Kappaandmonop        14        0.45         linux
+Dipoles              14        0.50         linux
+Quadrupoles          14        0.49         linux
+Octupoles            14        0.47         linux
+Hexadecapoles        14        0.55         linux
+Multipoles,an        14        0.78         linux
+Lowersymmetry        14        0.86         linux
+Finalrefineme        14        2.60         linux
+WIZ       14             16.64        12           linuxScalefactors         14        0.32         linux
+Highanglenon-        14        0.34         linux
+LowangleHposi        14        0.29         linux
+Kappaandmonop        14        0.46         linux
+Dipoles              14        0.47         linux
+Quadrupoles          14        0.55         linux
+Octupoles            14        0.53         linux
+Hexadecapoles        14        0.50         linux
+Multipoles,an        14        2.49         linux
+Lowersymmetry        14        0.89         linux
+Finalrefineme        14        0.74         linux
+WIZ       14             16.42        12           linuxScalefactors         30        0.88         linux
+Highanglenon-        30        1.26         linux
+LowangleHposi        30        1.53         linux
+Kappaandmonop        30        1.74         linux
+Dipoles              30        2.10         linux
+Quadrupoles          30        2.30         linux
+Octupoles            30        2.24         linux
+Hexadecapoles        30        2.21         linux
+Multipoles,an        30        3.80         linux
+Lowersymmetry        30        5.10         linux
+Finalrefineme        30        13.14        linux
+WIZ       30             39.98        12           linuxScalefactors         30        0.91         linux
+Highanglenon-        30        1.27         linux
+LowangleHposi        30        1.49         linux
+Kappaandmonop        30        1.70         linux
+Dipoles              30        2.11         linux
+Quadrupoles          30        2.12         linux
+Octupoles            30        2.30         linux
+Hexadecapoles        30        2.21         linux
+Multipoles,an        30        3.85         linux
+Lowersymmetry        30        5.13         linux
+Finalrefineme        30        12.92        linux
+WIZ       30             39.63        12           linuxScalefactors         30        0.94         linux
+Highanglenon-        30        1.32         linux
+LowangleHposi        30        1.50         linux
+Kappaandmonop        30        1.81         linux
+Dipoles              30        1.16         linux
+Quadrupoles          30        1.30         linux
+Octupoles            30        2.29         linux
+Hexadecapoles        30        2.32         linux
+Multipoles,an        30        4.42         linux
+WIZ       30             21.44        12           linuxLowersymmetry        30        2.53         linux
+Scalefactors         30        0.90         linux
+Highanglenon-        30        1.28         linux
+LowangleHposi        30        1.52         linux
+Kappaandmonop        30        1.18         linux
+Dipoles              30        1.25         linux
+Quadrupoles          30        2.23         linux
+Octupoles            30        2.35         linux
+Hexadecapoles        30        2.41         linux
+Multipoles,an        30        1.91         linux
+Lowersymmetry        30        5.30         linux
+Finalrefineme        30        5.14         linux
+WIZ       30             29.16        12           linuxScalefactors         30        0.94         linux
+Highanglenon-        30        1.29         linux
+LowangleHposi        30        1.53         linux
+Kappaandmonop        30        1.19         linux
+Dipoles              30        1.28         linux
+Quadrupoles          30        2.23         linux
+Octupoles            30        2.38         linux
+Hexadecapoles        30        2.42         linux
+Multipoles,an        30        1.88         linux
+Lowersymmetry        30        5.33         linux
+Finalrefineme        30        5.15         linux
+WIZ       30             29.25        12           linuxScalefactors         30        0.90         linux
+Highanglenon-        30        1.28         linux
+LowangleHposi        30        1.51         linux
+Kappaandmonop        30        1.19         linux
+Dipoles              30        1.25         linux
+Quadrupoles          30        2.22         linux
+Octupoles            30        2.36         linux
+Hexadecapoles        30        2.44         linux
+Multipoles,an        30        1.86         linux
+Lowersymmetry        30        5.32         linux
+Finalrefineme        30        5.15         linux
+WIZ       30             29.21        12           linuxScalefactors         14        0.32         linux
+Highanglenon-        14        0.34         linux
+LowangleHposi        14        0.29         linux
+Kappaandmonop        14        0.46         linux
+Dipoles              14        0.49         linux
+Quadrupoles          14        0.55         linux
+Octupoles            14        0.53         linux
+Hexadecapoles        14        0.51         linux
+Multipoles,an        14        2.51         linux
+Lowersymmetry        14        0.90         linux
+Finalrefineme        14        0.74         linux
+Scalefactors         30        0.92         linux
+Highanglenon-        30        0.99         linux
+LowangleHposi        30        1.35         linux
+Kappaandmonop        30        2.16         linux
+Dipoles              30        2.18         linux
+Quadrupoles          30        2.32         linux
+Octupoles            30        1.26         linux
+Hexadecapoles        30        1.20         linux
+Multipoles,an        30        1.93         linux
+Lowersymmetry        30        4.46         linux
+Finalrefineme        30        9.95         linux
+Scalefactors         30        0.92         linux
+Highanglenon-        30        0.96         linux
+LowangleHposi        30        1.35         linux
+Kappaandmonop        30        2.15         linux
+Dipoles              30        2.20         linux
+Quadrupoles          30        2.31         linux
+Octupoles            30        1.24         linux
+Hexadecapoles        30        1.20         linux
+Multipoles,an        30        1.93         linux
+Lowersymmetry        30        4.43         linux
+Finalrefineme        30        9.91         linux
+WIZ       30             32.26        12           linuxScalefactors         30        0.91         linux
+Highanglenon-        30        0.97         linux
+LowangleHposi        30        1.36         linux
+Kappaandmonop        30        2.16         linux
+Dipoles              30        2.25         linux
+Quadrupoles          30        2.36         linux
+Octupoles            30        1.25         linux
+Hexadecapoles        30        1.20         linux
+Multipoles,an        30        1.93         linux
+Lowersymmetry        30        4.48         linux
+Finalrefineme        30        10.01        linux
+WIZ       30             32.48        12           linuxScalefactors         30        0.93         linux
+Highanglenon-        30        0.96         linux
+LowangleHposi        30        1.34         linux
+Kappaandmonop        30        2.15         linux
+Dipoles              30        2.22         linux
+Quadrupoles          30        2.32         linux
+Octupoles            30        1.24         linux
+Hexadecapoles        30        1.20         linux
+Multipoles,an        30        1.93         linux
+Lowersymmetry        30        4.44         linux
+Finalrefineme        30        9.93         linux
+WIZ       30             32.28        12           linuxScalefactors         30        0.92         linux
+Highanglenon-        30        0.96         linux
+LowangleHposi        30        1.35         linux
+Kappaandmonop        30        2.18         linux
+Dipoles              30        2.23         linux
+Quadrupoles          30        2.31         linux
+Octupoles            30        1.25         linux
+Hexadecapoles        30        1.19         linux
+Multipoles,an        30        1.93         linux
+Lowersymmetry        30        4.44         linux
+Finalrefineme        30        9.91         linux
+WIZ       30             32.24        12           linuxScalefactors         30        0.91         linux
+Highanglenon-        30        0.95         linux
+LowangleHposi        30        1.37         linux
+Kappaandmonop        30        2.19         linux
+Dipoles              30        2.20         linux
+Quadrupoles          30        2.39         linux
+Octupoles            30        1.34         linux
+Hexadecapoles        30        1.22         linux
+Multipoles,an        30        1.95         linux
+Lowersymmetry        30        4.49         linux
+Finalrefineme        30        10.22        linux
+WIZ       30             32.88        12           linuxScalefactors         30        0.91         linux
+Highanglenon-        30        0.95         linux
+LowangleHposi        30        1.29         linux
+Kappaandmonop        30        1.23         linux
+Dipoles              30        2.36         linux
+Quadrupoles          30        2.57         linux
+Octupoles            30        1.60         linux
+Hexadecapoles        30        1.53         linux
+Multipoles,an        30        7.68         linux
+Lowersymmetry        30        4.49         linux
+Finalrefineme        30        10.70        linux
+WIZ       30             38.97        12           linuxScalefactors         30        0.89         linux
+Highanglenon-        30        0.94         linux
+LowangleHposi        30        1.28         linux
+Kappaandmonop        30        1.20         linux
+Dipoles              30        2.29         linux
+Quadrupoles          30        2.54         linux
+Octupoles            30        1.57         linux
+Hexadecapoles        30        1.53         linux
+Multipoles,an        30        7.50         linux
+Lowersymmetry        30        4.27         linux
+Finalrefineme        30        10.56        linux
+WIZ       30             38.14        12           linuxScalefactors         30        0.91         linux
+Highanglenon-        30        0.95         linux
+LowangleHposi        30        1.71         linux
+Kappaandmonop        30        2.13         linux
+Dipoles              30        1.22         linux
+Quadrupoles          30        1.22         linux
+Octupoles            30        2.24         linux
+Hexadecapoles        30        1.82         linux
+Multipoles,an        30        2.29         linux
+Lowersymmetry        30        2.45         linux
+Finalrefineme        30        6.24         linux
+WIZ       30             26.82        12           linuxScalefactors         14        0.38         linux
+Highanglenon-        14        0.33         linux
+LowangleHposi        14        0.52         linux
+Kappaandmonop        14        0.54         linux
+Dipoles              14        0.47         linux
+Quadrupoles          14        0.49         linux
+Octupoles            14        0.53         linux
+Hexadecapoles        14        0.50         linux
+Multipoles,an        14        0.83         linux
+Lowersymmetry        14        0.89         linux
+Finalrefineme        14        2.65         linux
+WIZ       14             17.52        12           linuxScalefactors         14        0.32         linux
+Highanglenon-        14        0.33         linux
+LowangleHposi        14        0.27         linux
+Kappaandmonop        14        1.24         linux
+Dipoles              14        0.48         linux
+Quadrupoles          14        0.50         linux
+Octupoles            14        0.56         linux
+Hexadecapoles        14        0.59         linux
+Multipoles,an        14        0.93         linux
+Lowersymmetry        14        3.27         linux
+Finalrefineme        14        0.72         linux
+WIZ       14             18.17        12           linuxScalefactors         14        0.34         linux
+Highanglenon-        14        0.33         linux
+LowangleHposi        14        0.28         linux
+Kappaandmonop        14        1.28         linux
+Dipoles              14        0.48         linux
+Quadrupoles          14        0.51         linux
+Octupoles            14        0.55         linux
+Hexadecapoles        14        0.58         linux
+Multipoles,an        14        1.00         linux
+Lowersymmetry        14        3.27         linux
+Finalrefineme        14        0.73         linux
+Scalefactors         17        1.09         linux
+Highanglenon-        17        1.33         linux
+LowangleHposi        17        1.74         linux
+Kappaandmonop        17        0.02         linux
+WIZ       17             49.52        12           linuxScalefactors         17        1.09         linux
+Highanglenon-        17        1.37         linux
+LowangleHposi        17        1.73         linux
+Kappaandmonop        17        0.02         linux
+WIZ       17             360.79       12           linuxScalefactors         17        1.09         linux
+Highanglenon-        17        1.32         linux
+LowangleHposi        17        1.72         linux
+WIZ       17             8.24         12           linuxScalefactors         17        1.09         linux
+Highanglenon-        17        1.32         linux
+LowangleHposi        17        1.74         linux
+WIZ       17             7.50         12           linuxScalefactors         17        1.08         linux
+Highanglenon-        17        1.32         linux
+LowangleHposi        17        1.73         linux
+Kappaandmonop        17        1.99         linux
+Dipoles              17        2.12         linux
+Quadrupoles          17        2.00         linux
+Octupoles            17        2.19         linux
+Hexadecapoles        17        2.45         linux
+Multipoles,an        17        3.73         linux
+Lowersymmetry        17        10.81        linux
+Finalrefineme        17        4.11         linux
+WIZ       17             34.87        12           linuxScalefactors         15        0.47         linux
+Highanglenon-        15        0.87         linux
+LowangleHposi        15        0.67         linux
+Kappaandmonop        15        0.84         linux
+Dipoles              15        1.77         linux
+Quadrupoles          15        1.96         linux
+Octupoles            15        2.16         linux
+Hexadecapoles        15        2.55         linux
+Multipoles,an        15        3.26         linux
+Lowersymmetry        15        4.18         linux
+Finalrefineme        15        2.14         linux
+WIZ       15             25.57        12           linuxScalefactors         30        0.95         linux
+Highanglenon-        30        1.10         linux
+LowangleHposi        30        2.17         linux
+Kappaandmonop        30        4.15         linux
+Dipoles              30        2.78         linux
+Quadrupoles          30        0.12         linux
+Dipoles              30        0.12         linux
+Quadrupoles          30        5.27         linux
+Octupoles            30        3.22         linux
+Hexadecapoles        30        2.59         linux
+Multipoles,an        30        12.82        linux
+Lowersymmetry        30        9.49         linux
+Finalrefineme        30        7.80         linux
+WIZ       30             55.36        12           linuxScalefactors         16        0.02         linux
+Scalefactors         16        0.59         linux
+Highanglenon-        16        2.22         linux
+LowangleHposi        16        0.22         linux
+WIZ       16             165.87       12           linuxScalefactors         30        0.86         linux
+Highanglenon-        30        1.24         linux
+LowangleHposi        30        6.48         linux
+Kappaandmonop        30        1.39         linux
+Dipoles              30        6.82         linux
+Quadrupoles          30        1.57         linux
+Octupoles            30        1.42         linux
+Hexadecapoles        30        1.46         linux
+Multipoles,an        30        3.28         linux
+Lowersymmetry        30        45.65        linux
+Finalrefineme        30        46.08        linux
+WIZ       30             119.79       12           linuxScalefactors         30        0.87         linux
+Highanglenon-        30        1.24         linux
+LowangleHposi        30        2.12         linux
+Kappaandmonop        30        1.38         linux
+Dipoles              30        2.22         linux
+Quadrupoles          30        1.58         linux
+Octupoles            30        1.44         linux
+Hexadecapoles        30        1.46         linux
+Multipoles,an        30        3.25         linux
+Lowersymmetry        30        11.86        linux
+Finalrefineme        30        11.94        linux
+WIZ       30             42.89        12           linuxScalefactors         30        0.87         linux
+Highanglenon-        30        1.26         linux
+LowangleHposi        30        2.11         linux
+Kappaandmonop        30        1.39         linux
+Dipoles              30        2.23         linux
+Quadrupoles          30        1.58         linux
+WIZ       30             13.06        12           linuxOctupoles            30        1.84         linux
+Scalefactors         30        0.88         linux
+Highanglenon-        30        0.93         linux
+LowangleHposi        30        1.47         linux
+Kappaandmonop        30        1.48         linux
+Dipoles              30        1.30         linux
+Quadrupoles          30        2.52         linux
+Octupoles            30        2.90         linux
+Hexadecapoles        30        3.03         linux
+WIZ       30             19.37        12           linuxMultipoles,an        30        3.05         linux
+Scalefactors         30        0.88         linux
+Highanglenon-        30        1.25         linux
+LowangleHposi        30        2.13         linux
+Kappaandmonop        30        1.28         linux
+Dipoles              30        1.41         linux
+Quadrupoles          30        1.60         linux
+Octupoles            30        1.54         linux
+Hexadecapoles        30        1.48         linux
+Multipoles,an        30        3.59         linux
+Lowersymmetry        30        5.50         linux
+Finalrefineme        30        7.78         linux
+WIZ       30             31.96        12           linuxScalefactors         30        0.88         linux
+Highanglenon-        30        1.26         linux
+LowangleHposi        30        2.13         linux
+Kappaandmonop        30        1.29         linux
+Dipoles              30        1.35         linux
+Quadrupoles          30        1.59         linux
+Octupoles            30        1.53         linux
+Hexadecapoles        30        1.51         linux
+Multipoles,an        30        3.59         linux
+Lowersymmetry        30        5.51         linux
+Finalrefineme        30        7.72         linux
+WIZ       30             31.88        12           linuxScalefactors         14        0.27         linux
+Highanglenon-        14        0.38         linux
+LowangleHposi        14        0.98         linux
+Kappaandmonop        14        0.40         linux
+Dipoles              14        1.00         linux
+Quadrupoles          14        0.44         linux
+Octupoles            14        0.40         linux
+Hexadecapoles        14        0.41         linux
+Multipoles,an        14        1.98         linux
+Lowersymmetry        14        0.80         linux
+Finalrefineme        14        0.58         linux
+WIZ       14             14.29        12           linuxWIZ       14             20.78        12           linuxScalefactors         14        0.27         linux
+Highanglenon-        14        0.38         linux
+LowangleHposi        14        0.98         linux
+Kappaandmonop        14        0.40         linux
+Dipoles              14        1.01         linux
+Quadrupoles          14        0.45         linux
+Octupoles            14        0.40         linux
+Hexadecapoles        14        0.41         linux
+Multipoles,an        14        1.99         linux
+Lowersymmetry        14        0.80         linux
+Finalrefineme        14        0.59         linux
+WIZ       14             14.66        12           linuxWIZ       14             21.39        12           linuxScalefactors         30        0.88         linux
+Highanglenon-        30        1.27         linux
+LowangleHposi        30        1.45         linux
+Kappaandmonop        30        1.42         linux
+Dipoles              30        1.31         linux
+Quadrupoles          30        2.51         linux
+Octupoles            30        1.56         linux
+Hexadecapoles        30        1.52         linux
+Multipoles,an        30        7.53         linux
+WIZ       30             24.17        12           linuxLowersymmetry        30        2.94         linux
+Scalefactors         30        0.87         linux
+Highanglenon-        30        1.25         linux
+LowangleHposi        30        2.14         linux
+Kappaandmonop        30        1.29         linux
+Dipoles              30        1.42         linux
+Quadrupoles          30        1.61         linux
+Octupoles            30        1.52         linux
+Hexadecapoles        30        1.48         linux
+Multipoles,an        30        3.59         linux
+Lowersymmetry        30        5.50         linux
+WIZ       30             24.85        12           linuxFinalrefineme        30        2.37         linux
+Scalefactors         30        0.88         linux
+Highanglenon-        30        1.28         linux
+LowangleHposi        30        2.20         linux
+Kappaandmonop        30        2.14         linux
+Dipoles              30        2.27         linux
+Quadrupoles          30        1.63         linux
+Octupoles            30        1.56         linux
+Hexadecapoles        30        1.69         linux
+Multipoles,an        30        3.70         linux
+Lowersymmetry        30        5.68         linux
+WIZ       30             27.89        12           linuxFinalrefineme        30        3.00         linux
+Scalefactors         30        0.88         linux
+Highanglenon-        30        1.26         linux
+LowangleHposi        30        2.14         linux
+Kappaandmonop        30        1.29         linux
+Dipoles              30        1.35         linux
+Quadrupoles          30        1.60         linux
+Octupoles            30        1.54         linux
+Hexadecapoles        30        1.51         linux
+Multipoles,an        30        3.68         linux
+Lowersymmetry        30        5.69         linux
+Finalrefineme        30        7.92         linux
+WIZ       30             32.34        12           linux

@@ -126,7 +126,8 @@ def applySymOps(fracPos):
     specAtoms = {}
     
     insInfo = readINS()
-    print(insInfo)
+    print('Lattice centering: {}'.format(insInfo[0]))
+    print('SYMM: {}'.format(insInfo[2]))
     centering = insInfo[0]
     centrosym = insInfo[1]
     SYMM = insInfo[2]
