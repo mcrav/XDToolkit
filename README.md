@@ -1,4 +1,6 @@
-# XD Toolkit - A program for working with the charge density refinement software XD.
+# XD Toolkit
+A program for working with the charge density refinement software XD.
+---------------------------------------------------------------------
 
 Installation
 ------------
@@ -20,10 +22,12 @@ Credits
 
 Creator: Matthew Craven
 
-Quickplot: Mads Ry Vogel Jørgensen
-
 XD Packages: 
 XD2016 - A Computer Program Package for Multipole Refinement, Topological Analysis of Charge Densities and Evaluation of Intermolecular Energies from Experimental and Theoretical Structure Factors
 Volkov, A.; Macchi, P.; Farrugia, L. J.; Gatti, C.; Mallinson, P.; Richter, T.; Koritsanszky, T. (2016)  
+
+Quickplot: Mads Ry Vogel Jørgensen
+
+Acknowledgements: Jacob Overgaard
 
 

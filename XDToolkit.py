@@ -54,6 +54,7 @@ def resetmas():
 def rawInput2Labels(rawInput):
     return formatLabels(labels2list(rawInput))
 
+
 def labels2list(inputText):
     inputText = inputText.upper()
     if ',' in inputText:
@@ -247,7 +248,7 @@ def addSnlCutoff(snlmin = 0.0, snlmax = 2.0):
             
             if line.startswith('SKIP'):
                 row = str.split(line)
-                rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:0<5} {snlMax:0<5}'.format(*row, snlOn = '*sinthl', snlMin = snlmin, snlMax = snlmax)
+                rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.3f} {snlMax:<5.3f}'.format(*row, snlOn = '*sinthl', snlMin = snlmin, snlMax = snlmax)
                 newmas.write(rowStr + '\n')
             
             else:
@@ -2425,7 +2426,7 @@ def FOU3atoms(atom):
                         x = pos[0]
                         y = pos[1]
                         z = pos[2]
-                        rowStr = 'XYZ (label {0}) {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
+                        rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
                         newmas.write(rowStr) 
                         if i == 1:
                             break
@@ -2438,7 +2439,7 @@ def FOU3atoms(atom):
                     pos = globAtomPos[neighbour][0]
                     x,y,z = pos[0], pos[1], pos[2]
                     splitLab = neighbour.split(',')
-                    rowStr = 'XYZ (label {0}) {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
+                    rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
                     newmas.write(rowStr) 
                     for neeb in neebsRaw[neighbour.split(',')[0]]:
                         if neeb.split(',')[0] != atom:
@@ -2447,7 +2448,7 @@ def FOU3atoms(atom):
                     pos = globAtomPos[nextNeighbour][0]
                     x,y,z = pos[0],pos[1],pos[2]
                     splitLab = nextNeighbour.split(',')
-                    rowStr = 'XYZ (label {0}) {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
+                    rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
                     newmas.write(rowStr) 
                         
                 newmas.write('LIMITS xmin -2.0 xmax  2.0 nx  50\n')     #Finish writing appropriate XDFOUR instructions
@@ -2486,27 +2487,22 @@ def setupPROPDpops():
     '''
     Setup XDPROP instructions in xd.mas to find d-orbital populations.
     '''
-    mas = open('xd.mas','r')            #Open up xd.mas to read and xdnew.mas to write
-    newmas = open('xdnew.mas','w')
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
     
-    for line in mas:                    #Go through mas file line by line
-        if line.startswith('!D-POP'):   #If dpop line is turned off write it without the ! to turn it on
-            newmas.write(line[1:])
-        else:
-            newmas.write(line)          #Write every other line unchanged
-            
-    mas.close()                         #Close files
-    newmas.close()
-    
+        for line in mas:                    #Go through mas file line by line
+            if line.startswith('!D-POP'):   #If dpop line is turned off write it without the ! to turn it on
+                newmas.write(line[1:])
+            else:
+                newmas.write(line)          #Write every other line unchanged
+
     os.remove('xd.mas')                 #Remove xd.mas
     os.rename('xdnew.mas','xd.mas')     #Rename xdnew.mas to xd.mas
-    
 
 def getDorbs():
     '''
     Find d-orbital populations in xd_pro.out. Return populations.
     '''
-    with open('xd_pro.out','r') as pro:                     #Open xd_pro.out to read
+    with open('xd_pro.out','r', encoding = 'utf-8', errors = 'ignore') as pro:      #errors ignore stops an error when the profile out is unreadable because some part isn't utf-8 decodable.
         
         orbTable = False                                    #Bool to detect d-orbital population section
         orbPops = []                                        #Initialise list to add orbital populations
@@ -2745,7 +2741,7 @@ def highAngleRef(sinthlMin,sinthlMax):
             
         if line.startswith('SKIP'):
             row = str.split(line)
-            rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:0<5} {snlMax:0<5}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
+            rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.3f} {snlMax:<5.3f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
             newmas.write(rowStr + '\n')
                         
         elif keyTab:
@@ -2783,42 +2779,39 @@ def lowAngleRef(sinthlMin,sinthlMax):
     
     keyTab = False
         
-    mas = open('xd.mas', 'r')
-    newmas = open('xdnew.mas','w') 
-    #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-    for line in mas:
-        
-        if line.startswith('KAPPA'):
-            keyTab = False
-                        
-        if keyTab:
-            row = str.split(line)
-            
-            if line[:1] != 'H':
-                rowStr = '{0:8}{1}'.format(row[0], '000 000000 0000000000 000000000000000 00 000 00000 0000000 000000000')
-                newmas.write(rowStr + '\n')
-            else:
-                rowStr = '{0:8}{1}'.format(row[0], '111 100000 0000000000 000000000000000 00 000 00000 0000000 000000000')
-                newmas.write(rowStr + '\n')
-        
-        elif line.startswith('RESET BOND'):
-#            newmas.write('!' + line)
-            newmas.write(line)
-        
-        elif line.startswith('SKIP'):
-            row = str.split(line)
-            rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.2f} {snlMax:<5.2f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
-            newmas.write(rowStr + '\n')
-        
-        else:     
-            newmas.write(line)   
-            
-        if line.startswith('KEY     XYZ'):
-            keyTab = True        
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
     
-    newmas.close()
-    mas.close()
-        
+        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+        for line in mas:
+            
+            if line.startswith('KAPPA'):
+                keyTab = False
+                            
+            if keyTab:
+                row = str.split(line)
+                
+                if line[:1] != 'H':
+                    rowStr = '{0:8}{1}'.format(row[0], '000 000000 0000000000 000000000000000 00 000 00000 0000000 000000000')
+                    newmas.write(rowStr + '\n')
+                else:
+                    rowStr = '{0:8}{1}'.format(row[0], '111 100000 0000000000 000000000000000 00 000 00000 0000000 000000000')
+                    newmas.write(rowStr + '\n')
+            
+            elif line.startswith('RESET BOND'):
+    #            newmas.write('!' + line)
+                newmas.write(line)
+            
+            elif line.startswith('SKIP'):
+                row = str.split(line)
+                rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.2f} {snlMax:<5.2f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
+                newmas.write(rowStr + '\n')
+            
+            else:     
+                newmas.write(line)   
+                
+            if line.startswith('KEY     XYZ'):
+                keyTab = True        
+            
     #Create new xd.mas file
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')  
@@ -4230,6 +4223,20 @@ def findSITESYM(trackAtom = None):
                             
                         else:
                             atomSyms[atom] = ['1', '22 et1', atomLabs[atom][0], atomLabs[atom][1]]    #Otherwise assign 1
+    
+#-----------------------------6 NEIGHBOURS---------------------------------------------------------
+#        elif len(neighbours) == 6:
+#            
+#            angles = bondAngles[atom]
+#            sortedAngles = sorted(angles)
+#            
+#            #6 neighbours
+#            if len(set(neighbours)) == 1:
+#                #Approximate octahedron
+#                if min(sortedAngles[11:]) > 170 and max(sortedAngles[11:] < 190):
+#                    if min(sortedAngles[:11]) > 80 and max(sortedAngles[11:]) < 100:
+#                        
+#                        atomSyms[atom] = ['4m', '6 o']
         
         if atom == trackAtom:
             print(atom)
@@ -5659,7 +5666,7 @@ class wizardRunning(QDialog, Ui_wizard):
                 removeCHEMCON()
             
             if wizUniSnlMax:
-                addSnlCutoff(snlmax = wizUniSnlMax)
+                addSnlCutoff(snlmin = 0.0, snlmax = wizUniSnlMax)
             if self.collectDat:
                 self.startingTime = time.time()
             self.xdlsm.start()
@@ -5801,7 +5808,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.menuAbout.triggered.connect(self.openAbout)
         #Run xdlsm.exe
         self.xdProgButs = [self.resNPPBut, self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
-                          self.pkgXDGRAPHBut, self.pkgXDPDFBut, self.pkgXDLSMBut, self.pkgXDPROPBut, self.xdWizINIBut, self.xdWizardBut, self.runXDLSMBut, self.runXDINIBut, self.setupFOURBut, self.getDpopsBut]
+                          self.pkgXDPDFBut, self.pkgXDLSMBut, self.pkgXDPROPBut, self.xdWizINIBut, self.xdWizardBut, self.runXDLSMBut, self.runXDINIBut, self.setupFOURBut, self.getDpopsBut]
         self.xdlsm = XDLSM()
         self.runXDLSMBut.clicked.connect(lambda: self.xdlsm.start())
         self.xdlsm.startSignal.connect(self.startXDLSM)
@@ -5849,7 +5856,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.XDLSMLabs = [self.XDLSMLab, self.pkgXDLab]
         self.XDLSMButs = [self.runXDLSMBut, self.pkgXDLSMBut]
         self.pkgXDButs = [self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
-                          self.pkgXDGRAPHBut, self.pkgXDLSMBut, self.pkgXDPROPBut]
+                          self.pkgXDLSMBut, self.pkgXDPROPBut]
         self.pkgXDLSMBut.clicked.connect(lambda: self.xdlsm.start())
         
         self.XDFOURButs = [self.setupFOURBut, self.pkgXDFOURBut, self.resNPPBut]
@@ -5995,7 +6002,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Unlock second stage of XD Wizard if all files are present, regardless of test result.
         '''        
         if os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl'):
-            self.xdWizINILab.setText('XDINI ran successfully. Follow instructions below and click "Test".')
+            self.xdWizINILab.setText('Compound initialized successfully. Follow instructions below and click "Test".')
             try:
                 self.wizTest()
             except Exception:
@@ -6577,6 +6584,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         for but in self.XDPROPButs:
             but.setText('Run XDPROP')                           #Sets button back to 'Run XDPROP'
             but.disconnect()
+        self.getDpopsBut.setText('Get d-orbital populations')
         self.getDpopsBut.clicked.connect(self.getDpops)    #Sets up button again to make XDPROP instructions and run XDPROP
         self.pkgXDPROPBut.clicked.connect(lambda: self.xdprop.start())
         self.pkgXDLab.setText('XDPROP finished')
@@ -6791,7 +6799,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Handle XDINI starting.
         '''
-        self.XDINILab.setText('XDINI running')                  #Sets the status label to 'XDINI running'
+        self.XDINILab.setText('Initializing compound...')                  #Sets the status label to 'XDINI running'
         self.runXDINIBut.setText('Cancel')                      #Sets the button text to 'Cancel'
         self.runXDINIBut.clicked.connect(self.killXDINI)        #Makes the button kill XDINI.exe if clicked
         self.xdini.finishedSignal.disconnect(self.finishedXDINI)
@@ -6801,7 +6809,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Handle XDINI finishing.
         '''
-        self.XDINILab.setText('XDINI finished')                         #Sets status label to 'XDINI finished'
+        self.XDINILab.setText('Compound initialized successfully. Ready to begin refinement.')                         #Sets status label to 'XDINI finished'
         self.refChosen()
         self.runXDINIBut.setText('Run XDINI')  
         self.check4res()
@@ -6942,36 +6950,59 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Add dummy atom from user input.
         '''
+        dumInputBoxes = [self.DUMnum, self.Atom1, self.Atom2]
+        
         inputDUMI = str(self.DUMnum.text())
-    
+        
+        if inputDUMI.upper().startswith('DUM'):
+            inputDUMI = inputDUMI[3:]
+            
+        if not inputDUMI.isdigit():
+            self.addDUMLab.setText('Invalid input given.')
+            return
+        
         atom1 = rawInput2Labels(str(self.Atom1.text()))[0]
         atom2 = rawInput2Labels(str(self.Atom2.text()))[0]
-        x = addDUM(atom1, atom2, inputDUMI) #Add dummy atom and store index actually used to x
+        
+        try:
+            x = addDUM(atom1, atom2, inputDUMI) #Add dummy atom and store index actually used to x
+        except Exception:
+            self.addDUMLab.setText('An error occurred. Check input.')
+            
         if x == inputDUMI:
             self.addDUMLab.setText('DUM{0} added to xd.mas.'.format(inputDUMI))
         else:
             self.addDUMLab.setText('DUM{0} already exists.\nDUM{1} added to xd.mas.'.format(inputDUMI,x))
-    
+        
+        for item in dumInputBoxes:
+            item.setText('')
 
     def alcs(self):
         '''
         Add local  coordinate system from user input.
         '''
+        alcsInput = [self.alcsPAtomInput, self.alcsAtom1Input, self.alcsAtom2Input, 
+                     self.alcsLocSymInput]
+        
         try:
             Patom = str(self.alcsPAtomInput.text())
-            Patom = rawInput2Labels(Patom)
+            Patom = rawInput2Labels(Patom)[0]
             axis1 = str(self.alcsAxis1Input.currentText())
             atom1 = str(self.alcsAtom1Input.text())
-            atom1 = rawInput2Labels(atom1)
+            atom1 = rawInput2Labels(atom1)[0]
             axis2 = str(self.alcsAxis2Input.currentText())
             atom2 = str(self.alcsAtom2Input.text())
-            atom2 = rawInput2Labels(atom2)
+            atom2 = rawInput2Labels(atom2)[0]
             sym = str(self.alcsLocSymInput.text())
-            
+
             x = addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym)
             if x == 'aw':
                 self.addedLocCoords[Patom] = (Patom, atom1, axis1, atom2, axis2, sym)
                 self.alcsStatusLab.setText('xd.mas updated with local coordinate system for ' + Patom)
+                
+                for item in alcsInput:
+                    item.setText('')
+                    
             elif x == 'a':
                 self.alcsStatusLab.setText('Atom table updated, but program unable to update key table.')
             elif x == 'w':
@@ -7170,7 +7201,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         refNum = self.manRefDropMenu.currentIndex() + 1
         successStr = 'xd.mas updated. Ready to run XDLSM.'
         failureStr = 'Error encountered. xd.mas not setup.'
-        snlErrMsg = 'Please enter valid values for sin(&theta;/&lambda;) cutoffs.'
+        snlErrMsg = '<p>Please enter valid values for sin(&theta;/&lambda;) cutoffs.</p>'
         
         snlMin = str(self.manRefSnlMin.text()).strip()
         snlMax= str(self.manRefSnlMax.text()).strip()
@@ -7186,6 +7217,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.manRefSetupLab.setText(snlErrMsg)
         
         else:
+                
             if refNum == 1:                 #Scale factors
                 try:
                     scaleFacRef()
@@ -7197,18 +7229,16 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
    
                 try:
                     if snlMin and snlMax:               #Check snl isn't blank
-                        print('in snl if')    
                         if not r:
-                            print('in r if')
                             msg = rWarnMsg + procMsg
                             warningMsg = QMessageBox.question(self, 'Warning', 
                             msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                             
                             if warningMsg == QMessageBox.Yes:
-                                highAngleRef(snlMin, snlMax)
+                                highAngleRef(float(snlMin), float(snlMax))
                                 self.manRefSetupLab.setText(successStr)
                         else:
-                            highAngleRef(snlMin, snlMax)
+                            highAngleRef(float(snlMin), float(snlMax))
                             self.manRefSetupLab.setText(successStr)
 
                             
@@ -7223,8 +7253,18 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 try:
         
                     if snlMin and snlMax:
-                        lowAngleRef(snlMin, snlMax)
-                        self.manRefSetupLab.setText(successStr)
+                        if not r:
+                            msg = rWarnMsg + procMsg
+                            warningMsg = QMessageBox.question(self, 'Warning', 
+                            msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                            
+                            if warningMsg == QMessageBox.Yes:
+                                lowAngleRef(float(snlMin), float(snlMax))
+                                self.manRefSetupLab.setText(successStr)
+                                
+                        else:
+                            lowAngleRef(float(snlMin), float(snlMax))
+                            self.manRefSetupLab.setText(successStr)
                     
                     else:
                         self.manRefSetupLab.setText(snlErrMsg)
@@ -7326,7 +7366,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     
                 except:
                     self.manRefSetupLab.setText(failureStr)
-
+            
+            if snlMin:
+                addSnlCutoff(float(snlMin), float(snlMax))
+                
 
     def manRefMultipoles(self,c,r,l):
         '''
@@ -7451,7 +7494,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 convStr = 'Yes'
             else:
                 convStr = 'No'
-            resStr = 'Convergence - {1}<br>RF<sup>2</sup> = {0: .2f} %<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(), convStr, dmsda[0], dmsda[1]) 
+            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(), convStr, dmsda[0], dmsda[1]) 
             
             i = 0
             if len(dmsda[2]) > 14:
@@ -7710,8 +7753,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 
                 lsmStr = folder + '/xd_lsm.out'
                 dmsda = getDMSDA(lsmStr)
-            
-                resStr = 'RF<sup>2</sup> = {0: .2f} %<br>{1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(folder), getConvergence(lsmStr), dmsda[0], dmsda[1]) 
+                
+                c = getConvergence(lsmStr)
+                if c:
+                    conv = 'Yes'
+                else:
+                    conv = 'No'
+                
+                resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(folder), conv, dmsda[0], dmsda[1]) 
                 resStr += '<br><br>{0:23}{1:24}{0:23}{1}'.format('INTERATOMIC VECTOR','DMSDA')
                 i = 0
                 while i+14 < len(dmsda[2]):
@@ -7774,8 +7823,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             dmsda = getDMSDA('xd_lsm.out')
-
-            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>{1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(), getConvergence('xd_lsm.out'), dmsda[0], dmsda[1]) 
+            c = getConvergence('xd_lsm.out')
+            if c:
+                conv = 'Yes'
+            else:
+                conv = 'No'
+                
+            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(), conv, dmsda[0], dmsda[1]) 
             
             i = 0
             if len(dmsda[2]) > 14:
@@ -7908,7 +7962,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Run XDPROP with instructions to find d-orbital populations.
         '''
         try:
+            print('getdpops')
             setupPROPDpops()
+            print('setuppro')
             self.xdprop.finishedSignal.connect(self.showDpops)
             self.xdprop.start()
             
@@ -7921,13 +7977,16 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Show d-orbital populations from xd_pro.out.
         '''
-        self.xdprop.finishedSignal.disconnect(self.showDpops)
+        try:
+            self.xdprop.finishedSignal.disconnect(self.showDpops)
+        except Exception:
+            pass
         try:
             
             dpopList = getDorbs()
             print(dpopList)
             dpopStr = 'd-orbital populations\n\n'
-                
+            print(dpopStr)
             for item in dpopList:
                 dpopStr += item[0].rjust(7) + ':   ' + item[1] + ' %\n'
             
@@ -7954,7 +8013,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if nameAllowed == True and folder:
             try:
                 backup(folder)
-                label.setText(self.backupConfirmStr + os.getcwd().replace('\\','/') + '/Backup/' + folder + '"')  
+                label.setText(self.backupConfirmStr + '"' + os.getcwd().replace('\\','/') + '/Backup/' + folder + '"')  
             except PermissionError:
                 label.setText(self.permErrorMsg)
             except Exception:
@@ -7976,7 +8035,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if folder:
             try:
                 loadBackup(folder)
-                self.loadBackupLab.setText('Backup loaded from: ' + folder) 
+                self.loadBackupLab.setText('Backup loaded from: "' + folder + '"') 
             except PermissionError:
                 self.loadBackupLab.setText(self.permErrorMsg)
             except Exception:
@@ -8080,9 +8139,9 @@ if __name__ == '__main__':
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
     prog.show()
     sys.exit(app.exec_())
-#os.chdir('/home/matt/dev/XDTstuff/test/data/thiocoumarin')
+#os.chdir('/home/matt/dev/XDTstuff/test/carba')
 #initialiseGlobVars()
-#wizAddCHEMCON()
+#highAngleRef(0.7,2.0)
 
 #x = rawInput2Labels('dum1')
 #print(x)

@@ -984,4 +984,51 @@ Hexadecapoles        30        1.51         linux
 Multipoles,an        30        3.68         linux
 Lowersymmetry        30        5.69         linux
 Finalrefineme        30        7.92         linux
-WIZ       30             32.34        12           linux
+WIZ       30             32.34        12           linuxScalefactors         30        0.98         linux
+Highanglenon-        30        1.28         linux
+LowangleHposi        30        2.16         linux
+Kappaandmonop        30        1.30         linux
+Dipoles              30        1.36         linux
+Quadrupoles          30        1.60         linux
+Octupoles            30        1.54         linux
+Hexadecapoles        30        1.52         linux
+Multipoles,an        30        3.78         linux
+Lowersymmetry        30        5.61         linux
+Finalrefineme        30        7.88         linux
+WIZ       30             32.90        12           linuxScalefactors         30        0.89         linux
+Highanglenon-        30        1.28         linux
+LowangleHposi        30        2.19         linux
+Kappaandmonop        30        1.33         linux
+Dipoles              30        1.37         linux
+Quadrupoles          30        1.64         linux
+Octupoles            30        1.56         linux
+Hexadecapoles        30        1.51         linux
+Multipoles,an        30        3.61         linux
+Lowersymmetry        30        5.57         linux
+Finalrefineme        30        7.77         linux
+WIZ       30             32.33        12           linuxScalefactors         70        0.04         linux
+Scalefactors         70        6.30         linux
+Highanglenon-        70        10.05        linux
+LowangleHposi        70        21.33        linux
+Kappaandmonop        70        0.05         linux
+LowangleHposi        70        0.05         linux
+Kappaandmonop        70        18.06        linux
+Dipoles              70        8.03         linux
+Quadrupoles          70        11.45        linux
+Octupoles            70        13.12        linux
+Hexadecapoles        70        34.72        linux
+Multipoles,an        70        103.24       linux
+Lowersymmetry        70        213.11       linux
+Finalrefineme        70        70.81        linux
+WIZ       70             519.67       12           linuxScalefactors         30        0.97         linux
+Highanglenon-        30        1.30         linux
+LowangleHposi        30        2.18         linux
+Kappaandmonop        30        1.31         linux
+Dipoles              30        1.38         linux
+Quadrupoles          30        1.64         linux
+Octupoles            30        1.57         linux
+Hexadecapoles        30        1.50         linux
+Multipoles,an        30        3.62         linux
+Lowersymmetry        30        5.58         linux
+Finalrefineme        30        7.84         linux
+WIZ       30             32.95        12           linux
