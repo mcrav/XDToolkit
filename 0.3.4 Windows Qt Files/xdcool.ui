@@ -439,7 +439,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Bitstream Vera Sans Mono</family>
+    <family>Consolas</family>
     <pointsize>10</pointsize>
    </font>
   </property>
@@ -448,7 +448,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../.designer/backup/res/flatearth.ico</normaloff>../../.designer/backup/res/flatearth.ico</iconset>
+    <normaloff>res/flatearth.ico</normaloff>res/flatearth.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -485,8 +485,126 @@
     </item>
     <item row="2" column="0" colspan="4">
      <widget class="QTabWidget" name="tabWidget">
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="Light">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="NoRole">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="Light">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="NoRole">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="Light">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="NoRole">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>232</red>
+            <green>232</green>
+            <blue>232</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
+      </property>
       <property name="autoFillBackground">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <property name="currentIndex">
        <number>0</number>
@@ -495,6 +613,9 @@
        <bool>false</bool>
       </property>
       <widget class="QWidget" name="tab_7">
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Wizard</string>
        </attribute>
@@ -582,8 +703,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1077</width>
-             <height>568</height>
+             <width>1072</width>
+             <height>564</height>
             </rect>
            </property>
            <property name="autoFillBackground">
@@ -1291,8 +1412,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1091</width>
-             <height>474</height>
+             <width>1089</width>
+             <height>482</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_10">
@@ -1824,6 +1945,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_3">
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>RESET BOND</string>
        </attribute>
@@ -1858,8 +1982,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>318</height>
+               <width>1049</width>
+               <height>326</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2293,8 +2417,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>499</width>
-               <height>310</height>
+               <width>459</width>
+               <height>304</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2498,7 +2622,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>304</width>
+               <width>303</width>
                <height>100</height>
               </rect>
              </property>
@@ -2596,7 +2720,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>312</width>
+               <width>284</width>
                <height>88</height>
               </rect>
              </property>
@@ -2662,6 +2786,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_5">
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>CHEMCON</string>
        </attribute>
@@ -2803,6 +2930,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_6">
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Results</string>
        </attribute>
@@ -2831,8 +2961,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>1049</width>
+               <height>297</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3007,8 +3137,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>537</width>
-               <height>214</height>
+               <width>487</width>
+               <height>208</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3135,7 +3265,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>265</width>
+               <width>242</width>
                <height>88</height>
               </rect>
              </property>
@@ -3308,6 +3438,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_4">
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Tools</string>
        </attribute>
@@ -3345,8 +3478,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>1049</width>
+               <height>355</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3732,8 +3865,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>258</width>
-               <height>290</height>
+               <width>271</width>
+               <height>269</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4024,6 +4157,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_2">
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Backup</string>
        </attribute>
@@ -4058,8 +4194,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>376</height>
+               <width>1049</width>
+               <height>384</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4122,7 +4258,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>673</width>
+               <width>663</width>
                <height>90</height>
               </rect>
              </property>
@@ -4241,6 +4377,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_8">
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>XD Programs</string>
        </attribute>
@@ -4411,7 +4550,7 @@
      <x>0</x>
      <y>0</y>
      <width>1131</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

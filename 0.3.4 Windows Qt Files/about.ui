@@ -24,7 +24,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>flatearth.ico</normaloff>flatearth.ico</iconset>
+    <normaloff>res/flatearth.png</normaloff>res/flatearth.png</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">

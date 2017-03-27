@@ -1691,7 +1691,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "XD Toolkit 0.3.1"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "XD Toolkit 0.3.4"))
         self.runXDLSMBut.setText(_translate("MainWindow", " Run XDLSM"))
         self.label_11.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Initialize compound</span></p></body></html>"))
         self.label_51.setText(_translate("MainWindow", " Compound ID:"))

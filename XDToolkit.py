@@ -444,7 +444,7 @@ def getNumAtoms():
                     break
                 
     elif os.path.isfile('shelx.ins'):
-        
+        atomBool = False
         with open('shelx.ins','r') as ins:
 
             for line in ins:
@@ -5103,7 +5103,10 @@ class XDLSM(QThread):
             self.xdlsmRunning = subprocess.Popen(xdlsmAbsPath, shell = False, cwd = os.getcwd())
             self.startSignal.emit()
             self.xdlsmRunning.wait()
-            fixLsmCif()
+            try:
+                fixLsmCif()
+            except Exception:
+                pass
             self.finishedSignal.emit()
         
         except Exception:
@@ -5805,7 +5808,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.menuLoadIAM.triggered.connect(self.loadIAM)
         self.menuPref.triggered.connect(self.openPrefs)
         self.toolbarSettings.triggered.connect(self.openPrefs)
-        self.menuManual.triggered.connect(lambda: os.startfile('res/XD Toolkit Manual.pdf'))
+        self.menuManual.triggered.connect(lambda: os.startfile(manualAbsPath))
         self.menuAbout.triggered.connect(self.openAbout)
         #Run xdlsm.exe
         self.xdProgButs = [self.resNPPBut, self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
@@ -6552,11 +6555,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             self.xdfour.finishedSignal.disconnect() #Disconnects finished signal so that QThread doesn't changes status label to 'XDFOUR finished'. Finished signal reconnected in startXDFOUR()
-            self.xdfour.xdfourRunning.terminate()             #Kills XDFOUR.exe
+            self.xdfour.xdProgRunning.terminate()             #Kills XDFOUR.exe
             
             for lab in self.XDFOURLabs:
                 lab.setText('XDFOUR terminated')       #Sets status label to 'XDFOUR terminated'
-            
+            self.enableXDButs()
             self.resetXDFOURButs()
         except Exception:
             pass
@@ -6599,7 +6602,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             self.xdfft.finishedSignal.disconnect() #Disconnects finished signal so that QThread doesn't changes status label to 'XDFFT finished'. Finished signal reconnected in startXDFFT()
-            self.xdfft.xdfftRunning.terminate()             #Kills XDFFT.exe
+            self.xdfft.xdProgRunning.terminate()             #Kills XDFFT.exe
             self.pkgXDFFTBut.setText('Run XDFFT')
             self.setupFOURBut.setText('Run XDFOUR')           #Sets XDFFT button back to 'Run XDFFT'
             self.setupFOURStatusLab.setText('XDFFT terminated')       #Sets status label to 'XDFFT terminated'
@@ -6607,7 +6610,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 but.disconnect()
             self.setupFOURBut.clicked.connect(self.addFOURIns) #Sets button back to starting XDFFT
             self.pkgXDFFTBut.clicked.connect(lambda: self.xdfft.start())
-            
+            self.enableXDButs()
         except Exception:
             pass
       
@@ -6623,7 +6626,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.setText('Cancel')
             but.disconnect()
             but.clicked.connect(self.killXDPROP)
-    
+        
+        self.disableXDButs(self.XDPROPButs)
         self.xdprop.finishedSignal.connect(self.finishedXDPROP)   #Sets up the finishedSignal in case XDPROP.exe was killed the last time and the finishedSignal was disconnected
 
     def finishedXDPROP(self):
@@ -6637,6 +6641,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.getDpopsBut.clicked.connect(self.getDpops)    #Sets up button again to make XDPROP instructions and run XDPROP
         self.pkgXDPROPBut.clicked.connect(lambda: self.xdprop.start())
         self.pkgXDLab.setText('XDPROP finished')
+        
+        self.enableXDButs()
 
     def killXDPROP(self):
         '''
@@ -6644,15 +6650,19 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''        
         try:  
             self.xdprop.finishedSignal.disconnect()
-            self.xdprop.xdpropRunning.terminate()             #Kills XDPROP.exe
+            self.xdprop.xdProgRunning.terminate()             #Kills XDPROP.exe
             self.getDpopsBut.setText('Run XDPROP')           #Sets XDPROP button back to 'Run XDPROP'
             self.getDpopsStatusLab.setText('XDPROP terminated')       #Sets status label to 'XDPROP terminated'
             self.getDpopsBut.disconnect()
             self.getDpopsBut.clicked.connect(self.getDpops) #Sets button back to starting XDPROP
              #Disconnects finished signal so that QThread doesn't changes status label to 'XDPROP finished'. Finished signal reconnected in startXDPROP()
-            
+            self.pkgXDPROPBut.setText('Run XDPROP')
+            self.pkgXDPROPBut.disconnect()
+            self.pkgXDPROPBut.clicked.connect(lambda: self.xdprop.start())
         except Exception:
             pass
+        finally:
+            self.enableXDButs()
     
 
     def startXDGEOM(self):
@@ -6667,6 +6677,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.disconnect()
             but.clicked.connect(self.killXDGEOM)
             
+        self.disableXDButs(survivors = self.XDGEOMButs)
+            
         self.xdgeom.finishedSignal.disconnect()
         self.xdgeom.finishedSignal.connect(self.finishedXDGEOM)
         
@@ -6678,7 +6690,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.setText('Run XDGEOM')
             but.disconnect()
             but.clicked.connect(lambda: self.xdgeom.start())
-            
+        
+        self.enableXDButs()
+        
         for lab in self.XDGEOMLabs:
             lab.setText('XDGEOM finished')
     
@@ -6688,7 +6702,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:  
             self.xdgeom.finishedSignal.disconnect()
-            self.xdgeom.xdgeomRunning.terminate()
+            self.xdgeom.xdProgRunning.terminate()
             for but in self.XDGEOMButs:
                 but.setText('Run XDGEOM')
                 but.disconnect()
@@ -6697,50 +6711,52 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 lab.setText('XDGEOM terminated')            
         except Exception:
             pass
+        finally:
+            self.enableXDButs()
         
         
-    def startXDGRAPH(self):
-        '''
-        Handle XDGRAPH starting.
-        '''
-        for lab in self.XDGRAPHLabs:
-            lab.setText('XDGRAPH running')
-        
-        for but in self.XDGRAPHButs:
-            but.setText('Cancel')
-            but.disconnect()
-            but.clicked.connect(self.killXDGRAPH)
-            
-        self.xdgraph.finishedSignal.disconnect()
-        self.xdgraph.finishedSignal.connect(self.finishedXDGRAPH)
-        
-    def finishedXDGRAPH(self):
-        '''
-        Handle XDGRAPH finishing.
-        '''        
-        for but in self.XDGRAPHButs:
-            but.setText('Run XDGRAPH')                          
-            but.disconnect()
-            but.clicked.connect(lambda: self.xdgraph.start())
-            
-        for lab in self.XDGRAPHLabs:
-            lab.setText('XDGRAPH finished')
-    
-    def killXDGRAPH(self):
-        '''
-        Kill XDGRAPH.
-        '''
-        try:  
-            self.xdgeom.finishedSignal.disconnect()
-            self.xdgeom.xdgeomRunning.terminate()
-            for but in self.XDGRAPHButs:
-                but.setText('Run XDGRAPH')
-                but.disconnect()
-                but.clicked.connect(lambda: self.xdgeom.start())
-            for lab in self.XDGRAPHLabs:
-                lab.setText('XDGRAPH terminated')            
-        except Exception:
-            pass
+#    def startXDGRAPH(self):
+#        '''
+#        Handle XDGRAPH starting.
+#        '''
+#        for lab in self.XDGRAPHLabs:
+#            lab.setText('XDGRAPH running')
+#        
+#        for but in self.XDGRAPHButs:
+#            but.setText('Cancel')
+#            but.disconnect()
+#            but.clicked.connect(self.killXDGRAPH)
+#            
+#        self.xdgraph.finishedSignal.disconnect()
+#        self.xdgraph.finishedSignal.connect(self.finishedXDGRAPH)
+#        
+#    def finishedXDGRAPH(self):
+#        '''
+#        Handle XDGRAPH finishing.
+#        '''        
+#        for but in self.XDGRAPHButs:
+#            but.setText('Run XDGRAPH')                          
+#            but.disconnect()
+#            but.clicked.connect(lambda: self.xdgraph.start())
+#            
+#        for lab in self.XDGRAPHLabs:
+#            lab.setText('XDGRAPH finished')
+#    
+#    def killXDGRAPH(self):
+#        '''
+#        Kill XDGRAPH.
+#        '''
+#        try:  
+#            self.xdgraph.finishedSignal.disconnect()
+#            self.xdgraph.xdProgRunning.terminate()
+#            for but in self.XDGRAPHButs:
+#                but.setText('Run XDGRAPH')
+#                but.disconnect()
+#                but.clicked.connect(lambda: self.xdgeom.start())
+#            for lab in self.XDGRAPHLabs:
+#                lab.setText('XDGRAPH terminated')            
+#        except Exception:
+#            pass
         
         
     def startXDPDF(self):
@@ -6755,6 +6771,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.disconnect()
             but.clicked.connect(self.killXDPDF)
             
+        self.disableXDButs(survivors = self.XDPDFButs)
+            
         self.xdpdf.finishedSignal.disconnect()
         self.xdpdf.finishedSignal.connect(self.finishedXDPDF)
         
@@ -6767,6 +6785,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.disconnect()
             but.clicked.connect(lambda: self.xdpdf.start())
         
+        self.enableXDButs()
+        
         for lab in self.XDPDFLabs:
             lab.setText('XDPDF finished')
     
@@ -6776,8 +6796,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:  
             self.xdpdf.finishedSignal.disconnect()
-            self.xdpdf.xdpdfRunning.terminate()
-            for but in self.XDGEOMButs:
+            self.xdpdf.xdProgRunning.terminate()
+            for but in self.XDPDFButs:
                 but.setText('Run XDPDF')
                 but.disconnect()
                 but.clicked.connect(lambda: self.xdpdf.start())
@@ -6785,6 +6805,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 lab.setText('XDPDF terminated')            
         except Exception:
             pass
+        finally:
+            self.enableXDButs()
         
         
     def startTOPXD(self):
@@ -6798,7 +6820,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.setText('Cancel')
             but.disconnect()
             but.clicked.connect(self.killTOPXD)
-            
+        
+        self.disableXDButs(survivors = self.TOPXDButs)
+        
         self.topxd.finishedSignal.disconnect()
         self.topxd.finishedSignal.connect(self.finishedTOPXD)
         
@@ -6811,6 +6835,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.disconnect()
             but.clicked.connect(lambda: self.topxd.start())
             
+        self.enableXDButs()
+            
         for lab in self.TOPXDLabs:
             lab.setText('TOPXD finished')
     
@@ -6820,7 +6846,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:  
             self.topxd.finishedSignal.disconnect()
-            self.topxd.xdgeomRunning.terminate()
+            self.topxd.xdProgRunning.terminate()
             for but in self.TOPXDButs:
                 but.setText('Run TOPXD')
                 but.disconnect()
@@ -6829,6 +6855,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 lab.setText('TOPXD terminated')            
         except Exception:
             pass
+        finally:
+            self.enableXDButs()
     
     
     def runXDINI(self):
@@ -7081,9 +7109,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global xdpdfAbsPath
         global timeFileAbsPath
         global xdProgAbsPaths
+        global manualAbsPath
         
         timeFileAbsPath = os.getcwd() + '/lsmTimes.buckfast'
-        
+        manualAbsPath = os.getcwd() + '/res/XD Toolkit Manual.pdf'
+                                   
         if not os.path.isfile(timeFileAbsPath):
             with open('lsmTimes.buckfast','w') as bucky:
                 pass
@@ -7104,15 +7134,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     
             elif sys.platform == 'win32':
                 
-                xdlsmAbsPath = '{}/xdlsm.exe'.format(xdExecAbsPath)
-                xdfourAbsPath = '{}/xdfour.exe'.format(xdExecAbsPath)
-                xdfftAbsPath = '{}/xdfft.exe'.format(xdExecAbsPath)
-                xdiniAbsPath = '{}/xdini.exe'.format(xdExecAbsPath)
-                xdgeomAbsPath = '{}/xdgeom.exe'.format(xdExecAbsPath)
-                xdpropAbsPath = '{}/xdprop.exe'.format(xdExecAbsPath)
-                xdpdfAbsPath = '{}/xdpdf.exe'.format(xdExecAbsPath)
-                topxdAbsPath = '{}/topxd.exe'.format(xdExecAbsPath)
-                xdgraphAbsPath = '{}/xdgraph.exe'.format(xdExecAbsPath)    #Can't find linux exec for xdgraph
+                xdlsmAbsPath = '{}/xdlsm.exe'.format(xdExecAbsPath).replace('/','\\')
+                xdfourAbsPath = '{}/xdfour.exe'.format(xdExecAbsPath).replace('/','\\')
+                xdfftAbsPath = '{}/xdfft.exe'.format(xdExecAbsPath).replace('/','\\')
+                xdiniAbsPath = '{}/xdini.exe'.format(xdExecAbsPath).replace('/','\\')
+                xdgeomAbsPath = '{}/xdgeom.exe'.format(xdExecAbsPath).replace('/','\\')
+                xdpropAbsPath = '{}/xdprop.exe'.format(xdExecAbsPath).replace('/','\\')
+                xdpdfAbsPath = '{}/xdpdf.exe'.format(xdExecAbsPath).replace('/','\\')
+                topxdAbsPath = '{}/topxd.exe'.format(xdExecAbsPath).replace('/','\\')
+                xdgraphAbsPath = '{}/xdgraph.exe'.format(xdExecAbsPath).replace('/','\\')    #Can't find linux exec for xdgraph
                     
         elif sys.platform == 'win32':
             
@@ -8192,7 +8222,7 @@ def myExceptHook(Type, value, traceback):
 
 ##Run GUI
 if __name__ == '__main__':
-    #sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
+    sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
     app = QApplication(sys.argv)
     prog = XDToolGui()
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
@@ -8201,7 +8231,7 @@ if __name__ == '__main__':
 #os.chdir('/home/matt/dev/XDTstuff/test/carba')
 #initialiseGlobVars()
 #check4res()
-
+#os.startfile('C:/Users/Matthew_2/Python/XDToolkit-master/res/XD Toolkit Manual.pdf')
 #x = rawInput2Labels('dum1')
 #print(x)
 
