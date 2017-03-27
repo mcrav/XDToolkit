@@ -5,14 +5,14 @@ A program for working with the charge density refinement software XD.
 Installation
 ------------
 
-If you have Python installed:
+If you have Python 3 installed:
 
 1) Download ZIP and extract, or clone repository.
 2) Go to a command prompt, navigate to the downloaded folder and enter: $ python XDToolkit.py
    Alternatively, open XDToolkit.py in an IDE and run it from there.
 
 
-If you don't have Python installed:
+If you don't have Python 3 installed:
 
 1) Wait for me to build it and put an exe online.
 

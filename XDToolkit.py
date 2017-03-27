@@ -119,12 +119,12 @@ def sendEmail(body = '', email = '', attachments = [], subject = ''):
     
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login("xdtoolkit@gmail.com", "*********")
+    server.login("xdtoolkit@gmail.com", "***")
     text = msg.as_string()
     server.sendmail("xdtoolkit@gmail.com", "mcrav@chem.au.dk", text)
     
     server.quit()
-
+    
 
 def isfloat(x):
     '''
@@ -5492,7 +5492,7 @@ class wizardRunning(QDialog, Ui_wizard):
         print(self.folder)
         os.makedirs('Backup/' + self.folder)
         print('backup made')
-        if os.path.isfile('shelx.ins'):
+        if os.path.isfile('shelx.ins') and os.path.isfile('shelx.hkl'):
             print('is shelx.ins')
             self.wizStatusLab.setText('Initializing compound...')
             self.xdini.finishedSignal.connect(self.xdWizRef)
@@ -5709,7 +5709,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
-        
+        self.cwdStatusLab = QLabel()
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
         
@@ -5745,7 +5745,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.backupConfirmStr = 'Current files backed up to: '
         self.labList = [self.resNPPLab, self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
         #Display current working directory on startup.
-        self.statusbar.showMessage('Current working directory: ' + os.getcwd())
+        self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
+        self.statusbar.addWidget(self.cwdStatusLab)
         self.toolbarRefreshCwd.triggered.connect(self.refreshFolder)
         self.toolbarSetFolder.triggered.connect(self.setFolder)
         self.toolbarOpenmas.triggered.connect(self.openMas)
@@ -5804,7 +5805,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.menuLoadIAM.triggered.connect(self.loadIAM)
         self.menuPref.triggered.connect(self.openPrefs)
         self.toolbarSettings.triggered.connect(self.openPrefs)
-        self.menuManual.triggered.connect(lambda: os.startfile('XD Toolkit Manual.pdf'))
+        self.menuManual.triggered.connect(lambda: os.startfile('res/XD Toolkit Manual.pdf'))
         self.menuAbout.triggered.connect(self.openAbout)
         #Run xdlsm.exe
         self.xdProgButs = [self.resNPPBut, self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
@@ -5920,22 +5921,27 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Send bug report with input from dialog.
         '''
         self.sendDialog.accepted.disconnect(self.sendBugReport)
-        
-        copyfile('shelx.ins','shelx.buckfast')
-        msg = str(self.sendDialog.bugReportInput.toPlainText())
-        emailStr = str(self.sendDialog.emailAdInput.text())
-
-        if self.sendDialog.incFilesBox.isChecked():
-            sendEmail(body = msg, email = emailStr, subject = 'Bug Report: XD Toolkit', attachments = ['shelx.buckfast','shelx.hkl'])
-        else:
-            sendEmail(body = msg, email = emailStr, subject = 'Bug Report: XD Toolkit')
-        if os.path.isfile('shelx.buckfast'):
-            os.remove('shelx.buckfast')
-        self.sendDialog.accept()
-        self.thanks = QMessageBox()
-        self.thanks.setText('Thanks for your feedback!')
-        self.thanks.setWindowTitle('Submit Bug Report')
-        self.thanks.show()
+        try:
+            copyfile('shelx.ins','shelx.buckfast')
+            msg = str(self.sendDialog.bugReportInput.toPlainText())
+            emailStr = str(self.sendDialog.emailAdInput.text())
+    
+            if self.sendDialog.incFilesBox.isChecked():
+                sendEmail(body = msg, email = emailStr, subject = 'Bug Report: XD Toolkit', attachments = ['shelx.buckfast','shelx.hkl'])
+            else:
+                sendEmail(body = msg, email = emailStr, subject = 'Bug Report: XD Toolkit')
+            if os.path.isfile('shelx.buckfast'):
+                os.remove('shelx.buckfast')
+            self.sendDialog.accept()
+            self.thanks = QMessageBox()
+            self.thanks.setText('Thanks for your feedback!')
+            self.thanks.setWindowTitle('Submit Bug Report')
+            self.thanks.show()
+        except Exception:
+            self.msg = QMessageBox()
+            self.msg.setText('An error occurred, report not sent. You can instead email "mcrav@chem.au.dk" with your message.')
+            self.msg.setWindowTitle('Submit Bug Report Failed')
+            self.msg.show()
         
         
     def sendSuggDialog(self):
@@ -5951,17 +5957,23 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Send suggestion with input from dialog.
         '''
         self.sendDialog.accepted.disconnect(self.sendSuggestion)
-        
-        msg = str(self.sendDialog.suggInput.toPlainText())
-        emailStr = str(self.sendDialog.emailAdInput.text())
-
-        sendEmail(body = msg, email = emailStr, subject = 'Suggestion: XD Toolkit')
-
-        self.sendDialog.accept()
-        self.thanks = QMessageBox()
-        self.thanks.setText('Thanks for your feedback!')
-        self.thanks.setWindowTitle('Submit Suggestion')
-        self.thanks.show()
+        try:
+            msg = str(self.sendDialog.suggInput.toPlainText())
+            emailStr = str(self.sendDialog.emailAdInput.text())
+    
+            sendEmail(body = msg, email = emailStr, subject = 'Suggestion: XD Toolkit')
+    
+            self.sendDialog.accept()
+            self.thanks = QMessageBox()
+            self.thanks.setText('Thanks for your feedback!')
+            self.thanks.setWindowTitle('Submit Suggestion')
+            self.thanks.show()
+            
+        except Exception:
+            self.msg = QMessageBox()
+            self.msg.setText('An error occurred, report not sent. You can instead email "mcrav@chem.au.dk" with your message.')
+            self.msg.setWindowTitle('Submit Bug Report Failed')
+            self.msg.show()
 
 #--------------------WIZARD----------------------------------------------
 
@@ -6054,7 +6066,12 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         try:
             for item in self.wizSnlInput:
                 a = float(str(item.text()))     #checks if input can be converted to float
+            
+            if str(self.wizUniSnlMax.text()).strip():
+                a = float(str(item.text()))
+                
             s = True
+            
         except ValueError:
             s = False
         
@@ -6169,9 +6186,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             global wizLowSnlMax
             wizLowSnlMax = float(str(self.wizLowSnlMax.text()))
             global wizUniSnlMax
-    
-            wizUniSnlMax = float(str(self.wizUniSnlMax.text()))
-            
+            if str(self.wizUniSnlMax.text()):
+                wizUniSnlMax = float(str(self.wizUniSnlMax.text()))
+            else:
+                wizUniSnlMax = 2.0
+
             copyfile('xd.mas','xdwiz.mas')
             
             self.xdWizRunning.show()
@@ -6189,46 +6208,56 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         except Exception:
             pass
         
-        results = self.xdWizRunning.finalRes
-        FOUcell()
-        self.xdfour.start()
-        self.xdfour.wait()
-        
-        values = grd2values()
         try:
-            self.nppWizLayout.removeWidget(self.nppCanvas)
-        except Exception:
-            print('''couldn't remove canvas''')
-
-        self.fig = plt.figure(facecolor = '#dddddd', figsize=(5,3), dpi=80)
-
-        self.ax = self.fig.add_subplot(1,1,1)
-        
-        probplot(values, plot = plt)
-        plt.title('Normal probability plot')
-        self.ax.get_lines()[0].set_marker('.')
-        self.ax.get_lines()[0].set_markersize(0.8)
-        self.nppCanvas = FigureCanvas(self.fig)
-#        saveBut = QPushButton('Save PNG file')
-#        saveBut.clicked.connect(self.savePng)
-#        saveBut.setFixedWidth(150)
-#        self.saveLab = QLabel()
-        self.nppWizLayout.addWidget(self.nppCanvas, 0)
-#        self.wizLayout.addWidget(saveBut,1)
-#        self.wizLayout.addWidget(self.saveLab,2)
-        self.setLayout(self.nppWizLayout)
-        # prevent the canvas to shrink beyond a point
-        # original size looks like a good minimum size
-        self.nppCanvas.setMinimumSize(self.nppCanvas.size())
+            results = self.xdWizRunning.finalRes
+            FOUcell()
+            self.xdfour.start()
+            self.xdfour.wait()
+            values = grd2values()
+            try:
+                self.nppCanvas.setParent(None)
+            except Exception:
+                print('''couldn't remove canvas''')
+            self.fig = plt.figure(facecolor = '#dddddd', figsize=(5,3), dpi=80)
+            self.ax = self.fig.add_subplot(1,1,1)
             
-        self.xdWizardStatusLab.setText(results)
-        self.resetWizInput()
-        if self.settings.value('senddata') == 'yes':
-            self.xdWizRunning.tfin = time.time()
-            runningTime = self.xdWizRunning.tfin - self.xdWizRunning.tzero
-            with open(timeFileAbsPath,'a') as lsmTimes:
-                lsmTimes.write('{0:10}{1:<15}{2:<13.2f}{3:<13}{4}'.format('WIZ', getNumAtoms(), runningTime,  len(self.xdWizRunning.refList), sys.platform))
-        self.xdWizRunning.accept()
+            probplot(values, plot = plt)
+            plt.title('Normal probability plot')
+            plt.tight_layout()
+            self.ax.get_lines()[0].set_marker('.')
+            self.ax.get_lines()[0].set_markersize(0.8)
+            self.nppCanvas = FigureCanvas(self.fig)
+    #        saveBut = QPushButton('Save PNG file')
+    #        saveBut.clicked.connect(self.savePng)
+    #        saveBut.setFixedWidth(150)
+    #        self.saveLab = QLabel()
+            self.nppWizLayout.addWidget(self.nppCanvas, 0)
+    #        self.wizLayout.addWidget(saveBut,1)
+    #        self.wizLayout.addWidget(self.saveLab,2)
+            self.setLayout(self.nppWizLayout)
+            # prevent the canvas to shrink beyond a point
+            # original size looks like a good minimum size
+            self.nppCanvas.setMinimumSize(self.nppCanvas.size())
+            self.nppCanvas.setMaximumSize(700,200000)
+            self.xdWizardStatusLab.setText(results)
+            
+            if self.settings.value('senddata') == 'yes':
+                self.xdWizRunning.tfin = time.time()
+                runningTime = self.xdWizRunning.tfin - self.xdWizRunning.tzero
+                with open(timeFileAbsPath,'a') as lsmTimes:
+                    lsmTimes.write('{0:10}{1:<15}{2:<13.2f}{3:<13}{4}'.format('WIZ', getNumAtoms(), runningTime,  len(self.xdWizRunning.refList), sys.platform))
+        
+        except Exception:   #Handle user cancelling halfway through
+            pass
+        
+        finally:
+            
+            self.xdWizRunning.accept()
+            self.resetWizInput()
+            try:
+                self.wizScrollArea.verticalScrollBar().setValue(self.wizScrollArea.verticalScrollBar().maximum())
+            except Exception:
+                print('auto scroll error')
         
         
     def resetWizInput(self):
@@ -6254,6 +6283,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.multKeyStatusLab.setText('An error occurred.')
 
     def openMerc(self):
+        
         if self.settings.value('mercurypath'):
             self.mercury.start()
         else:
@@ -6271,22 +6301,25 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.openPrefs()
                 
     def openMolecool(self):
-        if self.settings.value('molecoolpath'):
-            self.molecool.start()
-        else:
-            msg = '''Can't find MoleCoolQt. Download or select executable file below.'''
-            moleMsg = QMessageBox()
-            moleMsg.setText(msg)
-
-            moleMsg.addButton(QPushButton('Download'), QMessageBox.YesRole)
-            moleMsg.addButton(QPushButton('Select MoleCoolQt executable file'), QMessageBox.NoRole)
-            result = moleMsg.exec_()
-
-            if result == 0:
-                webbrowser.open('http://www.molecoolqt.de/dl.php')
-            elif result == 1:
-                self.openPrefs()
-                
+        try:
+            if self.settings.value('molecoolpath'):
+                self.molecoolqt.start()
+            else:
+                msg = '''Can't find MoleCoolQt. Download or select executable file below.'''
+                moleMsg = QMessageBox()
+                moleMsg.setText(msg)
+    
+                moleMsg.addButton(QPushButton('Download'), QMessageBox.YesRole)
+                moleMsg.addButton(QPushButton('Select MoleCoolQt executable file'), QMessageBox.NoRole)
+                result = moleMsg.exec_()
+    
+                if result == 0:
+                    webbrowser.open('http://www.molecoolqt.de/dl.php')
+                elif result == 1:
+                    self.openPrefs()
+        except Exception:
+            pass
+        
     def findXD(self):
         msg = '''Couldn't find folder containing the XD programs. Select folder now?'''
         findXD = QMessageBox.question(self, 'Find XD programs', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
@@ -6387,6 +6420,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Handle XDLSM starting.
         '''
+        try:
+            self.xdlsm.finishedSignal.disconnect(self.finishedXDLSM)
+        except Exception:
+            pass
         self.xdlsm.finishedSignal.connect(self.finishedXDLSM)   #Sets up the finishedSignal in case xdlsm.exe was killed the last time and the finishedSignal was disconnected
         for lab in self.XDLSMLabs:
             lab.setText('XDLSM running...')
@@ -6397,6 +6434,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.clicked.connect(self.killXDLSM)
         
         self.disableXDButs(survivors = self.XDLSMButs)
+        self.xdlsm.startTime = time.time()
         
                         
     #Called when XDLSM finishes
@@ -6405,30 +6443,41 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Handle XDLSM finishing.
         '''
         for but in self.XDLSMButs:
-            but.disconnect()
+            try:
+                but.disconnect()
+            except Exception:
+                pass
             but.clicked.connect(lambda: self.xdlsm.start())    #Sets up button again to start XDLSM
             but.setText('Run XDLSM')
             
         for lab in self.XDLSMLabs:
             lab.setText('XDLSM finished')                         #Sets status label to 'XDLSM finished'
-        self.check4res()
-        self.enableXDButs()
-        if self.xdlsm.time < 15:
-            error = check4errors()
-            if not error[0]:
-                if error[1].startswith('  * * * Parameter T and/or NCST should be increased'):
-          
-                    addNCST()
-                    self.xdlsm.start()
-                
-                elif error[1].startswith('Noble gas configuration not recognized for element Cu'):
-       
-                    initialiseMas()
-                    self.xdlsm.start()
-        
-        self.pkgXDLab.setText('XDLSM finished')
-        self.xdWizardBut.disconnect()
+        try:
+            self.check4res()
+
+            self.xdlsm.time = time.time() - self.xdlsm.startTime
+
+            if self.xdlsm.time < 15:
+                error = check4errors()
+                if not error[0]:
+                    if error[1].startswith('  * * * Parameter T and/or NCST should be increased'):
+              
+                        addNCST()
+                        self.xdlsm.start()
+                    
+                    elif error[1].startswith('Noble gas configuration not recognized for element Cu'):
+           
+                        initialiseMas()
+                        self.xdlsm.start()
+        except Exception:
+            pass
+            
+        try:
+            self.xdWizardBut.disconnect()
+        except Exception:
+            pass
         self.xdWizardBut.clicked.connect(self.xdWizRun)
+        self.enableXDButs()
         
     
     def killXDLSM(self):
@@ -6854,9 +6903,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if os.path.isfile('xd.res'):
             res2inp()
             self.toolbarRes2Inp.setDisabled(True)
-            self.res2inpLab.setText('xd.res renamed to xd.inp')
-        else:
-            self.res2inpLab.setText('''Couldn't find xd.res. xd.inp unchanged.''')
             
     def refreshFolder(self):
         '''
@@ -6876,14 +6922,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         try:
             os.chdir(folder)
             self.changeWizBackup()
-            self.statusbar.showMessage('Current working directory: ' + os.getcwd())
+            self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
             self.resetLabels()
             self.check4res()
             initialiseGlobVars()
             self.changeUserIns()
             self.resetWizInput()
-        except:
-            self.statusbar.showMessage('Current working directory: ' + os.getcwd())
+        except Exception:
+            self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
 
     def openCwd(self):
         '''
@@ -6900,14 +6946,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Open xd.mas in a text editor.
         '''
         global textEdAbsPath
-        
-        if sys.platform == 'win32':
-            subprocess.call([textEdAbsPath,'xd.mas'])
-
-        else:
-            opener ="open" if sys.platform == "darwin" else "xdg-open"
-            subprocess.call([opener, 'xd.mas'])
-
+        try:
+            if sys.platform == 'win32':
+                subprocess.call([textEdAbsPath,'xd.mas'])
+    
+            else:
+                opener ="open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.call([opener, 'xd.mas'])
+        except Exception:
+            pass
 
     def loadIAM(self):
         '''
@@ -6929,13 +6976,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         
         if ins and hkl:
             os.chdir(projectFolder)
-            self.statusbar.showMessage('Current working directory: ' + os.getcwd())
+            self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
             initialiseGlobVars()
             return True
         
         else:
             print('no files')
             msg = QMessageBox()
+            msg.setWindowTitle('Missing  files')
             msgStr = ''
             if not ins:
                 msgStr += 'res file not found.\n'
@@ -7035,6 +7083,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global xdProgAbsPaths
         
         timeFileAbsPath = os.getcwd() + '/lsmTimes.buckfast'
+        
+        if not os.path.isfile(timeFileAbsPath):
+            with open('lsmTimes.buckfast','w') as bucky:
+                pass
 
         if self.settings.value('xdpath'):
 
@@ -7125,7 +7177,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             os.chdir(self.settings.value('lastcwd'))
         except Exception:
             pass
-        self.statusbar.showMessage('Current working directory: ' + os.getcwd())
+        self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
 
 
     def openPrefs(self):
@@ -8064,20 +8116,19 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         self.settings.setValue('lastcwd', os.getcwd())
 
-#        if self.settings.value('senddata') == 'yes':
-#            
-#            with open(timeFileAbsPath,'r') as lsmTimes:
-#                x = len(lsmTimes.readlines())
-#            
-#            if x > 100:
-#                try:
-#                    sendEmail(subject = 'XD Toolkit: XDLSM times', attachments = [timeFileAbsPath])
-#                    with open(timeFileAbsPath, 'w') as lsmTimes:
-#                        lsmTimes.write(' ')
-#                except Exception:
-#                    pass
+        if self.settings.value('senddata') == 'yes':
+            
+            with open(timeFileAbsPath,'r') as lsmTimes:
+                x = len(lsmTimes.readlines())
+            
+            if x > 100:
+                try:
+                    sendEmail(subject = 'XD Toolkit: XDLSM times', attachments = [timeFileAbsPath])
+                    with open(timeFileAbsPath, 'w') as lsmTimes:
+                        lsmTimes.write(' ')
+                except Exception:
+                    pass
                
-                
         self.xdlsm.xdlsmRunning.terminate()
         event.accept()
 
@@ -8104,18 +8155,20 @@ class mercury(QThread):
         '''
         Open shelx.ins in Mercury.
         ''' 
-        if os.path.exists(os.getcwd() + '/shelx.ins'):
-            self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'shelx.ins'], shell = False, cwd = os.getcwd())
-        else:
-            self.mercuryOpen = subprocess.Popen([globMercAbsPath], shell = False, cwd = os.getcwd())
-            
+        try:
+            if os.path.exists(os.getcwd() + '/shelx.ins'):
+                self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'shelx.ins'], shell = False, cwd = os.getcwd())
+            else:
+                self.mercuryOpen = subprocess.Popen([globMercAbsPath], shell = False, cwd = os.getcwd())
+        except Exception:
+            pass
+        
 class molecool(QThread):
     '''
     MoleCoolQt
     '''
     def __init__(self):
         QThread.__init__(self)
-        
         
     def __del__(self):
         self.wait()
@@ -8124,16 +8177,22 @@ class molecool(QThread):
         '''
         Open xd.res/xd.inp in MoleCoolQt.
         '''
-        if os.path.exists(os.getcwd() + '/xd.res'):
-            self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.res'], shell = False, cwd = os.getcwd())
-        elif os.path.exists(os.getcwd() + '/xd.inp'):
-            self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.inp'], shell = False, cwd = os.getcwd())
-        else:
-            self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
+        try:
+            if os.path.exists(os.getcwd() + '/xd.res'):
+                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.res'], shell = False, cwd = os.getcwd())
+            elif os.path.exists(os.getcwd() + '/xd.inp'):
+                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.inp'], shell = False, cwd = os.getcwd())
+            else:
+                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
+        except Exception:
+            pass
+        
+def myExceptHook(Type, value, traceback):
+    pass
 
 ##Run GUI
 if __name__ == '__main__':
-
+    #sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
     app = QApplication(sys.argv)
     prog = XDToolGui()
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
@@ -8141,7 +8200,7 @@ if __name__ == '__main__':
     sys.exit(app.exec_())
 #os.chdir('/home/matt/dev/XDTstuff/test/carba')
 #initialiseGlobVars()
-#highAngleRef(0.7,2.0)
+#check4res()
 
 #x = rawInput2Labels('dum1')
 #print(x)

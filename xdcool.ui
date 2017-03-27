@@ -500,7 +500,7 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_32">
         <item row="0" column="0">
-         <widget class="QScrollArea" name="scrollArea">
+         <widget class="QScrollArea" name="wizScrollArea">
           <property name="palette">
            <palette>
             <active>
@@ -581,7 +581,7 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>0</y>
+             <y>-94</y>
              <width>1077</width>
              <height>568</height>
             </rect>
@@ -2293,8 +2293,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>318</height>
+               <width>499</width>
+               <height>310</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2498,8 +2498,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>318</height>
+               <width>304</width>
+               <height>100</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2596,8 +2596,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>318</height>
+               <width>312</width>
+               <height>88</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2898,8 +2898,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>684</width>
+               <height>110</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3007,8 +3007,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>537</width>
+               <height>214</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3135,8 +3135,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>265</width>
+               <height>88</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3199,8 +3199,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>411</width>
+               <height>107</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3732,8 +3732,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>258</width>
+               <height>290</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4360,7 +4360,7 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
+              <item row="4" column="0">
                <widget class="QLabel" name="pkgXDLab">
                 <property name="text">
                  <string/>
