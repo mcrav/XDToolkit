@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import random
 import copy
 import subprocess
+import hashlib
 import time
 import itertools
 import numpy as np
@@ -2216,8 +2217,8 @@ def writeCHEMCON(CHEMCONdict):
             else:
                 for atom,equi in CHEMCON.items():
                     if row[0].upper() in equi:
-                        rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}'.format(*row)
-                        newmas.write(rowStr + atom + '\n')  
+                        rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}\n'.format(*row, atom)
+                        newmas.write(rowStr)  
                         written = True
             
             if written == False:
@@ -7112,7 +7113,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global manualAbsPath
         
         timeFileAbsPath = os.getcwd() + '/lsmTimes.buckfast'
-        manualAbsPath = os.getcwd() + '/res/XD Toolkit Manual.pdf'
+        manualAbsPath = os.getcwd() + 'res/XD Toolkit Manual.pdf'
                                    
         if not os.path.isfile(timeFileAbsPath):
             with open('lsmTimes.buckfast','w') as bucky:
@@ -8221,19 +8222,232 @@ def myExceptHook(Type, value, traceback):
     pass
 
 ##Run GUI
-if __name__ == '__main__':
-    sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
-    app = QApplication(sys.argv)
-    prog = XDToolGui()
-    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
-    prog.show()
-    sys.exit(app.exec_())
-#os.chdir('/home/matt/dev/XDTstuff/test/carba')
-#initialiseGlobVars()
+#if __name__ == '__main__':
+#    sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
+#    app = QApplication(sys.argv)
+#    prog = XDToolGui()
+#    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
+#    prog.show()
+#    sys.exit(app.exec_())
+os.chdir('/home/matt/dev/XDTstuff/test/carba')
+initialiseGlobVars()
 #check4res()
 #os.startfile('C:/Users/Matthew_2/Python/XDToolkit-master/res/XD Toolkit Manual.pdf')
 #x = rawInput2Labels('dum1')
 #print(x)
 
+
+def findCHEMCON():
+    '''
+    Find chemical equivalency in structure. Return CHEMCON dictionary.
+    '''
+    with open('xd.mas', 'r') as mas:
+        
+        envs = {}
+        CHEMCON = {}
+        atomTab = False
+        
+        for line in mas:
+            
+            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                atomTab = False
+                
+            if atomTab:
+                row = str.split(line)
+                atom = row[0].upper()
+                print(atom)
+                atomEnv = genEnvSig(atom + ',asym')
+                envs.setdefault(atomEnv,[]).append(atom)
+                
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+                
+        for env, atoms in envs.items():
+            if len(atoms) > 1:
+                CHEMCON[atoms[0]] = atoms[1:]
+            else:
+                CHEMCON[atoms[0]] = []
+                
+    return CHEMCON
+    
+                
+def getEnvTag(atom):
+    '''
+    Create unique signature of the chemical environment of an atom. Return signature.
+    '''
+    atomLabs = copy.copy(globAtomLabs)
+        
+    passedAtoms = [atom]
+    
+    envTagRaw = getBranches(atom, [atom], atomLabs)
+    #print(envTagRaw)
+   #envTag = splitEnvSig(branchDividers, envTagRaw)
+    
+    #envTag = atom.split('(')[0] + ',' + ','.join(sorted(envTagRaw.strip(',').split(',')))
+    
+    return envTag
+
+def splitEnvSig(dividers, envTag,  i=0):
+    
+    if dividers[i] not in envTag:
+        return
+    
+    else:
+        envTag = envTag.split(dividers[i])
+        envTag = sorted(envTag)
+#        print(envTag)
+#        print(i)
+#        print('ENV TAG*****************************************')
+        for item in envTag:
+            splitEnvSig(dividers, item, i=i+1)
+            
+
+def getPath(atom, atomNeebDict, usedBranches, lastPath=[], envTag = ''):
+    
+    currAtom = atom
+    passedAtoms = []    
+    newUsedBranches = []
+    steps = -1
+    nearNeeb = ''
+    
+    while currAtom not in passedAtoms:      
+        passedAtoms.append(currAtom)
+        steps += 1
+        atomNeebs = atomNeebDict[currAtom.split(',')[0]]
+
+        for neeb in atomNeebs: 
+            branchTag = '{0}~{1}'.format(neeb, str(steps))
+
+            if neeb not in passedAtoms and branchTag not in usedBranches:
+#Need to reset usedBranches  at a certain level everytime program tries all combos down a new branch
+#                if lastPath and (len(lastPath)-1 < steps or neeb != lastPath[steps]) and usedBranches:
+#                    #print(lastPath)
+#                    print('~~~~~~~~~~~~~~~~~')
+#                    #usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
+#                if i==0:
+#                    nearNeeb = neeb
+                try:
+                    if lastPath[steps] != neeb:
+#                        print(usedBranches)
+                        usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
+                        
+                        if atom == 'N(0),asym':
+                            print('*******')
+                            print(usedBranches)
+                            print(envTag + '|' + neeb)
+                            print(lastPath)
+                        
+                except IndexError:
+#                    print('except')
+#                    print(usedBranches)
+                    usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
+#                    print(usedBranches)
+                newUsedBranches.append(branchTag)
+
+                envTag += neeb + '|'
+                currAtom = neeb
+                break
+    
+    envTag = envTag.strip('|')
+    return (envTag, newUsedBranches[-1:], usedBranches)
+
+
+def findAllPaths(atom):
+
+    lastRes = ''
+    usedNeebs = []
+    lastPath = []
+    paths = []
+    usedBranches = []
+    atomNeebs = copy.copy(globAtomLabs)
+    i=0
+    j=0
+    while True:
+        
+
+        pathRes = getPath(atom, atomNeebs, usedBranches, lastPath)
+
+        lastPath = pathRes[0].split('|')
+
+        usedBranches = pathRes[2]
+        if atom == 'N(0),asym':
+            print(pathRes[0])
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+
+        if not pathRes[0]:
+            break
+        
+        else:  
+
+            pathsFormatted = ''.join([item.split('(')[0] for item in pathRes[0].split('|')])
+            #pathsFormatted = ', '.join([item.split(',')[0] for item in pathRes[0].split('|')])
+            paths.append(pathsFormatted)
+
+            usedBranches.extend(pathRes[1])
+            
+#            if pathRes[1]:
+#                steps = pathRes[1][0].split('~')[1]
+#                copyUsedBranches = copy.copy(usedBranches)
+#                usedBranches = []
+#                
+#                for item in copyUsedBranches:
+#    
+#                    if item.split('~')[1] <= steps:
+#                        usedBranches.append(item)
+
+        i+=1
+    #if atom == 'H(AA),asym':
+    print(len(paths))
+    return paths
+        
+
+def genEnvSig(atom):
+    pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom)))
+    hashObj = hashlib.md5(bytes(pathString,'utf-8'))
+    return hashObj.hexdigest()
+
+def lab2type(atomLabel):
+    return atomLabel.split('(')[0]
+
+def spec2norm(atomLabel):
+    return atomLabel.split(',')[0]
+
+def findSphere(atom, path='', visited = []):
+    
+    neebsDict = copy.copy(globAtomLabs)
+    
+    path = lab2type(atom)
+    
+    for neeb in neebsDict[spec2norm(atom)]:
+
+        if neeb not in visited:
+            print(neeb)
+            path += lab2type(neeb)
+            visited.append(neeb)
+            path += findSphere(neeb, path, visited)
+        
+    return path
+    
+    
+
+
+#os.chdir('/home/matt/dev/XDTstuff/test/carba')
+#x = findAllPaths('C(2),asym')
+##for item in x:
+##    print(item)
+# 
+#z = genEnvSig(x)
+#print(z)
+
+x = findCHEMCON()
+#print(x)
+#x = findAllPaths('N(0),asym')
+
+#for path in x:
+#    print(path)
+for parent, children in x.items():
+    print(parent)
+    print(children)
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#')
 
 
