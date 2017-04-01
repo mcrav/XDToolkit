@@ -444,7 +444,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.3.4</string>
+   <string>XD Toolkit 0.4.0</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -2681,22 +2681,12 @@
            <number>20</number>
           </property>
           <item>
-           <widget class="QRadioButton" name="neeborCHEMCON">
+           <widget class="QRadioButton" name="autoCHEMCON">
             <property name="text">
-             <string>Make atoms of the same element with the same nearest neighbours chemically equivalent.</string>
+             <string>Automatically add chemical equivalency.</string>
             </property>
             <property name="checked">
              <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="allElementCHEMCON">
-            <property name="text">
-             <string>Make atoms of the same element chemically equivalent.</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
             </property>
            </widget>
           </item>

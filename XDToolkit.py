@@ -52,11 +52,30 @@ def resetmas():
 '''	
 #-------------------UTILITIES----------------------------------------
 '''
+
+
+def lab2type(atomLabel):
+    '''
+    Convert atom label to atom type, e.g. 'C(2)' to 'C'. Return type.
+    '''
+    return atomLabel.split('(')[0]
+
+def spec2norm(atomLabel):
+    '''
+    Convert special atom label to normal atom label, e.g. 'C(2),asym' to 'C(2)'. Return label.
+    '''
+    return atomLabel.split(',')[0]
+
 def rawInput2Labels(rawInput):
+    '''
+    Convert raw input of unspecified format atom labels to list of correctly formatted labels. Return list.
+    '''
     return formatLabels(labels2list(rawInput))
 
-
 def labels2list(inputText):
+    '''
+    Convert raw input of atom labels to list of unformatted atom labels. Return list.
+    '''
     inputText = inputText.upper()
     if ',' in inputText:
         inputText = inputText.replace(' ','').strip(',')
@@ -1899,6 +1918,160 @@ def delResetBond():
 '''	
 #-------------------CHEMCON-------------------------------------------
 '''
+
+
+def findCHEMCON():
+    '''
+    Find chemical equivalency in structure. Return CHEMCON dictionary.
+    '''    
+    with open('xd.mas', 'r') as mas:
+        
+        envs = {}
+        CHEMCON = {}
+        atomTab = False
+        
+        for line in mas:
+            
+            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                atomTab = False
+            
+            #Make dictionary of environment hash values and atoms with that environment
+            #i.e. {'f11390f0a9cadcbb4f234c8e8ea8d236' : ['H(4)', 'H(3)']}
+            
+            if atomTab:
+                row = str.split(line)
+                atom = row[0].upper()
+                print(atom)
+                atomEnv = getEnvSig(atom + ',asym')
+                envs.setdefault(atomEnv,[]).append(atom)
+                
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+                
+        #Organise hash value dictionary into dictionary of parent atoms that appear first in ATOM table,
+        #and children that appear further down.
+        for env, atoms in envs.items():
+            if len(atoms) > 1:
+                CHEMCON[atoms[0]] = atoms[1:]
+                print(atoms[0])
+                print(atoms[1:])
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###~~~~~~~####')
+            else:
+                CHEMCON[atoms[0]] = []
+    
+    return CHEMCON
+            
+'''
+Short guide to path finding algorithm:
+    
+    findAllPaths will start with the first neighbour to starting atom, and exhaust all possibilities,
+    before moving to the next neighbour. This applies no matter how many steps you are from the
+    starting atom. For example, all branches 5+ steps down would be explored for one 5 step neighbour, before
+    any other of the 5 step neighbours were explored.
+    
+    Only adding the last branch to usedBranches causes this behaviour. If the current path differs from 
+    the last path at any stage then everything downstream is removed from usedBranches, as these branches
+    are no longer used as something has been changed upstream.
+'''
+
+def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
+    '''
+    Find a path through the structure from a given atom, limitied by a list of branches already visited.
+    Return a pipe separated string of path in the format 'C(1),asym|N(1),asym|H(1),asym'.
+    Return the last branch in the path.
+    Return the list of visited branches.
+    '''
+    currAtom = atom             #Current atom as program walks through structure.
+    passedAtoms = []            #Atoms already visited in the path.
+    
+    newUsedBranches = []        #List of all branches explored in the structure.
+                                #Branches are format 'ATOM~number of steps through path' i.e. 'C(1),asym~2'
+                                #means C(1) was passed on the second step through the structure.
+                                
+    steps = -1                   #Tracks number of steps taken down path.
+    
+    while currAtom not in passedAtoms:        #This condition will be satisfied until path can't go anywhere unvisited.
+        
+        passedAtoms.append(currAtom)          #Add current atoms to visited atoms list.
+        steps += 1                            #Add step to total number of steps in path
+        
+        atomNeebs = atomNeebDict[currAtom.split(',')[0]]        #Get neighbours of current atom.
+
+        for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
+            branchTag = '{0}~{1}'.format(neeb, str(steps))  #Make 'C(1),asym~2' format branch tag for current atom and number of steps.
+
+            #If a neighbour of current atom is found that hasn't been visited,
+            #and hasn't been branched too in other trips down the same path.
+            if neeb not in passedAtoms and branchTag not in usedBranches:
+
+                try:
+                    #If this path changes from the previous path at this atom,
+                    #remove all branch tags downstream from current number of steps.
+                    #i.e. if number of steps is 3 only keep branch tags with number of steps 0,1,2,3.
+                    if lastPath[steps] != neeb:
+                        usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
+                        
+                except IndexError:
+                    #If the last path didn't go this far, or it was empty also remove downstream branch tags.
+                    usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
+                
+                #Add branch tag of every atom in path to list.
+                newUsedBranches.append(branchTag)
+
+                pathStr += neeb + '|'   #Add new atom in path to pipe separated path string.
+                currAtom = neeb         #Make the current atom the new atom, quit the for loop
+                break                   #and look for the next atom along the path.
+    
+    pathStr = pathStr.strip('|')        #Remove the | from the end of the path string.
+    
+    return (pathStr, newUsedBranches[-1:], usedBranches)    #Return the path string, last new branch, and edited list of used branches.
+
+
+def findAllPaths(atom):
+    '''
+    Find all possible paths through the molecule starting from a given atom. Return all paths in list.
+    '''
+    lastPath = []
+    lastPathStr = ''
+    paths = []
+    usedBranches = []
+    atomNeebs = copy.copy(globAtomLabs)
+    i = 0
+    while True:
+        
+        pathRes = getPath(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
+        
+        #If no path is returned all paths have been found and the while loop is ended.
+        if not pathRes[0]:
+            break
+        
+        else:  
+
+            #Store path as a list, to be the last path for the next time getPath is called.
+            lastPath = pathRes[0].split('|')    
+
+            #Update usedBranches to list returned from getPath.
+            usedBranches = pathRes[2]
+            
+            #Format path to string of atom types e.g. 'CCCNCCCH'
+            pathsFormatted = ''.join([item.split('(')[0] for item in pathRes[0].split('|')])
+
+            paths.append(pathsFormatted)    #Add this path string to list of paths.
+
+            usedBranches.extend(pathRes[1]) #Add the last branch from the current path to the list of used branches.
+       
+    #When no more paths can be found return list of paths.    
+    return paths
+
+def getEnvSig(atom):
+    '''
+    Create a unique hash value for the chemical environment of a given atom. Return this hash value.
+    '''
+    #Sort list of paths alphabetically so it is the same no matter what order paths were found in
+    #Make string with starting atom types followed by , joined sorted list of all paths.
+    pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom)))
+    hashObj = hashlib.md5(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
+    return hashObj.hexdigest()                              #Return digest of hash value.
 
 def removeCHEMCON():
     '''
@@ -6249,7 +6422,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.xdWizRunning.tfin = time.time()
                 runningTime = self.xdWizRunning.tfin - self.xdWizRunning.tzero
                 with open(timeFileAbsPath,'a') as lsmTimes:
-                    lsmTimes.write('{0:10}{1:<15}{2:<13.2f}{3:<13}{4}'.format('WIZ', getNumAtoms(), runningTime,  len(self.xdWizRunning.refList), sys.platform))
+                    lsmTimes.write('{0:10}{1:<15}{2:<13.2f}{3:<13}{4}\n'.format('WIZ', getNumAtoms(), runningTime,  len(self.xdWizRunning.refList), sys.platform))
         
         except Exception:   #Handle user cancelling halfway through
             pass
@@ -7742,24 +7915,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Handle user clicking 'Add CHEMCON'.
         '''
-        if self.allElementCHEMCON.isChecked() == True:
+        if self.autoCHEMCON.isChecked():
             try:
-                writeCHEMCON(findCHEMCONbyElement())
+                writeCHEMCON(findCHEMCON())
                 self.CHEMCONStatusLab.setText('CHEMCON added and xd.mas updated')
-            except PermissionError:
-                self.CHEMCONStatusLab.setText(self.permErrorMsg)
-            except Exception:
-                self.CHEMCONStatusLab.setText('An error occurred.')
-            
-        elif self.neeborCHEMCON.isChecked() == True:
-            try:
-                writeCHEMCON(findCHEMCONbyNeebors())
-                self.CHEMCONStatusLab.setText('CHEMCON added and xd.mas updated')
-            except PermissionError:
-                self.CHEMCONStatusLab.setText(self.permErrorMsg)
-            except Exception:
-                self.CHEMCONStatusLab.setText('An error occurred.')
-            
             except PermissionError:
                 self.CHEMCONStatusLab.setText(self.permErrorMsg)
             except Exception:
@@ -8222,232 +8381,19 @@ def myExceptHook(Type, value, traceback):
     pass
 
 ##Run GUI
-#if __name__ == '__main__':
-#    sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
-#    app = QApplication(sys.argv)
-#    prog = XDToolGui()
-#    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
-#    prog.show()
-#    sys.exit(app.exec_())
-os.chdir('/home/matt/dev/XDTstuff/test/carba')
-initialiseGlobVars()
-#check4res()
-#os.startfile('C:/Users/Matthew_2/Python/XDToolkit-master/res/XD Toolkit Manual.pdf')
-#x = rawInput2Labels('dum1')
-#print(x)
-
-
-def findCHEMCON():
-    '''
-    Find chemical equivalency in structure. Return CHEMCON dictionary.
-    '''
-    with open('xd.mas', 'r') as mas:
-        
-        envs = {}
-        CHEMCON = {}
-        atomTab = False
-        
-        for line in mas:
-            
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-                
-            if atomTab:
-                row = str.split(line)
-                atom = row[0].upper()
-                print(atom)
-                atomEnv = genEnvSig(atom + ',asym')
-                envs.setdefault(atomEnv,[]).append(atom)
-                
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-                
-        for env, atoms in envs.items():
-            if len(atoms) > 1:
-                CHEMCON[atoms[0]] = atoms[1:]
-            else:
-                CHEMCON[atoms[0]] = []
-                
-    return CHEMCON
-    
-                
-def getEnvTag(atom):
-    '''
-    Create unique signature of the chemical environment of an atom. Return signature.
-    '''
-    atomLabs = copy.copy(globAtomLabs)
-        
-    passedAtoms = [atom]
-    
-    envTagRaw = getBranches(atom, [atom], atomLabs)
-    #print(envTagRaw)
-   #envTag = splitEnvSig(branchDividers, envTagRaw)
-    
-    #envTag = atom.split('(')[0] + ',' + ','.join(sorted(envTagRaw.strip(',').split(',')))
-    
-    return envTag
-
-def splitEnvSig(dividers, envTag,  i=0):
-    
-    if dividers[i] not in envTag:
-        return
-    
-    else:
-        envTag = envTag.split(dividers[i])
-        envTag = sorted(envTag)
-#        print(envTag)
-#        print(i)
-#        print('ENV TAG*****************************************')
-        for item in envTag:
-            splitEnvSig(dividers, item, i=i+1)
-            
-
-def getPath(atom, atomNeebDict, usedBranches, lastPath=[], envTag = ''):
-    
-    currAtom = atom
-    passedAtoms = []    
-    newUsedBranches = []
-    steps = -1
-    nearNeeb = ''
-    
-    while currAtom not in passedAtoms:      
-        passedAtoms.append(currAtom)
-        steps += 1
-        atomNeebs = atomNeebDict[currAtom.split(',')[0]]
-
-        for neeb in atomNeebs: 
-            branchTag = '{0}~{1}'.format(neeb, str(steps))
-
-            if neeb not in passedAtoms and branchTag not in usedBranches:
-#Need to reset usedBranches  at a certain level everytime program tries all combos down a new branch
-#                if lastPath and (len(lastPath)-1 < steps or neeb != lastPath[steps]) and usedBranches:
-#                    #print(lastPath)
-#                    print('~~~~~~~~~~~~~~~~~')
-#                    #usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-#                if i==0:
-#                    nearNeeb = neeb
-                try:
-                    if lastPath[steps] != neeb:
-#                        print(usedBranches)
-                        usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-                        
-                        if atom == 'N(0),asym':
-                            print('*******')
-                            print(usedBranches)
-                            print(envTag + '|' + neeb)
-                            print(lastPath)
-                        
-                except IndexError:
-#                    print('except')
-#                    print(usedBranches)
-                    usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-#                    print(usedBranches)
-                newUsedBranches.append(branchTag)
-
-                envTag += neeb + '|'
-                currAtom = neeb
-                break
-    
-    envTag = envTag.strip('|')
-    return (envTag, newUsedBranches[-1:], usedBranches)
-
-
-def findAllPaths(atom):
-
-    lastRes = ''
-    usedNeebs = []
-    lastPath = []
-    paths = []
-    usedBranches = []
-    atomNeebs = copy.copy(globAtomLabs)
-    i=0
-    j=0
-    while True:
-        
-
-        pathRes = getPath(atom, atomNeebs, usedBranches, lastPath)
-
-        lastPath = pathRes[0].split('|')
-
-        usedBranches = pathRes[2]
-        if atom == 'N(0),asym':
-            print(pathRes[0])
-            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-
-        if not pathRes[0]:
-            break
-        
-        else:  
-
-            pathsFormatted = ''.join([item.split('(')[0] for item in pathRes[0].split('|')])
-            #pathsFormatted = ', '.join([item.split(',')[0] for item in pathRes[0].split('|')])
-            paths.append(pathsFormatted)
-
-            usedBranches.extend(pathRes[1])
-            
-#            if pathRes[1]:
-#                steps = pathRes[1][0].split('~')[1]
-#                copyUsedBranches = copy.copy(usedBranches)
-#                usedBranches = []
-#                
-#                for item in copyUsedBranches:
-#    
-#                    if item.split('~')[1] <= steps:
-#                        usedBranches.append(item)
-
-        i+=1
-    #if atom == 'H(AA),asym':
-    print(len(paths))
-    return paths
-        
-
-def genEnvSig(atom):
-    pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom)))
-    hashObj = hashlib.md5(bytes(pathString,'utf-8'))
-    return hashObj.hexdigest()
-
-def lab2type(atomLabel):
-    return atomLabel.split('(')[0]
-
-def spec2norm(atomLabel):
-    return atomLabel.split(',')[0]
-
-def findSphere(atom, path='', visited = []):
-    
-    neebsDict = copy.copy(globAtomLabs)
-    
-    path = lab2type(atom)
-    
-    for neeb in neebsDict[spec2norm(atom)]:
-
-        if neeb not in visited:
-            print(neeb)
-            path += lab2type(neeb)
-            visited.append(neeb)
-            path += findSphere(neeb, path, visited)
-        
-    return path
-    
-    
-
-
+if __name__ == '__main__':
+    sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
+    app = QApplication(sys.argv)
+    prog = XDToolGui()
+    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
+    prog.show()
+    sys.exit(app.exec_())
 #os.chdir('/home/matt/dev/XDTstuff/test/carba')
-#x = findAllPaths('C(2),asym')
-##for item in x:
-##    print(item)
-# 
-#z = genEnvSig(x)
-#print(z)
+#initialiseGlobVars()
+#writeCHEMCON(findCHEMCON())
 
-x = findCHEMCON()
-#print(x)
-#x = findAllPaths('N(0),asym')
 
-#for path in x:
-#    print(path)
-for parent, children in x.items():
-    print(parent)
-    print(children)
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#')
+  
+
 
 
