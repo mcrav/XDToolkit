@@ -1919,11 +1919,14 @@ def delResetBond():
 #-------------------CHEMCON-------------------------------------------
 '''
 
-
 def findCHEMCON():
     '''
     Find chemical equivalency in structure. Return CHEMCON dictionary.
     '''    
+    
+    global globAtomEnv          #Global dictionary of atoms and their chemical environment hash values i.e. {'C(1)':'f11390f0a9cadcbb4f234c8e8ea8d236'}
+    globAtomEnv = {}
+    
     with open('xd.mas', 'r') as mas:
         
         envs = {}
@@ -1943,6 +1946,7 @@ def findCHEMCON():
                 atom = row[0].upper()
                 print(atom)
                 atomEnv = getEnvSig(atom + ',asym')
+                globAtomEnv[atom] = atomEnv         
                 envs.setdefault(atomEnv,[]).append(atom)
                 
             if line.startswith('ATOM     ATOM0'):
@@ -2032,11 +2036,10 @@ def findAllPaths(atom):
     Find all possible paths through the molecule starting from a given atom. Return all paths in list.
     '''
     lastPath = []
-    lastPathStr = ''
     paths = []
     usedBranches = []
     atomNeebs = copy.copy(globAtomLabs)
-    i = 0
+    
     while True:
         
         pathRes = getPath(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
@@ -3250,15 +3253,15 @@ def kapMonRef():
  
 def multipoleMagician(trackAtom = None):
     '''
-    Setup xd.mas to refine multipoles.
+    Setup xd.mas to refine multipoles. Return list of atoms for which problems were encountered.
     '''
     #x = time.time()
     setupmas()
     resetKeyTable()
     kapMonRef()
     writeSITESYM(findSITESYM(trackAtom))
-    writeLocalCoordSys(getLocalCoordSys()) 
-    warnings = multipoleKeyTable()
+    warnings = makeLCS()
+    multipoleKeyTable()
     return warnings
     #y = time.time()
     #t = y-x
@@ -4660,7 +4663,29 @@ def addDUMsym(atomLab, dumI = 1):
     os.rename('xdnew.mas','xd.mas')
         
     return ('DUM' + str(dumI))                                   #Return dumI so that getLocalCoordSys knows what dummy atom label to use
+
+def neebDict2masLabs(atomNeebsRaw):
+    '''
+    Take raw neighbour dictionary and convert every label to either a normal mas label or a dummy atom label.
+    Also update global environment dictionary with new labels.
+    Return dictionary.
+    '''
+    atomNeebs = {}
     
+    for atom, neebs in atomNeebsRaw.items():
+        
+        atomNeebs[atom] = []
+        for neeb in neebs:
+            splitLab = neeb.split(',')
+            if splitLab[1] == 'asym':
+                atomNeebs[atom].append(splitLab[0])
+            else:
+                newLab = spec2masLab(neeb)
+                atomNeebs[atom].append(newLab)    
+                globAtomEnv[newLab] = globAtomEnv[splitLab[0]]
+
+    return atomNeebs
+
 
 def getLocalCoordSys():
     '''
@@ -4670,7 +4695,7 @@ def getLocalCoordSys():
     atomNeebsRaw = copy.copy(globAtomLabs)   #Get dictionary of atoms and their nearest neighbour labels i.e. {C(2):['C(3)','C(4)','H(2)','H(3)']}
     atomSymsRaw = findSITESYM()         #Get dictionary of atoms and their local symmetry labels and their configuration of different/identical atoms i.e. ('mm2',2+2) could mean a C bonded to 2Hs and 2Cs
     atomLocCoords = {}                      #Initialise dictionary that will be returned and passed to writeLocalCoordSys format {'C(2)':['DUM0','Z','C(3),'Y']}
-    atomNeebs = {}
+
     i = 1	                                  #Default value for dumI in addDUM(atom1,atom2,dumI). addDUM will find the lowest unused index itself.
                  
     atomSyms = {}
@@ -4696,15 +4721,7 @@ def getLocalCoordSys():
                         atomSyms[atom][i].append(splitLab[0])
                         
     
-    for atom, neebs in atomNeebsRaw.items():
-        atomNeebs[atom] = []
-        for neeb in neebs:
-            splitLab = neeb.split(',')
-            if splitLab[1] == 'asym':
-                atomNeebs[atom].append(splitLab[0])
-            else:
-                atomNeebs[atom].append(spec2masLab(neeb))
-            
+    atomNeebs = neebDict2masLabs(atomNeebsRaw)           
             
                                                
     for atom,sym in atomSyms.items():       #Go through atomSym dict and do different things depending on nearest neighbour configuration
@@ -4868,11 +4885,91 @@ def getLocalCoordSys():
         
         elif sym[0] == '1':                      #Define arbritrary system for '1' symmetry so it is not returned as not being defined
             atomLocCoords[atom] = [atomNeebs[atom][0], 'Z', atomNeebs[atom][1], 'Y']
-    
 
-    return (atomLocCoords)
+    return (atomLocCoords, atomNeebs)
 
+def findMasCHEMCON():
+    '''
+    Get CHEMCON from mas file. Return as dictionary of children and their parents.
+    '''
+    with open('xd.mas','r') as mas:
+        
+        atomTab = False
+        chemcon = {}
+        
+        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+        for line in mas:
             
+            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                atomTab = False
+                break
+            
+            if atomTab:
+                row = line.upper().split()
+                if len(row) == 13:
+                    chemcon[row[0]] = row[12]
+            
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+                
+    return (chemcon)
+
+def makeLCS():
+    '''
+    Write local coordinate systems to mas file for all atoms. Return atoms for which local coordinate system could not be found as list.
+    '''
+    global globAtomEnv
+    
+    x = getLocalCoordSys()
+    
+    if globAtomEnv:
+        y = writeLocalCoordSys(getCHEMCONLocalCoordSys(x[0], x[1]))
+    else:
+        y = writeLocalCoordSys(x[0])
+        
+    return y
+
+def getCHEMCONLocalCoordSys(atomLocCoordsDict, atomNeebs):
+    '''
+    Update local coordinate systems to make sure all chemically equivalent atoms have equivalent local coordinate systems.
+    Return new local coordinate system dictionary.
+    '''
+    envs = copy.copy(globAtomEnv)
+    chemcon = findMasCHEMCON()
+    children = chemcon.keys()
+    newLocCoords = {}
+    
+    for atom, locCoords in atomLocCoordsDict.items():
+        
+        if atom in children:
+            
+            pLocCoordSys = atomLocCoordsDict[chemcon[atom]]
+            
+            cLocCoordSys = ['', pLocCoordSys[1], '' ,pLocCoordSys[3]]
+            
+            neebs = atomNeebs[atom]
+            
+            pHash1 = envs[pLocCoordSys[0]]
+            pHash2 = envs[pLocCoordSys[2]]
+            
+            for neeb in neebs:
+                
+                if envs[neeb] == pHash1:
+                    
+                    cLocCoordSys[0] = neeb
+                    
+                elif envs[neeb] == pHash2:
+                    cLocCoordSys[2] = neeb
+                    
+            if cLocCoordSys[0] and cLocCoordSys[2]:
+                newLocCoords[atom] = cLocCoordSys
+                    
+        else:
+            newLocCoords[atom] = locCoords
+            
+    return newLocCoords          
+            
+
 def writeLocalCoordSys(atomLocCoordsDict):
     '''
     Write local coordinate systems to atom table.
@@ -4881,6 +4978,7 @@ def writeLocalCoordSys(atomLocCoordsDict):
     try:  
         mas = open('xd.mas', 'r')
         newmas = open('xdnew.mas','w') 
+        
         atomTab = False
         coordSystems = atomLocCoordsDict
 
@@ -6251,7 +6349,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             
         except ValueError:
             s = False
-        
+        print(c)
+        print(r)
+        print(s)
+        print(f)
+        print(m)
         if c and r and s and f and m:
             
             self.xdWizardBut.setEnabled(True)
@@ -8390,7 +8492,10 @@ if __name__ == '__main__':
     sys.exit(app.exec_())
 #os.chdir('/home/matt/dev/XDTstuff/test/carba')
 #initialiseGlobVars()
-#writeCHEMCON(findCHEMCON())
+#findCHEMCON()
+#multipoleMagician()
+#x = makeLCS()
+#print(x)
 
 
   
