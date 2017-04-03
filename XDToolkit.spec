@@ -2,9 +2,8 @@
 
 block_cipher = None
 
-
 a = Analysis(['XDToolkit.py'],
-             pathex=['/home/matt/dev/XDToolkit'],
+             pathex=[],
              binaries=[],
              datas=[('res','res'),
 		    ('LICENSE.txt','.')],
@@ -15,8 +14,10 @@ a = Analysis(['XDToolkit.py'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher)
+
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
 exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
@@ -25,6 +26,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=False )
+
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

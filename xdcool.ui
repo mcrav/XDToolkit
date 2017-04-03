@@ -444,7 +444,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.4.0</string>
+   <string>XD Toolkit 0.4.2</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -3905,8 +3905,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>344</width>
-               <height>194</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3949,7 +3949,7 @@
                 <item row="0" column="0" colspan="2">
                  <widget class="QLabel" name="multKeyLab">
                   <property name="text">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list. Only works for NO, m, mm2 and cyl in SITESYM column.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list. Supports NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 6 and 6mm in SITESYM column.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -4526,7 +4526,10 @@
   </action>
   <action name="toolbarRes2Inp">
    <property name="text">
-    <string>res -&gt; inp</string>
+    <string>&lt;p&gt;&amp;#8594;&lt;/p&gt;res -&gt; inp</string>
+   </property>
+   <property name="iconText">
+    <string>res → inp</string>
    </property>
    <property name="toolTip">
     <string>Rename 'xd.res' to 'xd.inp'</string>

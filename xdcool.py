@@ -1406,7 +1406,7 @@ class Ui_MainWindow(object):
         self.gridLayout_15.addLayout(self.verticalLayout_6, 0, 0, 1, 1)
         self.getresults.addItem(self.page_3, "")
         self.page_5 = QtWidgets.QWidget()
-        self.page_5.setGeometry(QtCore.QRect(0, 0, 344, 194))
+        self.page_5.setGeometry(QtCore.QRect(0, 0, 1051, 347))
         self.page_5.setObjectName("page_5")
         self.gridLayout_14 = QtWidgets.QGridLayout(self.page_5)
         self.gridLayout_14.setContentsMargins(0, 0, 0, 0)
@@ -1674,7 +1674,7 @@ class Ui_MainWindow(object):
         self.toolbar.addAction(self.toolbarOpenmas)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(0)
         self.toolBox_4.setCurrentIndex(0)
         self.toolBox_2.setCurrentIndex(0)
         self.getresults.setCurrentIndex(0)
@@ -1687,7 +1687,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "XD Toolkit 0.4.0"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "XD Toolkit 0.4.2"))
         self.runXDLSMBut.setText(_translate("MainWindow", " Run XDLSM"))
         self.label_11.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-weight:600;\">Initialize compound</span></p></body></html>"))
         self.label_51.setText(_translate("MainWindow", " Compound ID:"))
@@ -1833,7 +1833,7 @@ class Ui_MainWindow(object):
         self.dumBut.setText(_translate("MainWindow", "Add Dummy Atom"))
         self.getresults.setItemText(self.getresults.indexOf(self.page_3), _translate("MainWindow", "Add dummy atom"))
         self.multKeyBut.setText(_translate("MainWindow", "Add Multipoles To KEY Table"))
-        self.multKeyLab.setText(_translate("MainWindow", "<html><head/><body><p>Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list. Only works for NO, m, mm2 and cyl in SITESYM column.</p></body></html>"))
+        self.multKeyLab.setText(_translate("MainWindow", "<html><head/><body><p>Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list. Supports NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 6 and 6mm in SITESYM column.</p></body></html>"))
         self.getresults.setItemText(self.getresults.indexOf(self.page_5), _translate("MainWindow", "Add multipoles to key table"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Tools"))
         self.loadBackupBut.setText(_translate("MainWindow", "Select backup to load"))
@@ -1863,7 +1863,8 @@ class Ui_MainWindow(object):
         self.menuManual.setText(_translate("MainWindow", "XD Toolkit Manual"))
         self.toolbarMolecool.setText(_translate("MainWindow", "MoleCoolQt"))
         self.toolbarMolecool.setToolTip(_translate("MainWindow", "Open structure in MoleCoolQt"))
-        self.toolbarRes2Inp.setText(_translate("MainWindow", "res -> inp"))
+        self.toolbarRes2Inp.setText(_translate("MainWindow", "<p>&#8594;</p>res -> inp"))
+        self.toolbarRes2Inp.setIconText(_translate("MainWindow", "res → inp"))
         self.toolbarRes2Inp.setToolTip(_translate("MainWindow", "Rename \'xd.res\' to \'xd.inp\'"))
         self.toolbarSetFolder.setText(_translate("MainWindow", "Select project folder"))
         self.toolbarXDLSMBut.setText(_translate("MainWindow", "Run XDLSM"))

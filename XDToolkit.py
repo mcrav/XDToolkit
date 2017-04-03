@@ -58,7 +58,7 @@ def lab2type(atomLabel):
     '''
     Convert atom label to atom type, e.g. 'C(2)' to 'C'. Return type.
     '''
-    return atomLabel.split('(')[0]
+    return atomLabel.split('(')[0].upper()
 
 def spec2norm(atomLabel):
     '''
@@ -139,7 +139,7 @@ def sendEmail(body = '', email = '', attachments = [], subject = ''):
     
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login("xdtoolkit@gmail.com", "***")
+    server.login("xdtoolkit@gmail.com", '***')
     text = msg.as_string()
     server.sendmail("xdtoolkit@gmail.com", "mcrav@chem.au.dk", text)
     
@@ -1733,137 +1733,106 @@ def autoAddResetBond():
     addedRBs = [rb.upper() for rb in addedRBs]
     return addedRBs
 
+def getPathAromatic(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
+    '''
+    Find a path through the structure from a given atom, limitied by a list of branches already visited.
+    Return a pipe separated string of path in the format 'C(1),asym|N(1),asym|H(1),asym'.
+    Return the last branch in the path.
+    Return the list of visited branches.
+    '''
+    currAtom = atom             #Current atom as program walks through structure.
+    passedAtoms = []            #Atoms already visited in the path.
+    
+    newUsedBranches = []        #List of all branches explored in the structure.
+                                #Branches are format 'ATOM~number of steps through path' i.e. 'C(1),asym~2'
+                                #means C(1) was passed on the second step through the structure.
+    
+    aromaticConfirmed = False     
+    steps = -1                   #Tracks number of steps taken down path.
+    
+    while currAtom not in passedAtoms:        #This condition will be satisfied until path can't go anywhere unvisited.
+        
+        passedAtoms.append(currAtom)          #Add current atoms to visited atoms list.
+        steps += 1                            #Add step to total number of steps in path
+        
+        atomNeebs = atomNeebDict[currAtom.split(',')[0]]        #Get neighbours of current atom.
+        
+        if steps == 5:
+            
+            for neeb in atomNeebs:
+                if neeb == atom:
+                    aromaticConfirmed = True
+                    return (pathStr, newUsedBranches[-1:], usedBranches, aromaticConfirmed)    #Return the path string, last new branch, and edited list of used branches.
+        
+        for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
+            branchTag = '{0}~{1}'.format(neeb, str(steps))  #Make 'C(1),asym~2' format branch tag for current atom and number of steps.
 
-def confirmAromaticity(startingAtom):
+            #If a neighbour of current atom is found that hasn't been visited,
+            #and hasn't been branched too in other trips down the same path.
+            if lab2type(neeb) == 'C' and neeb not in passedAtoms and branchTag not in usedBranches:
+
+                try:
+                    #If this path changes from the previous path at this atom,
+                    #remove all branch tags downstream from current number of steps.
+                    #i.e. if number of steps is 3 only keep branch tags with number of steps 0,1,2,3.
+                    if lastPath[steps] != neeb:
+                        usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
+                        
+                except IndexError:
+                    #If the last path didn't go this far, or it was empty also remove downstream branch tags.
+                    usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
+                
+                #Add branch tag of every atom in path to list.
+                newUsedBranches.append(branchTag)
+
+                pathStr += neeb + '|'   #Add new atom in path to pipe separated path string.
+                currAtom = neeb         #Make the current atom the new atom, quit the for loop
+                break                   #and look for the next atom along the path.
+    
+    pathStr = pathStr.strip('|')        #Remove the | from the end of the path string.
+    
+    return (pathStr, newUsedBranches[-1:], usedBranches, aromaticConfirmed)    #Return the path string, last new branch, and edited list of used branches.
+
+
+def confirmAromaticity(atom):
     '''
     Check if atom is part of a phenyl ring. Return result as bool.
     '''
+    lastPath = []
+    paths = []
+    usedBranches = []
+    atomNeebs = copy.copy(globAtomLabs)
     aromaticConfirmed = False
-    i = 0
-    currentAtom = copy.copy(startingAtom)
-    branches = {}
-    potentialAtom= ''
-    neighboursType = copy.copy(globAtomTypes)
-    neighboursLabs = copy.copy(globAtomLabs)
-
-    #atoms already travelled through
-    passedAtoms = []
-    while i < 7:
+    
+    while True:
         
-        #Get neighbours of current atom
-        currentNeebs = neighboursLabs[currentAtom.split(',')[0]] 
-  
-        atomFound = False
-        #Go through neighbours and find next atom in aromatic ring
-        for atom in currentNeebs:
-            splitLab = atom.split(',')
-            #If atom not already travelled and is C              
-            if atom not in passedAtoms and atom[0:2]=='C(':
-                
-                #Check atom has aromatic sig
-                if len(neighboursType[splitLab[0]]) == 3:
-                    #Add current atom to passed atoms
-                    passedAtoms.append(currentAtom)
-                    
-                    if [neeb[:2] for neeb in currentNeebs].count('C(') == 3:
-
-                        potentialAtom = ''.join([x for x in currentNeebs if x not in passedAtoms and x != atom]) 
-                        
-                        if potentialAtom:
-
-                            branches[currentAtom] = potentialAtom
-
-                    currentAtom = atom
-                    atomFound = True
-            
-                  #if starting atom is neighbour of current atom check if it has gone all the way round the ring        
-            if atom == startingAtom and len(passedAtoms) == 5:
-
-                
-                if i ==5:
-                    aromaticConfirmed = True  
-                    break
-
-            if atomFound == True:
-                break
-            
-        i+=1
+        pathRes = getPathAromatic(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
         
-    if branches:
-        if checkBranches(branches, startingAtom):
+        if pathRes[3] == True:
             aromaticConfirmed = True
-            
-        elif len(branches.keys()) == 2:
-            branch1 = random.choice(list(branches.keys()))
-            branches2 = {branch1:branches.pop(branch1)}  
-            
-            if checkBranches(branches, startingAtom) or checkBranches(branches2, startingAtom):
-                aromaticConfirmed = True
+            break
         
-    return aromaticConfirmed      
+        #If no path is returned all paths have been found and the while loop is ended.
+        if not pathRes[0]:
+            break
+        
+        else:  
 
+            #Store path as a list, to be the last path for the next time getPath is called.
+            lastPath = pathRes[0].split('|')    
 
-def checkBranches(branches, startingAtom):
-    '''
-    Check if atom is part of a phenyl ring.
-    Branches are given to determine which way to go at junctions.
-    Return result as bool.
-    '''
-    if not branches:
-        return False
-    
-    aromaticConfirmed = False
-    i = 0
+            #Update usedBranches to list returned from getPath.
+            usedBranches = pathRes[2]
+            
+            #Format path to string of atom types e.g. 'CCCNCCCH'
+            pathsFormatted = ''.join([item.split('(')[0] for item in pathRes[0].split('|')])
 
-    currentAtom = copy.copy(startingAtom)
-    neighboursLabs = copy.copy(globAtomLabs)
-    neighboursType = copy.copy(globAtomTypes)
+            paths.append(pathsFormatted)    #Add this path string to list of paths.
 
-    #atoms already travelled through
-    passedAtoms = []
-    
-    while i < 7:
-        #print(currentAtom)
-        #Get neighbours of current atom
-
-        if currentAtom in branches.keys():
-
-            passedAtoms.append(currentAtom)
-
-            currentAtom = branches[currentAtom]
-
-            i+=1
-
-        else:
-            currentNeebs = neighboursLabs[currentAtom.split(',')[0]] 
- 
-            #Go through neighbours and find next atom in aromatic ring
-            for atom in currentNeebs:
-                
-                #If atom not already travelled and is C              
-                if atom not in passedAtoms and atom[0:2]=='C(':
-
-                    #Check atom has aromatic sig
-                    if len(neighboursType[atom.split(',')[0]]) == 3:                       
-                        #Add current atom to passed atoms
-                        passedAtoms.append(currentAtom)
-                        #Move onto next atom
-
-                        currentAtom = atom 
-                        break
-
-                             
-                     #if starting atom is neighbour of current atom check if it has gone all the way round the ring        
-                if i==5:
-
-                    if atom == startingAtom and len(passedAtoms) == 5:
-
-                        aromaticConfirmed = True
-                        return aromaticConfirmed
-                 
-            i+=1
-
-    return aromaticConfirmed 
+            usedBranches.extend(pathRes[1]) #Add the last branch from the current path to the list of used branches.
+       
+    #When no more paths can be found or aromatic path has been found return aromatic results.    
+    return aromaticConfirmed
 
 
 def autoResetBond():
@@ -2393,8 +2362,8 @@ def writeCHEMCON(CHEMCONdict):
             else:
                 for atom,equi in CHEMCON.items():
                     if row[0].upper() in equi:
-                        rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}\n'.format(*row, atom)
-                        newmas.write(rowStr)  
+                        rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}'.format(*row)
+                        newmas.write(rowStr + atom + '\n')  
                         written = True
             
             if written == False:
@@ -5037,52 +5006,37 @@ def multipoleKeyTable():
     Write key table with multipoles based on SITESYM column of atom table.
     '''
     #Initialise dictionary containing multipole KEY table settings for common local symmetries.
-    multipoleBank = {'NO':'00 000 00000 0000000 000000000', '1':'10 111 11111 1111111 111111111','m':'10 110 10011 0110011 100110011' ,'mm2':'10 001 10010 1001000 100100010','cyl':'10 001 00000 0000000 000000000','cylX':'10 001 10000 1000000 000000000', 'cylXD':'10 001 10000 0000000 000000000'}
+    multipoleBank = {'NO': '00 000 00000 0000000 000000000', '1': '10 111 11111 1111111 111111111', 
+                     'cyl': '10 001 00000 0000000 000000000', 'cylX': '10 001 10000 1000000 000000000', 
+                     'cylXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010', 
+                     'm': '10 110 10011 0110011 100110011', 'mm2': '10 001 10010 1001000 100100010', 
+                     '4': '10 001 10000 1000000 100000010', '4mm': '10 001 10000 1000000 100000010', 
+                     '3': '10 001 10000 1000010 100001000', '6': '10 001 10000 1000000 100000000', 
+                     '6mm': '10 001 10000 1000000 100000000'}
+    
     XAtoms = ('CL','BR','I(', 'O(', 'N(')
+    noHexaAtoms = ['C(', 'O(']
 
-    
-    mas = open('xd.mas', 'r')       #Open xd.mas to read
-    newmas = open('xdnew.mas','w')  #Open xdnew.mas to write new mas file
-    
-    atomTab = False             #Initialise atomTab and keyTab bools to detect atom table and key table
-    keyTab = False
-    newMultipoles = {}          #Initialise dict to store atom labels and their corresponding multipoles
-    atomSyms = {}
-    
-    #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-    for line in mas:
+    with open('xd.mas','r') as mas:
+   
+        atomTab = False             #Initialise atomTab and keyTab bools to detect atom table and key table
+        keyTab = False
+        newMultipoles = {}          #Initialise dict to store atom labels and their corresponding multipoles
+        atomSyms = {}
         
-        if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-            atomTab = False
-    #In atom table, if a row has no chemcon (12 items in row) add to dictionary for printing to new file. 
-    #Atoms with CHEMCON will inherit multipole configuration if everything is set to 0.
-        if atomTab:
-            row = str.split(line)
-            if len(row)==12:
-                atomSyms[row[0].upper()] = row[11].upper()
-                if line[:2] not in XAtoms:
-                    if line[:2] != 'C(':
-                        #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                        newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-                    else:
-                        #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                        newMultStr = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-                        #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                        newMultipoles[row[0].upper()] = newMultStr[:-9] + '000000000'
-                #If cyl is sym label for a halogen include z2 quadrupole
-                else:
-                    if row[11] == 'cyl':
-                        if line[:2] != 'F(':
-                            newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylX'])
-                        else:
-                            newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylXD'])
-                    else:
-                        newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+        for line in mas:
             
-            elif len(row) == 13:
-                if row[11].upper() != atomSyms[row[12].upper()]:
+            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                atomTab = False
+        #In atom table, if a row has no chemcon (12 items in row) add to dictionary for printing to new file. 
+        #Atoms with CHEMCON will inherit multipole configuration if everything is set to 0.
+            if atomTab:
+                row = str.split(line)
+                if len(row)==12:
+                    atomSyms[row[0].upper()] = row[11].upper()
                     if line[:2] not in XAtoms:
-                        if line[:2] != 'C(':
+                        if line[:2] not in noHexaAtoms:
                             #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
                             newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
                         else:
@@ -5100,35 +5054,54 @@ def multipoleKeyTable():
                         else:
                             newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
                 
+                elif len(row) == 13:
+                    if row[11].upper() != atomSyms[row[12].upper()]:
+                        if line[:2] not in XAtoms:
+                            if line[:2] not in noHexaAtoms:
+                                #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
+                                newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+    
+                            else:
+                                #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
+                                newMultStr = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+                                #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
+                                newMultipoles[row[0].upper()] = newMultStr[:-9] + '000000000'
+                        
+                        #If cyl is sym label for a halogen include z2 quadrupole
+                        else:
+                            if row[11] == 'cyl':
+                                if line[:2] != 'F(':
+                                    newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylX'])
+                                else:
+                                    newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylXD'])
+                            else:
+                                newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+                    
+                    
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
                 
-        if line.startswith('ATOM     ATOM0'):
-            atomTab = True
+        
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+        #Find key table the same as with atomTab
+        for line in mas:
             
-    mas.close()                         #Need to close and open xd.mas again otherwise you just get a blank new mas file
-    mas = open('xd.mas','r')
-    #Find key table the same as with atomTab
-    for line in mas:
-        
-        if line.startswith('KAPPA'):
-            keyTab = False
-        
-        #In the key table, if the atom needs multipoles they are written
-        #otherwise write all 0s and atom will inherit multipoles from CHEMCON atom.
-        if keyTab:
-            row = str.split(line)
-            if row[0].upper() in newMultipoles:
-                newmas.write(newMultipoles[row[0].upper()] + '\n')
+            if line.startswith('KAPPA'):
+                keyTab = False
+            
+            #In the key table, if the atom needs multipoles they are written
+            #otherwise write all 0s and atom will inherit multipoles from CHEMCON atom.
+            if keyTab:
+                row = str.split(line)
+                if row[0].upper() in newMultipoles:
+                    newmas.write(newMultipoles[row[0].upper()] + '\n')
+                else:
+                    newmas.write('{0:8}{1}\n'.format(row[0].upper(), '000 000000 0000000000 000000000000000 00 000 00000 0000000 000000000'))
             else:
-                newmas.write('{0:8}{1}\n'.format(row[0].upper(), '000 000000 0000000000 000000000000000 00 000 00000 0000000 000000000'))
-        else:
-            newmas.write(line)
-        
-        if line.startswith('KEY     XYZ'):
-            keyTab = True
+                newmas.write(line)
             
-    #Close files and rename xdnew.mas to xd.mas
-    mas.close()
-    newmas.close() 
+            if line.startswith('KEY     XYZ'):
+                keyTab = True
     
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
@@ -5547,12 +5520,13 @@ class prefGui(QDialog, Ui_pref):
                         xdFolder = folder + '/bin'
                 else:
                     xdFolder = folder
-                    
-                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
-                self.envMsg = QMessageBox()
-                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
-                self.envMsg.setText(self.msg)
-                self.envMsg.show()
+                
+                if not os.environ.get('XD_DATADIR'):
+                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
+                    self.envMsg = QMessageBox()
+                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                    self.envMsg.setText(self.msg)
+                    self.envMsg.show()
                     
             elif sys.platform.startswith('linux'):
                 if 'xdlsm' not in os.listdir(folder):
@@ -5560,12 +5534,13 @@ class prefGui(QDialog, Ui_pref):
                         xdFolder = folder + '/bin'
                 else:
                     xdFolder = folder
-                    
-                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
-                self.envMsg = QMessageBox()
-                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
-                self.envMsg.setText(self.msg)
-                self.envMsg.show()
+                
+                if not os.environ.get('XD_DATADIR'):
+                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
+                    self.envMsg = QMessageBox()
+                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                    self.envMsg.setText(self.msg)
+                    self.envMsg.show()
     
             self.xdpath = xdFolder
             self.settingsXDLab.setText('Current path: ' + self.xdpath)
@@ -5672,7 +5647,9 @@ class NPP(QWidget, Ui_resmap):
         Setup normal probability plot window.
         '''
         self.values = grd2values()
-
+        self.maxValue = max(self.values)
+        self.minValue = min(self.values)
+        print(self.maxValue)
         fig = plt.figure(facecolor = '#dddddd', figsize=(7,5), dpi=80)
         ax = fig.add_subplot(1,1,1)
         probplot(self.values, plot = plt)
@@ -5683,10 +5660,13 @@ class NPP(QWidget, Ui_resmap):
         saveBut = QPushButton('Save PNG file')
         saveBut.clicked.connect(self.savePng)
         saveBut.setFixedWidth(150)
+        self.infoLab = QLabel()
+        self.infoLab.setText('Minimum residual = {0: .3f}\nMaximum residual = {1: .3f}'.format(self.minValue, self.maxValue))
         self.saveLab = QLabel()
         self.resmapLayout.addWidget(canvas, 0)
         self.resmapLayout.addWidget(saveBut,1)
         self.resmapLayout.addWidget(self.saveLab,2)
+        self.resmapLayout.addWidget(self.infoLab,3)
         self.setLayout(self.resmapLayout)
 
         # prevent the canvas to shrink beyond a point
@@ -6600,6 +6580,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             pass
         
     def findXD(self):
+        
         msg = '''Couldn't find folder containing the XD programs. Select folder now?'''
         findXD = QMessageBox.question(self, 'Find XD programs', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         
@@ -6616,12 +6597,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     self.warningMsg.show()
                 else:
                     xdFolder = folder
-                    
-                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
-                self.envMsg = QMessageBox()
-                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
-                self.envMsg.setText(self.msg)
-                self.envMsg.show()
+                
+                if not os.environ.get['XD_DATADIR']:
+                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. It should be:\n\nXD_DATADIR={}lib/xd\n\n'.format(xdFolder[:-3])
+                    self.envMsg = QMessageBox()
+                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                    self.envMsg.setText(self.msg)
+                    self.envMsg.show()
                     
             elif sys.platform.startswith('linux'):
                 if 'xdlsm' not in os.listdir(folder):
@@ -6632,12 +6614,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                         self.warningMsg.show()
                 else:
                     xdFolder = folder
-                    
-                self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
-                self.envMsg = QMessageBox()
-                self.envMsg.setWindowTitle('XD_DATADIR environment variable')
-                self.envMsg.setText(self.msg)
-                self.envMsg.show()
+                
+                if not os.environ.get['XD_DATADIR']:
+                    self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
+                    self.envMsg = QMessageBox()
+                    self.envMsg.setWindowTitle('XD_DATADIR environment variable')
+                    self.envMsg.setText(self.msg)
+                    self.envMsg.show()
 
             self.settings.setValue('xdpath', xdFolder)
             self.initialiseSettings()
@@ -7960,9 +7943,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 for atomLab in resetAtomRawList:
                     if '(' not in atomLab:
                         if atomLab.startswith('H') and len(atomLab) > 1:
-                            newAtomLab = '{0}({1})'.format('H', atomLab[1:])
+                            newAtomLab = 'H({0})'.format(atomLab[1:])
                         else:
-                            newAtomLab = '{0}({1})'.format('H', atomLab)
+                            newAtomLab = 'H({0})'.format(atomLab)
                         resetAtomList.append(newAtomLab)
                 
                         resetAtomStr += (newAtomLab + ', ')
@@ -7971,7 +7954,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 resetAtomList = sorted(list(set(resetAtomList)))
                 atomLabs = copy.copy(globAtomLabs)
                 atomLabs = atomLabs.keys()
-                wrongAtoms = [atom for atom in resetAtomList if atom not in atomLabs]
+                wrongAtoms = [atom for atom in resetAtomList if atom not in atomLabs or atom[:2] != 'H(']
                 resetAtomList = [atom for atom in resetAtomList if atom not in wrongAtoms]
                 resetAtomStr = ', '.join(lab for lab in resetAtomList).strip(', ')
 
