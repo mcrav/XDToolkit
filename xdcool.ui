@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -741,6 +741,9 @@
                       <width>150</width>
                       <height>16777215</height>
                      </size>
+                    </property>
+                    <property name="acceptDrops">
+                     <bool>true</bool>
                     </property>
                     <property name="text">
                      <string>0.7</string>
@@ -2814,7 +2817,7 @@
           <item>
            <widget class="QToolBox" name="toolBox_2">
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="page_18">
              <property name="geometry">
@@ -2997,8 +3000,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>537</width>
-               <height>214</height>
+               <width>1051</width>
+               <height>289</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3022,7 +3025,7 @@
                 <item>
                  <widget class="QRadioButton" name="setupFOURFFTBox">
                   <property name="text">
-                   <string>Produce map around atom with highest peak in XDFFT output.</string>
+                   <string>Produce map around atom nearest largest residual peak.</string>
                   </property>
                  </widget>
                 </item>
@@ -3043,8 +3046,11 @@
                       <height>16777215</height>
                      </size>
                     </property>
+                    <property name="text">
+                     <string/>
+                    </property>
                     <property name="placeholderText">
-                     <string>Atom label, i.e. C(2)</string>
+                     <string>C(1)</string>
                     </property>
                    </widget>
                   </item>
@@ -3645,7 +3651,7 @@
                   <item>
                    <widget class="QLabel" name="label_49">
                     <property name="text">
-                     <string>(m, mm2, cyl and 1 supported)</string>
+                     <string>(NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 6 and 6mm supported)</string>
                     </property>
                    </widget>
                   </item>
@@ -3722,8 +3728,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>258</width>
-               <height>290</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4622,6 +4628,11 @@
   <action name="menuSendSugg">
    <property name="text">
     <string>Send Suggestion</string>
+   </property>
+  </action>
+  <action name="newOption">
+   <property name="text">
+    <string>New option</string>
    </property>
   </action>
  </widget>

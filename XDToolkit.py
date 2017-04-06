@@ -5,6 +5,7 @@ from scipy.stats import probplot
 import matplotlib.pyplot as plt
 import random
 import copy
+import traceback as trcbk
 import subprocess
 import hashlib
 import time
@@ -48,11 +49,21 @@ def resetmas():
     except Exception:
         pass
 
+def timeDec(f):
+    '''
+    Decorator to print total running time of a function.
+    '''
+    def timeFunc(*args, **kwargs):
+        tzero = time.time()
+        rtn = f(*args, **kwargs)
+        tfin = time.time()
+        print('{0:40}{1:.7f} s'.format(f.__name__, tfin-tzero))
+        return rtn
+    return timeFunc
 	
 '''	
 #-------------------UTILITIES----------------------------------------
 '''
-
 
 def lab2type(atomLabel):
     '''
@@ -111,6 +122,7 @@ def formatLabels(inputAtomList):
             inputNewAtomList.append(atomLab)
     
     return inputNewAtomList
+
 
 
 def sendEmail(body = '', email = '', attachments = [], subject = ''):
@@ -615,6 +627,7 @@ def inp2fracPos():
     
     return (atomPos, a, b, c, alpha, beta, gamma)
 
+
 def getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma):
     '''
     Get distance between 2 atoms. Return distance.
@@ -630,13 +643,12 @@ def getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma):
     return bondDist
     
 
-#Get neighbour labs/types, angles, and bond distances
+@timeDec
 def ins2all():
     '''
     Find information about compound from shelx.ins input and calculations.
     Return nearest neighbours, atomic positions, bond distances, and bond angles.
     '''
-    startTime = time.time()
     if os.path.isfile('shelx.ins'):
         atomPosData = applySymOps(ins2fracPos('shelx.ins')[0])
         atomPos = atomPosData[0]
@@ -694,13 +706,6 @@ def ins2all():
                 pos2SpecialLab = pos2[1]
                 
                 bondDist = getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma)
-#                
-#                if ('O(2),edge2') in [pos2SpecialLab, pos1SpecialLab] and ('LI(0),asym') in [pos2SpecialLab, pos1SpecialLab]:
-
-                
-#                if 'C(7)' in pair and 'C(6)' in pair:
-#                    print(bondDist)
-#                    print((covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.57))
                     
                 if bondDist < (covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.5):
                     distances[frozenset(tupPair)] = round(bondDist, 4)
@@ -710,7 +715,7 @@ def ins2all():
                     
                 else: 
                     
-                                                                 #Get all x,y,z+-1 combos
+                    #Get all x,y,z+-1 combos
                     for combo in getCombos(atom1c):
                         bondDist = getBondDist(combo[0], atom2c, a, b, c, alpha, beta, gamma)
                         
@@ -730,10 +735,6 @@ def ins2all():
  
                             specAtomPos[combo1SpecialLab] = (combo[0], combo1InvSym)
                         
-            
-#    for item in neebSpecialPairs:
-#        if 'O(2)' in [item2.split(',')[0] for item2 in item]:
-#            print (item)
             
     #Get neighbours label dictionary       
     for pair in neebPairs:
@@ -772,8 +773,6 @@ def ins2all():
     for atom, neighbours in neebSpecLabs.items():
         neebSpecLabs[atom] = sorted(neighbours)
     
-    
-    
     asymNeebs = {}
     addedPosDict = {atom: [] for atom in neebLabs.keys()}
      
@@ -790,13 +789,7 @@ def ins2all():
                 addedPosDict[splitLab[0]].append(tupPos)
 
         else:          
-#            cutoff = (covradii[pair[1][:2].strip('(')] + covradii[pair[0][:2].strip('(')] + 0.57)
-#            parentAtom = specAtomPos[pair[0]][0]
-#            for combo in getCombos(specAtomPos[pair[1]][0]):
-#                bondDist = getBondDist(parentAtom, combo, a, b, c, alpha, beta, gamma)
-#                if bondDist < cutoff:
-#                    asymNeebs.setdefault(splitLab[0],[]).append((combo,pair[0]))
-#                    print(bondDist)                                                #Atom not in asym so need to transform it
+
             invSymOp = specAtomPos[pair[0]][1]              #Get inv symOp of asym atom
             pos = specAtomPos[pair[1]][0]                   #Position of atom not asym
 
@@ -804,27 +797,13 @@ def ins2all():
             y = pos[1]
             z = pos[2]
             for item in invSymOp:
-#                print(item)
-#                print(item[1])
-#                print('about to evaluate')
+
                 x = eval(item[0])                                  #Generate position in relation to asym atom
                 y = eval(item[1])
                 z = eval(item[2])
             newPos = np.array([x,y,z])
             tupPos = coords2tuple(newPos)
             
-            #TESTING
-#            if i == 3:
-#                print('----------------------------')
-#                print(pair[0])
-#                print(pair[1])
-#                print(invSymOp)
-#                print(specAtomPos[pair[0]])
-#                print(pair[0])
-#                print(specAtomPos[pair[1]])
-#                print(pair[1])
-#                
-#                print('i==' + str(i) + '------------------------------------')
             addedPos = addedPosDict[splitLab[0]]
             if tupPos not in addedPos:
 
@@ -835,7 +814,7 @@ def ins2all():
                 specDistances[frozenset([newLab, splitLab[0] + ',asym'])] = getBondDist(newPos, specAtomPos[splitLab[0] + ',asym'][0],a,b,c,alpha,beta,gamma)
                 addedPosDict[splitLab[0]].append(tupPos)
                 i+=1
-#            
+            
         splitLab = pair[1].split(',')
         tupPos = coords2tuple(specAtomPos[pair[0]][0])
         if splitLab[1] == 'asym':
@@ -860,17 +839,7 @@ def ins2all():
                 z = eval(item[2])
             newPos = np.array([x,y,z])
             tupPos = coords2tuple(newPos)
-            #TESTING
-#            if i == 3:
-#                print('--------------------------------------')
-#                print(pair[0])
-#                print(pair[1])
-#                print(invSymOp)
-#                print(specAtomPos[pair[0]])
-#                print(pair[0])
-#                print(specAtomPos[pair[1]])
-#                print(pair[1])
-#                print('i==' + str(i) + '------------------------------------')
+
             addedPos = addedPosDict[splitLab[0]]
             if tupPos not in addedPos:
                 newLab = pair[0] + '.dum' + str(i)
@@ -880,22 +849,6 @@ def ins2all():
                 specDistances[frozenset([newLab, splitLab[0] + ',asym'])] = getBondDist(newPos, specAtomPos[splitLab[0] + ',asym'][0],a,b,c,alpha,beta,gamma)
                 addedPosDict[splitLab[0]].append(tupPos)
                 i+=1
-        #TESTING
-#    atom1c = specAtomPos['MN(1),asym'][0]
-#
-#    for item in asymNeebs['N(0)']:
-#        print('------------------------')
-#        print(item[0])
-#        print(item[1])
-#        atom2c = (item[0][0], item[0][1], item[0][2])
-#        bondDist = getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma)
-#        print(bondDist)
-#        print(specAtomPos[item[1]][1])
-#        print(item[1].split('.')[0])
-#        print(specAtomPos[item[1].split('.')[0]])
-#        print('---------------------------------------------------')
-    
-
 
     #Get neighbour type dictionary
     for atom, neebs in asymNeebs.items():
@@ -926,65 +879,11 @@ def ins2all():
             specAngles[atom2].append((round(angle,2), atomsInAngle))
                
 
-#Remove atom positions from atomLab dict
-
+    #Remove atom positions from atomLab dict
     atomLabs = {atom : [neeb[1] for neeb in neighbours] for atom, neighbours in asymNeebs.items()}
 
-#    newAngles = {}
-#    #Turn specAngle dict into dict for just atoms in asymmetric unit.
-#    for atom, angleList in specAngles.items():
-#        lab = atom.split(',')[0]
-#        for angle in angleList:
-#
-#            if lab not in newAngles.keys():
-#                newAngles[lab] = [angle]
-#            else:
-#                newAngles[lab].append(angle)
-# 
-    
-#    
-    
-#    finalAngles = {}
-#    #Remove duplicates
-#    addedAngles = {}
-#    for lab, angleList in newAngles.items():
-#        addedAngles[lab] = {}
-#        finalAngles[lab] = []
-#        for angle in angleList:
-#            if frozenset(angle[1]) in addedAngles[lab].keys():
-#                if angle[0].round(1) not in addedAngles[lab][frozenset(angle[1])]:
-#                    addedAngles[lab][frozenset(angle[1])].append(angle[0].round(1))
-#                    finalAngles[lab].append(angle)
-#            else:
-#                addedAngles[lab][frozenset(angle[1])] = [angle[0].round(1)]
-#                finalAngles[lab].append(angle)
-
-#Checker to see what angles have been added
-#    m=0
-#    for frozset,angle in addedAngles['MN(1)'].items():
-#        for k in angle:
-#            if 'MN(1)' in frozset:
-#                print(k)
-#                print(frozset)
-#                m+=1
-#    print(m)
-#    
-#    for item in finalAngles['MN(2)']:
-#        print(item)
-    
-
-    #Get angles
-#    for atom, neighbours in neebLabs.items():
-#        atom2 = atom
-#        angles[atom] = []
-#        pairs  = itertools.combinations(neighbours, 2)
-#        for pair in pairs:
-#            atomsInAngle = [pair[0],atom2,pair[1]]
-#            angle = atoms2angle((pair[0],atom2,pair[1]), (a,b,c,alpha,beta,gamma), atomPos, distances)
-#            angles[atom].append((round(angle,2), atomsInAngle))
-    endTime = time.time()
-    print('\n\n---------------------------------\nins2all took {0:.2f} seconds'.format(endTime-startTime))
     return (atomLabs, neebTypes, specAngles, specDistances, specAtomPos)
+
 
 def getCombos(coord):
     '''
@@ -1336,7 +1235,13 @@ def addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym):
         keyTab = False
         result = ''
         
-        multipoleBank = {'NO':'00 000 00000 0000000 000000000', '1':'10 111 11111 1111111 111111111','m':'10 110 10011 0110011 100110011' ,'mm2':'10 001 10010 1001000 100100010','cyl':'10 001 00000 0000000 000000000','cylHalogen':'10 001 10000 0000000 000000000'}
+        multipoleBank = {'NO': '00 000 00000 0000000 000000000', '1': '10 111 11111 1111111 111111111', 
+                 'cyl': '10 001 00000 0000000 000000000', 'cylX': '10 001 10000 1000000 000000000', 
+                 'cylXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010', 
+                 'm': '10 110 10011 0110011 100110011', 'mm2': '10 001 10010 1001000 100100010', 
+                 '4': '10 001 10000 1000000 100000010', '4mm': '10 001 10000 1000000 100000010', 
+                 '3': '10 001 10000 1000010 100001000', '6': '10 001 10000 1000000 100000000', 
+                 '6mm': '10 001 10000 1000000 100000000'}
         
         for line in mas:
             if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
@@ -3224,7 +3129,6 @@ def multipoleMagician(trackAtom = None):
     '''
     Setup xd.mas to refine multipoles. Return list of atoms for which problems were encountered.
     '''
-    #x = time.time()
     setupmas()
     resetKeyTable()
     kapMonRef()
@@ -3232,9 +3136,6 @@ def multipoleMagician(trackAtom = None):
     warnings = makeLCS()
     multipoleKeyTable()
     return warnings
-    #y = time.time()
-    #t = y-x
-    #print(t)
 
 
 def nonHPosADPKey():
@@ -6000,7 +5901,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.backupConfirmStr = 'Current files backed up to: '
         self.labList = [self.resNPPLab, self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
         #Display current working directory on startup.
-        self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
+        self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
         self.statusbar.addWidget(self.cwdStatusLab)
         self.toolbarRefreshCwd.triggered.connect(self.refreshFolder)
         self.toolbarSetFolder.triggered.connect(self.setFolder)
@@ -7209,14 +7110,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         try:
             os.chdir(folder)
             self.changeWizBackup()
-            self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
+            self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
             self.resetLabels()
             self.check4res()
             initialiseGlobVars()
             self.changeUserIns()
             self.resetWizInput()
         except Exception:
-            self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
+            self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
 
     def openCwd(self):
         '''
@@ -7263,7 +7164,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         
         if ins and hkl:
             os.chdir(projectFolder)
-            self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
+            self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
             initialiseGlobVars()
             return True
         
@@ -7466,7 +7367,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             os.chdir(self.settings.value('lastcwd'))
         except Exception:
             pass
-        self.cwdStatusLab.setText('Current working directory: ' + os.getcwd())
+        self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
 
 
     def openPrefs(self):
@@ -8461,8 +8362,9 @@ class molecool(QThread):
                 self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
         except Exception:
             pass
-        
+       
 def myExceptHook(Type, value, traceback):
+    trcbk.print_exc()
     pass
 
 ##Run GUI
