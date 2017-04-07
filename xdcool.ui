@@ -2824,8 +2824,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>257</width>
+               <height>88</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3331,7 +3331,7 @@
              <number>1</number>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <property name="tabSpacing">
              <number>6</number>
@@ -3651,7 +3651,7 @@
                   <item>
                    <widget class="QLabel" name="label_49">
                     <property name="text">
-                     <string>(NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 6 and 6mm supported)</string>
+                     <string>(NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 3m, 6 and 6mm supported)</string>
                     </property>
                    </widget>
                   </item>
@@ -3728,8 +3728,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>258</width>
+               <height>290</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3955,7 +3955,7 @@
                 <item row="0" column="0" colspan="2">
                  <widget class="QLabel" name="multKeyLab">
                   <property name="text">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list. Supports NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 6 and 6mm in SITESYM column.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add multipoles to the KEY table based on SITESYM and CHEMCON in ATOM list. Supports NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 3m, 6 and 6mm in SITESYM column.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

@@ -5,7 +5,7 @@ from scipy.stats import probplot
 import matplotlib.pyplot as plt
 import random
 import copy
-import traceback as trcbk
+from traceback import print_exception
 import subprocess
 import hashlib
 import time
@@ -28,9 +28,9 @@ from resmap import Ui_resmap
 from sendBug import Ui_sendBug
 from sendSugg import Ui_sendSugg
 from splash import Ui_splash
-from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QDialogButtonBox, QPushButton, QApplication, QDialog, QLineEdit, QFileDialog, QMainWindow
-from PyQt5.QtCore import QCoreApplication, QSettings, QThread, pyqtSignal
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QGridLayout, QDialogButtonBox, QSplashScreen, QPushButton, QApplication, QDialog, QLineEdit, QFileDialog, QMainWindow
+from PyQt5.QtCore import QCoreApplication, QSettings, QThread, pyqtSignal, Qt
+from PyQt5.QtGui import QPixmap, QFont
 
 '''
 #-------------------DEV TOOLS----------------------------------------  
@@ -1236,12 +1236,12 @@ def addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym):
         result = ''
         
         multipoleBank = {'NO': '00 000 00000 0000000 000000000', '1': '10 111 11111 1111111 111111111', 
-                 'cyl': '10 001 00000 0000000 000000000', 'cylX': '10 001 10000 1000000 000000000', 
-                 'cylXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010', 
-                 'm': '10 110 10011 0110011 100110011', 'mm2': '10 001 10010 1001000 100100010', 
-                 '4': '10 001 10000 1000000 100000010', '4mm': '10 001 10000 1000000 100000010', 
-                 '3': '10 001 10000 1000010 100001000', '6': '10 001 10000 1000000 100000000', 
-                 '6mm': '10 001 10000 1000000 100000000'}
+                     'CYL': '10 001 00000 0000000 000000000', 'CYLX': '10 001 10000 1000000 000000000', 
+                     'CYLXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010', 
+                     'M': '10 110 10011 0110011 100110011', 'MM2': '10 001 10010 1001000 100100010', 
+                     '4': '10 001 10000 1000000 100000010', '4MM': '10 001 10000 1000000 100000010', 
+                     '3': '10 001 10000 1000010 100001000', '3M': '10 001 10000 1000010 100001000',  
+                     '6': '10 001 10000 1000000 100000000', '6MM': '10 001 10000 1000000 100000000'}
         
         for line in mas:
             if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
@@ -4908,12 +4908,12 @@ def multipoleKeyTable():
     '''
     #Initialise dictionary containing multipole KEY table settings for common local symmetries.
     multipoleBank = {'NO': '00 000 00000 0000000 000000000', '1': '10 111 11111 1111111 111111111', 
-                     'cyl': '10 001 00000 0000000 000000000', 'cylX': '10 001 10000 1000000 000000000', 
-                     'cylXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010', 
-                     'm': '10 110 10011 0110011 100110011', 'mm2': '10 001 10010 1001000 100100010', 
-                     '4': '10 001 10000 1000000 100000010', '4mm': '10 001 10000 1000000 100000010', 
-                     '3': '10 001 10000 1000010 100001000', '6': '10 001 10000 1000000 100000000', 
-                     '6mm': '10 001 10000 1000000 100000000'}
+                     'CYL': '10 001 00000 0000000 000000000', 'CYLX': '10 001 10000 1000000 000000000', 
+                     'CYLXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010', 
+                     'M': '10 110 10011 0110011 100110011', 'MM2': '10 001 10010 1001000 100100010', 
+                     '4': '10 001 10000 1000000 100000010', '4MM': '10 001 10000 1000000 100000010', 
+                     '3': '10 001 10000 1000010 100001000', '3M': '10 001 10000 1000010 100001000',  
+                     '6': '10 001 10000 1000000 100000000', '6MM': '10 001 10000 1000000 100000000'}
     
     XAtoms = ('CL','BR','I(', 'O(', 'N(')
     noHexaAtoms = ['C(', 'O(']
@@ -4933,50 +4933,51 @@ def multipoleKeyTable():
         #In atom table, if a row has no chemcon (12 items in row) add to dictionary for printing to new file. 
         #Atoms with CHEMCON will inherit multipole configuration if everything is set to 0.
             if atomTab:
-                row = str.split(line)
+                row = str.split(line.upper())
+                
                 if len(row)==12:
-                    atomSyms[row[0].upper()] = row[11].upper()
+                    atomSyms[row[0]] = row[11]
                     if line[:2] not in XAtoms:
                         if line[:2] not in noHexaAtoms:
                             #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                            newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+                            newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
                         else:
                             #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
                             newMultStr = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
                             #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                            newMultipoles[row[0].upper()] = newMultStr[:-9] + '000000000'
+                            newMultipoles[row[0]] = newMultStr[:-9] + '000000000'
                     #If cyl is sym label for a halogen include z2 quadrupole
                     else:
-                        if row[11] == 'cyl':
+                        if row[11] == 'CYL':
                             if line[:2] != 'F(':
-                                newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylX'])
+                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLX'])
                             else:
-                                newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylXD'])
+                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLXD'])
                         else:
-                            newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+                            newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
                 
                 elif len(row) == 13:
-                    if row[11].upper() != atomSyms[row[12].upper()]:
+                    if row[11] != atomSyms[row[12]]:
                         if line[:2] not in XAtoms:
                             if line[:2] not in noHexaAtoms:
                                 #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                                newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
     
                             else:
                                 #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
                                 newMultStr = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
                                 #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                                newMultipoles[row[0].upper()] = newMultStr[:-9] + '000000000'
+                                newMultipoles[row[0]] = newMultStr[:-9] + '000000000'
                         
                         #If cyl is sym label for a halogen include z2 quadrupole
                         else:
-                            if row[11] == 'cyl':
+                            if row[11] == 'CYL':
                                 if line[:2] != 'F(':
-                                    newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylX'])
+                                    newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLX'])
                                 else:
-                                    newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['cylXD'])
+                                    newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLXD'])
                             else:
-                                newMultipoles[row[0].upper()] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
+                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
                     
                     
             if line.startswith('ATOM     ATOM0'):
@@ -5486,13 +5487,6 @@ class prefGui(QDialog, Ui_pref):
         except Exception:
             self.chooseTextPathLab.setText('Current path: ')
             
-class Splash(QDialog, Ui_splash):
-    '''
-    DOESN'T WORK: Splash screen.
-    '''
-    def __init__(self, parent=None):
-        super(Splash, self).__init__(parent)
-        self.setupUi(self)
 
 class resmap(QWidget, Ui_resmap):
     '''
@@ -5865,6 +5859,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
+
         self.cwdStatusLab = QLabel()
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
@@ -5900,6 +5895,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.lstMissingErrorMsg = 'Select add shelx.ins to project folder and try again.'
         self.backupConfirmStr = 'Current files backed up to: '
         self.labList = [self.resNPPLab, self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
+        self.tabWidget.setCurrentIndex(0)
         #Display current working directory on startup.
         self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
         self.statusbar.addWidget(self.cwdStatusLab)
@@ -7113,6 +7109,19 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
             self.resetLabels()
             self.check4res()
+#            loading = QWidget()
+#            
+#            loadLayout = QGridLayout()
+#            loadMsg = QLabel()
+#            loadMsg.setText('Initializing compound...')
+#            loadLayout.addWidget(loadMsg, 0)
+#            loading.setLayout(loadLayout)
+#            
+#            loading.show()
+#            try:
+#                initialiseGlobVars()
+#            finally:
+#                loading.accept()
             initialiseGlobVars()
             self.changeUserIns()
             self.resetWizInput()
@@ -8304,8 +8313,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                         lsmTimes.write(' ')
                 except Exception:
                     pass
-               
-        self.xdlsm.xdlsmRunning.terminate()
+        try:
+            self.xdlsm.xdlsmRunning.terminate()
+        except Exception:
+            pass
         event.accept()
 
     
@@ -8364,16 +8375,30 @@ class molecool(QThread):
             pass
        
 def myExceptHook(Type, value, traceback):
-    trcbk.print_exc()
+    print_exception(Type, value, traceback)
     pass
 
 ##Run GUI
 if __name__ == '__main__':
+    
     sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
     app = QApplication(sys.argv)
+    splash_pix = QPixmap('res/flatearth.png')
+    splash = QSplashScreen(splash_pix)
+    splash.setMask(splash_pix.mask())
+    font = QFont()
+    font.setFamily("Bitstream Vera Sans Mono")
+    splash.setFont(font)
+    splash.showMessage('Initializing...',
+                           Qt.AlignBottom | Qt.AlignLeft,
+                           Qt.white)
+    
+    splash.show()
     prog = XDToolGui()
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
+    splash.finish(prog)
     prog.show()
+    
     sys.exit(app.exec_())
 #os.chdir('/home/matt/dev/XDTstuff/test/carba')
 #initialiseGlobVars()

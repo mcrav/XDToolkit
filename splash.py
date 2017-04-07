@@ -23,6 +23,10 @@ class Ui_splash(object):
         self.gridLayout.setObjectName("gridLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
+        self.progressBar = QtWidgets.QProgressBar(splash)
+        self.progressBar.setProperty("value", 24)
+        self.progressBar.setObjectName("progressBar")
+        self.verticalLayout.addWidget(self.progressBar)
         self.statusLab = QtWidgets.QLabel(splash)
         self.statusLab.setText("")
         self.statusLab.setObjectName("statusLab")
@@ -35,14 +39,4 @@ class Ui_splash(object):
     def retranslateUi(self, splash):
         _translate = QtCore.QCoreApplication.translate
         splash.setWindowTitle(_translate("splash", "Initializing"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    splash = QtWidgets.QDialog()
-    ui = Ui_splash()
-    ui.setupUi(splash)
-    splash.show()
-    sys.exit(app.exec_())
 
