@@ -7103,30 +7103,31 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         folder = str(QFileDialog.getExistingDirectory(None, "Select Directory"))
         
+        os.chdir(folder)
+        self.changeWizBackup()
+        self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
+        self.resetLabels()
+        self.check4res()
+        
+        loading = QWidget()
+        loadLayout = QGridLayout()
+        loadMsg = QLabel()
+        loadMsg.setText('Initializing compound...')
+        loadLayout.addWidget(loadMsg, 0, 0)
+        loading.setLayout(loadLayout)
+        loading.setGeometry(300, 300, 300, 100)
+        loading.setWindowTitle('Loading')
+        loading.show()
+        
         try:
-            os.chdir(folder)
-            self.changeWizBackup()
-            self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
-            self.resetLabels()
-            self.check4res()
-#            loading = QWidget()
-#            
-#            loadLayout = QGridLayout()
-#            loadMsg = QLabel()
-#            loadMsg.setText('Initializing compound...')
-#            loadLayout.addWidget(loadMsg, 0)
-#            loading.setLayout(loadLayout)
-#            
-#            loading.show()
-#            try:
-#                initialiseGlobVars()
-#            finally:
-#                loading.accept()
             initialiseGlobVars()
             self.changeUserIns()
             self.resetWizInput()
+            loading.close()
+
         except Exception:
             self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
+            loading.close()
 
     def openCwd(self):
         '''
