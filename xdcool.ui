@@ -444,7 +444,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.4.2</string>
+   <string>XD Toolkit 0.5.0</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>4</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -582,7 +582,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1077</width>
+             <width>703</width>
              <height>568</height>
             </rect>
            </property>
@@ -1294,8 +1294,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1091</width>
-             <height>474</height>
+             <width>705</width>
+             <height>432</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_10">
@@ -1846,7 +1846,7 @@
            <number>20</number>
           </property>
           <item>
-           <widget class="QToolBox" name="toolBox_4">
+           <widget class="QToolBox" name="rbToolbox">
             <property name="font">
              <font>
               <weight>50</weight>
@@ -1861,8 +1861,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>318</height>
+               <width>613</width>
+               <height>334</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2815,17 +2815,17 @@
            <number>20</number>
           </property>
           <item>
-           <widget class="QToolBox" name="toolBox_2">
+           <widget class="QToolBox" name="resToolbox">
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="page_18">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>257</width>
-               <height>88</height>
+               <width>1051</width>
+               <height>289</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3000,8 +3000,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>505</width>
+               <height>214</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3326,12 +3326,12 @@
            <number>20</number>
           </property>
           <item>
-           <widget class="QToolBox" name="getresults">
+           <widget class="QToolBox" name="toolsToolbox">
             <property name="lineWidth">
              <number>1</number>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <property name="tabSpacing">
              <number>6</number>
@@ -3341,8 +3341,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>639</width>
+               <height>310</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3911,8 +3911,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>344</width>
+               <height>194</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4039,7 +4039,7 @@
            <number>20</number>
           </property>
           <item>
-           <widget class="QToolBox" name="toolBox_3">
+           <widget class="QToolBox" name="backupToolbox">
             <property name="lineWidth">
              <number>1</number>
             </property>
@@ -4054,8 +4054,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>376</height>
+               <width>231</width>
+               <height>108</height>
               </rect>
              </property>
              <attribute name="label">

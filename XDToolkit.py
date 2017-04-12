@@ -3,6 +3,7 @@ from asym2unit import applySymOps
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from scipy.stats import probplot
 import matplotlib.pyplot as plt
+from ast import literal_eval
 import random
 import copy
 from traceback import print_exception
@@ -18,7 +19,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import sys
 import webbrowser
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from collections import Counter
 from xdcool import Ui_MainWindow
 from pref import Ui_pref
@@ -881,7 +882,7 @@ def ins2all():
 
     #Remove atom positions from atomLab dict
     atomLabs = {atom : [neeb[1] for neeb in neighbours] for atom, neighbours in asymNeebs.items()}
-
+    
     return (atomLabs, neebTypes, specAngles, specDistances, specAtomPos)
 
 
@@ -958,6 +959,43 @@ def atoms2angle(atoms, atomPos, distances, metricMatrix):
     return roundAngle       
 
 
+def getmd5Hash(file):
+    '''
+    Create md5 hash of shelx.hkl file. Return hash as string.
+    '''
+    hklHash = ''
+    
+    if os.path.isfile(file):
+        with open(file,'r') as hkl:
+            hklTxt = hkl.read()
+            hklHash = hashlib.md5(bytes(hklTxt, 'utf-8')).hexdigest()
+            
+    return hklHash
+
+
+def inCache(file):
+    '''
+    Find out if project is in cache. Return result as bool and md5 hash of shelx.hkl.
+    '''
+    global cachePath
+    inCache = False
+    
+    hklHash = getmd5Hash(file)
+    
+    if os.path.isdir('{}/{}'.format(cachePath, hklHash)):
+        inCache = True
+    
+    return (inCache, hklHash)
+
+
+def clearCache():
+    '''
+    Delete everything from cache.
+    '''
+    rmtree(cachePath)
+    os.makedirs(cachePath)
+    
+    
 def initialiseGlobVars():
     '''
     Initialise global variables of nearest neighbour, bond angle and atomic position dictionaries.
@@ -966,15 +1004,65 @@ def initialiseGlobVars():
     global globAtomTypes
     global globAtomAngles
     global globAtomPos
+    global cachePath
     
-    if os.path.isfile('shelx.ins'):
-        x = ins2all()
+    if os.path.isfile('shelx.hkl'):
+        cacheRes = inCache('shelx.hkl')
+        hklHash = cacheRes[1]
+        isInCache = cacheRes[0]
         
-        globAtomLabs = x[0]
-        globAtomTypes = x[1]
-        globAtomAngles = x[2]
-        globAtomPos = x[4]
+        #If global dicts are in the cache folder, load them from there instead of making them again.
+        try:
+            if not isInCache:
+                raise Exception
+            else:
+                with open('{}/{}/atomLabs.buckfast'.format(cachePath, hklHash),'r') as atomLabs:
+                    globAtomLabs = literal_eval(atomLabs.read())
+                    
+                with open('{}/{}/atomTypes.buckfast'.format(cachePath, hklHash),'r') as atomTypes:
+                    globAtomTypes = literal_eval(atomTypes.read())
+                    
+                with open('{}/{}/atomAngles.buckfast'.format(cachePath, hklHash),'r') as atomAngles:
+                    globAtomAngles = literal_eval(atomAngles.read())
+                    
+                with open('{}/{}/atomPos.buckfast'.format(cachePath, hklHash),'r') as atomPos:
+                    globAtomPosRaw = literal_eval(atomPos.read())
+                    globAtomPos = {}
+                    for item, value in globAtomPosRaw.items():
+                        globAtomPos[item] = (np.array(value[0]), value[1])
+        
+        except Exception as e:
+            if os.path.isfile('shelx.ins'):
+                x = ins2all()
+                print(str(e))
+                globAtomLabs = x[0]
+                globAtomTypes = x[1]
+                globAtomAngles = x[2]
+                globAtomPos = x[4]
+                
+                #Write dicts to cache folder
+                newCacheFolderPath = '{}/{}'.format(cachePath, hklHash)
+                if os.path.isdir(newCacheFolderPath):
+                    rmtree(newCacheFolderPath)
+                
+                os.makedirs(newCacheFolderPath)
+                
+                with open('{}/atomLabs.buckfast'.format(newCacheFolderPath),'w') as atomLabs:
+                    atomLabs.write(str(globAtomLabs))
+                    
+                with open('{}/atomTypes.buckfast'.format(newCacheFolderPath),'w') as atomTypes:
+                    atomTypes.write(str(globAtomTypes))
+                    
+                with open('{}/atomAngles.buckfast'.format(newCacheFolderPath),'w') as atomAngles:
+                    atomAngles.write(str(globAtomAngles))
+                    
+                with open('{}/atomPos.buckfast'.format(newCacheFolderPath),'w') as atomPos:
+                    newPos = {}
+                    for item, value in x[4].items():
+                        newPos[item] = (tuple(value[0]), value[1])
 
+                    atomPos.write(str(newPos))
+                
 
 def res2inp():
     '''
@@ -997,8 +1085,7 @@ def backup(folderName):
     if not os.path.isdir('{}{}{}'.format(os.getcwd(), '/',folder)):                      #Check if new folder exists
         os.makedirs(folder)                             #If it doesn't exist, make it
     
-    try:    
-                                                  #Copy all files to backup folder
+    try:                                                #Copy all files to backup folder
         copyfile('xd.mas',folder + '/xd.mas')           #try and except used in case one of the files
     except:                                             #doesn't exist i.e. xd.res
         pass
@@ -1831,9 +1918,6 @@ def findCHEMCON():
         for env, atoms in envs.items():
             if len(atoms) > 1:
                 CHEMCON[atoms[0]] = atoms[1:]
-                print(atoms[0])
-                print(atoms[1:])
-                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###~~~~~~~####')
             else:
                 CHEMCON[atoms[0]] = []
     
@@ -1956,10 +2040,8 @@ def removeCHEMCON():
     '''
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
         
-
         atomTab = False
     
-            
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
             #Detect end of ATOM table
@@ -2580,6 +2662,46 @@ def getDorbs():
     return orbPops  #Return list of tuples with orbitals and their populations
 
 
+def readSUs(file):
+    '''
+    Get all SUs from xd_lsm.out and sort them. Return sorted list of tuples of form (atom, parameter, SU).
+    '''
+    i = 0
+    paramsList = []
+    paramTab = False
+    
+    with open(file,'r') as lsm:
+
+        for line in lsm:
+            
+            if line.startswith(' ATOM #   1'):
+                paramTab = True
+            
+            if paramTab:
+                if line.startswith(' ATOM #'):
+                    row = line.split()
+                    atom = row[4]
+                    i=0
+                    
+                elif i > 5 and not line.startswith('------'):
+                   
+                    row = line.split()
+                    if len(row) == 7:
+                         SU = line[48:56]
+                         param = row[0]
+  
+                         paramsList.append((atom, param, float(SU)))
+                    
+            if line.startswith(' SCALE') and len(line.split()) == 7:
+                break    
+            
+            i+=1
+
+    paramsList.sort(key=lambda item: item[2])
+        
+    return paramsList
+
+
 def getRF2(folder=None):
     '''
     Get final RF2 value from xd_lsm.out. Return value.
@@ -2849,8 +2971,8 @@ def lowAngleRef(sinthlMin,sinthlMax):
                     newmas.write(rowStr + '\n')
             
             elif line.startswith('RESET BOND'):
-    #            newmas.write('!' + line)
-                newmas.write(line)
+                newmas.write('!' + line)
+#                newmas.write(line)
             
             elif line.startswith('SKIP'):
                 row = str.split(line)
@@ -4909,14 +5031,14 @@ def multipoleKeyTable():
     #Initialise dictionary containing multipole KEY table settings for common local symmetries.
     multipoleBank = {'NO': '00 000 00000 0000000 000000000', '1': '10 111 11111 1111111 111111111', 
                      'CYL': '10 001 00000 0000000 000000000', 'CYLX': '10 001 10000 1000000 000000000', 
-                     'CYLXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010', 
+                     'CYLXD': '10 001 10000 1000000 000000000', '2': '10 001 10010 1001000 100100010', 
                      'M': '10 110 10011 0110011 100110011', 'MM2': '10 001 10010 1001000 100100010', 
                      '4': '10 001 10000 1000000 100000010', '4MM': '10 001 10000 1000000 100000010', 
                      '3': '10 001 10000 1000010 100001000', '3M': '10 001 10000 1000010 100001000',  
                      '6': '10 001 10000 1000000 100000000', '6MM': '10 001 10000 1000000 100000000'}
     
-    XAtoms = ('CL','BR','I(', 'O(', 'N(')
-    noHexaAtoms = ['C(', 'O(']
+    XAtoms = ('CL', 'F(', 'BR','I(', 'O(', 'N(')
+    noHexaAtoms = ['C(', 'O(', 'N(']
 
     with open('xd.mas','r') as mas:
    
@@ -4978,7 +5100,7 @@ def multipoleKeyTable():
                                     newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLXD'])
                             else:
                                 newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-                    
+                            print(newMultipoles[row[0]])
                     
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
@@ -5322,20 +5444,8 @@ class XDINI(QThread):
         self.startSignal.emit()
         
         try:
-            if os.path.exists('shelx.ins'):
-                x = ins2all()
-
-            global globAtomLabs
-            globAtomLabs = x[0]
+            initialiseGlobVars()
             
-            global globAtomTypes
-            globAtomTypes = x[1]
-            
-            global globAtomAngles
-            globAtomAngles = x[2]
-            
-            global globAtomPos
-            globAtomPos = x[4]
         except Exception:
             pass
         
@@ -5659,6 +5769,7 @@ class wizardRunning(QDialog, Ui_wizard):
         Finally emit finished signal.        
         '''
         print('xdWizRef called')
+
         if self.collectDat:
             global timeFileAbsPath
             if self.i > 0 and self.i < len(self.refList):
@@ -5686,9 +5797,7 @@ class wizardRunning(QDialog, Ui_wizard):
         
         global wizUniSnlMax
         self.i += 1
-        if self.i > 1:
-            backup('{}/{}'.format(self.folder, self.refList[self.i-1]))
-            print('backed up')
+        
         if self.i > 1 and not self.errorFixed:
             error = check4errors()
             
@@ -5723,6 +5832,9 @@ class wizardRunning(QDialog, Ui_wizard):
                     return
             else: 
                 print('no errors')
+                if self.i > 1:
+                    backup('{}/{}'.format(self.folder, self.refList[self.i-1]))
+                    print('backed up')
                 if self.i > 1:
                     c = ''
                     resStr = str(self.wizResLab.text())
@@ -5766,6 +5878,10 @@ class wizardRunning(QDialog, Ui_wizard):
             refNum = refSplit[0]
             refName = ' '.join(refSplit[2:])
             
+            print(refName)
+            
+            noUniSnl = False
+            
             if refName.upper().startswith('SCALE'):
                 scaleFacRef()
                 print('scalefacref')
@@ -5775,11 +5891,14 @@ class wizardRunning(QDialog, Ui_wizard):
                 sinthlMax = wizHighSnlMax
                 highAngleRef(sinthlMin,sinthlMax)
                 wizAddResetBond()
+                noUniSnl = True
                 
             elif refName.upper().startswith('LOW ANGLE'):
+                print('LOW ANGLE~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                 sinthlMin = wizLowSnlMin
                 sinthlMax = wizLowSnlMax
                 lowAngleRef(sinthlMin,sinthlMax)
+                noUniSnl = True
                 
             elif refName.upper().startswith('KAPPA'):
                 wizAddCHEMCON()
@@ -5815,7 +5934,7 @@ class wizardRunning(QDialog, Ui_wizard):
                 checkMultRes()           
                 removeCHEMCON()
             
-            if wizUniSnlMax:
+            if wizUniSnlMax and not noUniSnl:
                 addSnlCutoff(snlmin = 0.0, snlmax = wizUniSnlMax)
             if self.collectDat:
                 self.startingTime = time.time()
@@ -5827,6 +5946,7 @@ class wizardRunning(QDialog, Ui_wizard):
             
         except Exception:
             self.wizStatusLab.setText('''Couldn't setup xd.mas for ''' + self.refList[self.i][4:].lower().replace('-h','-H'))
+    
     
 class sendBug(QDialog, Ui_sendBug):
     '''
@@ -5849,6 +5969,20 @@ class sendSugg(QDialog, Ui_sendSugg):
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
     
     
+class loadingScreen(QThread):
+    '''
+    Loading popup while compound initializes.
+    '''
+    def __init__(self):
+        QThread.__init__(self)
+        
+    def __del__(self):
+        self.wait()
+        
+    def run(self):
+        pass
+        
+    
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
     Main window.
@@ -5864,22 +5998,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
         
-        #Give user options not to load last project
-        if 'shelx.ins' in os.listdir(os.getcwd()):
-            if getNumAtoms() > 50:
-                msg = 'Load last project?\n\n{}'.format(os.getcwd())
-                loadLastProj = QMessageBox.question(self, 'Load last project', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        initialiseGlobVars()
     
-                if loadLastProj == QMessageBox.Yes:
-                    
-                    initialiseGlobVars()
-                    self.changeUserIns()	
-                else:
-                    os.chdir(os.path.expanduser('~'))
-            else:
-                initialiseGlobVars()
-      
-                self.changeUserIns()
+        self.changeUserIns()
         
         
         #Check for XD files and if they are not there prompt user to find directory.
@@ -5896,6 +6017,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.backupConfirmStr = 'Current files backed up to: '
         self.labList = [self.resNPPLab, self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
         self.tabWidget.setCurrentIndex(0)
+        toolboxes = [self.rbToolbox, self.backupToolbox, self.resToolbox, self.toolsToolbox]
+        for item in toolboxes:
+            item.setCurrentIndex(0)
         #Display current working directory on startup.
         self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
         self.statusbar.addWidget(self.cwdStatusLab)
@@ -6238,7 +6362,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             minutes, seconds = divmod(estTime, 60)
             hours, minutes = divmod(minutes, 60)
             timeStr = '{0:.0f}hrs {1:.0f}mins {2:.0f}secs'.format(hours, minutes, seconds)
-            wizStr = '{0} Estimated running time is {1}'.format('Ready to run XD Wizard.', timeStr)
+            #wizStr = '{0} Estimated running time is {1}'.format('Ready to run XD Wizard.', timeStr)
+            wizStr = 'Ready to run XD Wizard.'
             self.wizTestStatusLab.setText(wizStr)
         
         else: 
@@ -7109,25 +7234,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.resetLabels()
         self.check4res()
         
-        loading = QWidget()
-        loadLayout = QGridLayout()
-        loadMsg = QLabel()
-        loadMsg.setText('Initializing compound...')
-        loadLayout.addWidget(loadMsg, 0, 0)
-        loading.setLayout(loadLayout)
-        loading.setGeometry(300, 300, 300, 100)
-        loading.setWindowTitle('Loading')
-        loading.show()
-        
         try:
             initialiseGlobVars()
             self.changeUserIns()
             self.resetWizInput()
-            loading.close()
-
+            
         except Exception:
             self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
-            loading.close()
 
     def openCwd(self):
         '''
@@ -7280,7 +7393,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global timeFileAbsPath
         global xdProgAbsPaths
         global manualAbsPath
+        global cachePath
         
+        
+        cachePath = os.getcwd() + '/cache'
+        
+        if not os.path.isdir(cachePath):
+            os.makedirs(cachePath)
+            
         timeFileAbsPath = os.getcwd() + '/lsmTimes.buckfast'
         manualAbsPath = os.getcwd() + 'res/XD Toolkit Manual.pdf'
                                    
@@ -7979,6 +8099,53 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 #--------------------RESULTS---------------------------------------------
         
+    def makeResStr(self, lsmOutFile):
+        '''
+        Create string of formatted results from xd_lsm.out file. Return string.
+        '''
+        try:
+            dmsda = getDMSDA(lsmOutFile)
+            c = getConvergence(lsmOutFile)
+            if c:
+                conv = 'Yes'
+            else:
+                conv = 'No'
+                
+            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(), conv, dmsda[0], dmsda[1]) 
+            SUs = readSUs(lsmOutFile)
+            resStr+='<br><br>Largest standard uncertainties<br>'
+            for item in reversed(SUs[-10:]):
+                resStr+= '{0:8}{1:8}{2}<br>'.format(item[0], item[1], item[2])
+            resStr=resStr[:-4]
+            i = 0
+            if len(dmsda[2]) > 14:
+                resStr += '<br><br>{0:23}{1:24}{0:23}{1}<br>'.format('INTERATOMIC VECTOR','DMSDA')
+                while i+14 < len(dmsda[2]):
+                    
+                    resStr += '<br>{0:7} ---> {1:7}  {2:< 25.0f}{3:7} ---> {4:7}  {5: .0f}'.format(dmsda[2][i][0], dmsda[2][i][1], dmsda[2][i][2], dmsda[2][i+14][0], dmsda[2][i+14][1], dmsda[2][i+14][2])
+                    i += 1
+                
+                while i < 14:
+                    resStr += '<br>{0:7} ---> {1:7}  {2:< 25.0f}'.format(dmsda[2][i][0], dmsda[2][i][1], dmsda[2][i][2])
+                    i+=1
+            else:
+                resStr += '<br><br>{0:23}{1:24}<br>'.format('INTERATOMIC VECTOR','DMSDA')
+                while i < len(dmsda[2]):
+                    resStr += '<br>{0:7} ---> {1:7}  {2:< 25.0f}'.format(dmsda[2][i][0], dmsda[2][i][1], dmsda[2][i][2])
+                    i += 1
+            resStr = '<pre>' + resStr +'</pre>'
+            
+        
+
+#If full results can't be printed, try to print without DMSDA and if that doesn't work print error message
+        except Exception:
+            try:
+                resStr = 'RF<sup>2</sup> = {0}<br>{1}<br>No DMSDA results found.'.format(getRF2(), getConvergence('xd_lsm.out'))
+            except Exception:
+                resStr = 'An error occurred.'
+        
+        return resStr
+    
         
     def showResBackup(self):
         '''
@@ -7987,33 +8154,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         folder = str(QFileDialog.getExistingDirectory(None, "Choose backup folder to load results from"))
         
         if folder:
-            try:
-                
-                lsmStr = folder + '/xd_lsm.out'
-                dmsda = getDMSDA(lsmStr)
-                
-                c = getConvergence(lsmStr)
-                if c:
-                    conv = 'Yes'
-                else:
-                    conv = 'No'
-                
-                resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(folder), conv, dmsda[0], dmsda[1]) 
-                resStr += '<br><br>{0:23}{1:24}{0:23}{1}'.format('INTERATOMIC VECTOR','DMSDA')
-                i = 0
-                while i+14 < len(dmsda[2]):
-                    
-                    resStr += '<br>{0:7} ---> {1:7}  {2:< 25.0f}{3:7} ---> {4:7}  {5: .0f}'.format(dmsda[2][i][0], dmsda[2][i][1], dmsda[2][i][2], dmsda[2][i+14][0], dmsda[2][i+14][1], dmsda[2][i+14][2])
-                    i += 1
-                resStr = '<pre>' + resStr +'</pre>'
+            resStr = self.makeResStr(folder + '/xd_lsm.out')
 
-    #If full results can't be printed, try to print without DMSDA and if that doesn't work print error message                    
-            except Exception:
-                try:
-                    resStr = 'RF<sup>2</sup> = {0}<br>{1}<br>No DMSDA results found.'.format(getRF2(), getConvergence('xd_lsm.out'))
-                except Exception:
-                    resStr = 'An error occurred.'
-        
         self.resBackupLab.setText(resStr)
         
         
@@ -8059,41 +8201,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Get results from xd_lsm.out and show them in results tab.
         '''
-        try:
-            dmsda = getDMSDA('xd_lsm.out')
-            c = getConvergence('xd_lsm.out')
-            if c:
-                conv = 'Yes'
-            else:
-                conv = 'No'
-                
-            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(), conv, dmsda[0], dmsda[1]) 
-            
-            i = 0
-            if len(dmsda[2]) > 14:
-                resStr += '<br><br>{0:23}{1:24}{0:23}{1}<br>'.format('INTERATOMIC VECTOR','DMSDA')
-                while i+14 < len(dmsda[2]):
-                    
-                    resStr += '<br>{0:7} ---> {1:7}  {2:< 25.0f}{3:7} ---> {4:7}  {5: .0f}'.format(dmsda[2][i][0], dmsda[2][i][1], dmsda[2][i][2], dmsda[2][i+14][0], dmsda[2][i+14][1], dmsda[2][i+14][2])
-                    i += 1
-                
-                while i < 14:
-                    resStr += '<br>{0:7} ---> {1:7}  {2:< 25.0f}'.format(dmsda[2][i][0], dmsda[2][i][1], dmsda[2][i][2])
-                    i+=1
-            else:
-                resStr += '<br><br>{0:23}{1:24}<br>'.format('INTERATOMIC VECTOR','DMSDA')
-                while i < len(dmsda[2]):
-                    resStr += '<br>{0:7} ---> {1:7}  {2:< 25.0f}'.format(dmsda[2][i][0], dmsda[2][i][1], dmsda[2][i][2])
-                    i += 1
-            resStr = '<pre>' + resStr +'</pre>'
-
-#If full results can't be printed, try to print without DMSDA and if that doesn't work print error message
-        except Exception:
-            try:
-                resStr = 'RF<sup>2</sup> = {0}<br>{1}<br>No DMSDA results found.'.format(getRF2(), getConvergence('xd_lsm.out'))
-            except Exception:
-                resStr = 'An error occurred.'
-        
+        resStr = self.makeResStr('xd_lsm.out')
         self.getResLab.setText(resStr)
     
     
@@ -8302,18 +8410,18 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         self.settings.setValue('lastcwd', os.getcwd())
 
-        if self.settings.value('senddata') == 'yes':
-            
-            with open(timeFileAbsPath,'r') as lsmTimes:
-                x = len(lsmTimes.readlines())
-            
-            if x > 100:
-                try:
-                    sendEmail(subject = 'XD Toolkit: XDLSM times', attachments = [timeFileAbsPath])
-                    with open(timeFileAbsPath, 'w') as lsmTimes:
-                        lsmTimes.write(' ')
-                except Exception:
-                    pass
+#        if self.settings.value('senddata') == 'yes':
+#            
+#            with open(timeFileAbsPath,'r') as lsmTimes:
+#                x = len(lsmTimes.readlines())
+#            
+#            if x > 100:
+#                try:
+#                    sendEmail(subject = 'XD Toolkit: XDLSM times', attachments = [timeFileAbsPath])
+#                    with open(timeFileAbsPath, 'w') as lsmTimes:
+#                        lsmTimes.write(' ')
+#                except Exception:
+#                    pass
         try:
             self.xdlsm.xdlsmRunning.terminate()
         except Exception:
@@ -8327,7 +8435,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         for label in self.labList:
             label.setText('')
-
 
 class mercury(QThread):
     '''
@@ -8384,6 +8491,8 @@ if __name__ == '__main__':
     
     sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
     app = QApplication(sys.argv)
+    
+    #Splash screen
     splash_pix = QPixmap('res/flatearth.png')
     splash = QSplashScreen(splash_pix)
     splash.setMask(splash_pix.mask())
@@ -8393,16 +8502,19 @@ if __name__ == '__main__':
     splash.showMessage('Initializing...',
                            Qt.AlignBottom | Qt.AlignLeft,
                            Qt.white)
-    
     splash.show()
+    
     prog = XDToolGui()
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
     splash.finish(prog)
     prog.show()
     
     sys.exit(app.exec_())
-#os.chdir('/home/matt/dev/XDTstuff/test/carba')
+
+#os.chdir('/home/matt/dev/XDTstuff/test')
 #initialiseGlobVars()
+#multipoleMagician()
+#x = ins2all()
 #findCHEMCON()
 #multipoleMagician()
 #x = makeLCS()
