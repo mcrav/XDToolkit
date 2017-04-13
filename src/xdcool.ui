@@ -448,7 +448,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../.designer/backup/res/flatearth.ico</normaloff>../../.designer/backup/res/flatearth.ico</iconset>
+    <normaloff>../res/flatearth.ico</normaloff>../res/flatearth.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -470,7 +470,7 @@
         </property>
         <property name="icon">
          <iconset>
-          <normaloff>../../.designer/backup/res/play.ico</normaloff>../../.designer/backup/res/play.ico</iconset>
+          <normaloff>../res/play.ico</normaloff>../res/play.ico</iconset>
         </property>
        </widget>
       </item>
@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -581,8 +581,8 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>0</y>
-             <width>703</width>
+             <y>-94</y>
+             <width>1077</width>
              <height>568</height>
             </rect>
            </property>
@@ -1151,7 +1151,7 @@
                 </property>
                 <property name="icon">
                  <iconset>
-                  <normaloff>../../.designer/backup/res/play.ico</normaloff>../../.designer/backup/res/play.ico</iconset>
+                  <normaloff>../res/play.ico</normaloff>../res/play.ico</iconset>
                 </property>
                </widget>
               </item>
@@ -4496,7 +4496,7 @@
   <action name="toolbarSettings">
    <property name="icon">
     <iconset>
-     <normaloff>res/settings.png</normaloff>res/settings.png</iconset>
+     <normaloff>../res/settings.png</normaloff>../res/settings.png</iconset>
    </property>
    <property name="text">
     <string>Preferences</string>
@@ -4518,7 +4518,7 @@
   <action name="toolbarMolecool">
    <property name="icon">
     <iconset>
-     <normaloff>res/molecoolico.png</normaloff>res/molecoolico.png</iconset>
+     <normaloff>../res/molecoolico.png</normaloff>../res/molecoolico.png</iconset>
    </property>
    <property name="text">
     <string>MoleCoolQt</string>
@@ -4544,7 +4544,7 @@
   <action name="toolbarSetFolder">
    <property name="icon">
     <iconset>
-     <normaloff>res/folder.ico</normaloff>res/folder.ico</iconset>
+     <normaloff>../res/folder.ico</normaloff>../res/folder.ico</iconset>
    </property>
    <property name="text">
     <string>Select project folder</string>
@@ -4558,7 +4558,7 @@
   <action name="toolbarRefreshCwd">
    <property name="icon">
     <iconset>
-     <normaloff>res/refreshico.png</normaloff>res/refreshico.png</iconset>
+     <normaloff>../res/refreshico.png</normaloff>../res/refreshico.png</iconset>
    </property>
    <property name="text">
     <string>Refresh Folder</string>
@@ -4578,7 +4578,7 @@
   <action name="toolbarMercury">
    <property name="icon">
     <iconset>
-     <normaloff>res/mercury_48x48.png</normaloff>res/mercury_48x48.png</iconset>
+     <normaloff>../res/mercury_48x48.png</normaloff>../res/mercury_48x48.png</iconset>
    </property>
    <property name="text">
     <string>Mercury</string>
@@ -4608,7 +4608,7 @@
   <action name="toolbarOpenmas">
    <property name="icon">
     <iconset>
-     <normaloff>res/notepadico.png</normaloff>res/notepadico.png</iconset>
+     <normaloff>../res/notepadico.png</normaloff>../res/notepadico.png</iconset>
    </property>
    <property name="text">
     <string>Openmas</string>

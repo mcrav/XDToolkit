@@ -4,7 +4,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from scipy.stats import probplot
 import matplotlib.pyplot as plt
 from ast import literal_eval
-import random
 import copy
 from traceback import print_exception
 import subprocess
@@ -28,9 +27,8 @@ from wizard import Ui_wizard
 from resmap import Ui_resmap
 from sendBug import Ui_sendBug
 from sendSugg import Ui_sendSugg
-from splash import Ui_splash
-from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QGridLayout, QDialogButtonBox, QSplashScreen, QPushButton, QApplication, QDialog, QLineEdit, QFileDialog, QMainWindow
-from PyQt5.QtCore import QCoreApplication, QSettings, QThread, pyqtSignal, Qt
+from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen, QPushButton, QApplication, QDialog, QFileDialog, QMainWindow
+from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
 
 '''
@@ -6082,7 +6080,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.menuLoadIAM.triggered.connect(self.loadIAM)
         self.menuPref.triggered.connect(self.openPrefs)
         self.toolbarSettings.triggered.connect(self.openPrefs)
-        self.menuManual.triggered.connect(lambda: os.startfile(manualAbsPath))
+        self.menuManual.triggered.connect(self.openManual)
         self.menuAbout.triggered.connect(self.openAbout)
         #Run xdlsm.exe
         self.xdProgButs = [self.resNPPBut, self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
@@ -6553,6 +6551,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 #--------------------UTILITIES-------------------------------------------
     
+    def openManual(self):
+        
+        if sys.platform=='win32':
+            os.startfile(manualAbsPath)
+        else:
+            subprocess.call(['xdg-open', manualAbsPath])
+        
     def multKeyPress(self):
         '''
         Handle user pressing 'Add multipoles to key table button.
@@ -6997,50 +7002,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.enableXDButs()
         
         
-#    def startXDGRAPH(self):
-#        '''
-#        Handle XDGRAPH starting.
-#        '''
-#        for lab in self.XDGRAPHLabs:
-#            lab.setText('XDGRAPH running')
-#        
-#        for but in self.XDGRAPHButs:
-#            but.setText('Cancel')
-#            but.disconnect()
-#            but.clicked.connect(self.killXDGRAPH)
-#            
-#        self.xdgraph.finishedSignal.disconnect()
-#        self.xdgraph.finishedSignal.connect(self.finishedXDGRAPH)
-#        
-#    def finishedXDGRAPH(self):
-#        '''
-#        Handle XDGRAPH finishing.
-#        '''        
-#        for but in self.XDGRAPHButs:
-#            but.setText('Run XDGRAPH')                          
-#            but.disconnect()
-#            but.clicked.connect(lambda: self.xdgraph.start())
-#            
-#        for lab in self.XDGRAPHLabs:
-#            lab.setText('XDGRAPH finished')
-#    
-#    def killXDGRAPH(self):
-#        '''
-#        Kill XDGRAPH.
-#        '''
-#        try:  
-#            self.xdgraph.finishedSignal.disconnect()
-#            self.xdgraph.xdProgRunning.terminate()
-#            for but in self.XDGRAPHButs:
-#                but.setText('Run XDGRAPH')
-#                but.disconnect()
-#                but.clicked.connect(lambda: self.xdgeom.start())
-#            for lab in self.XDGRAPHLabs:
-#                lab.setText('XDGRAPH terminated')            
-#        except Exception:
-#            pass
-        
-        
     def startXDPDF(self):
         '''
         Handle XDPDF starting.
@@ -7396,17 +7357,17 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global manualAbsPath
         global cachePath
         
-        
-        cachePath = os.getcwd() + '/cache'
+        projDir = '/'.join(os.getcwd().split('/')[:-1])
+        cachePath = projDir + '/cache'
         
         if not os.path.isdir(cachePath):
             os.makedirs(cachePath)
             
-        timeFileAbsPath = os.getcwd() + '/lsmTimes.buckfast'
-        manualAbsPath = os.getcwd() + 'res/XD Toolkit Manual.pdf'
+        timeFileAbsPath = projDir + '/tools/lsmTimes.buckfast'
+        manualAbsPath = projDir + '/res/XD Toolkit Manual.pdf'
                                    
         if not os.path.isfile(timeFileAbsPath):
-            with open('lsmTimes.buckfast','w') as bucky:
+            with open('{}/tools/lsmTimes.buckfast'.format(projDir),'w') as bucky:
                 pass
 
         if self.settings.value('xdpath'):
@@ -7566,6 +7527,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         
 
 #--------------------REFINEMENTS-----------------------------------------
+    
     def setupRef(self):
         '''
         Handle user clicking 'setup xd.mas' in 'Manual refinement' tab.
@@ -8138,7 +8100,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             
         
 
-#If full results can't be printed, try to print without DMSDA and if that doesn't work print error message
+        #If full results can't be printed, try to print without DMSDA and if that doesn't work print error message
         except Exception:
             try:
                 resStr = 'RF<sup>2</sup> = {0}<br>{1}<br>No DMSDA results found.'.format(getRF2(), getConvergence('xd_lsm.out'))
