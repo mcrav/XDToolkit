@@ -659,7 +659,6 @@ def ins2all():
     else:
         atomPos = insInfo[0]
 
-    
     a = insInfo[1]
     b = insInfo[2]
     c = insInfo[3]
@@ -812,7 +811,7 @@ def ins2all():
                 asymNeebs.setdefault(splitLab[0], []).append((newPos, newLab))     #(pos, specLabel)
                 specAtomPos[newLab] = (newPos, invSymOp)
 
-                specDistances[frozenset([newLab, splitLab[0] + ',asym'])] = getBondDist(newPos, specAtomPos[splitLab[0] + ',asym'][0],a,b,c,alpha,beta,gamma)
+                specDistances[frozenset([newLab, splitLab[0] + ',asym'])] = round(getBondDist(newPos, specAtomPos[splitLab[0] + ',asym'][0], a,b,c,alpha,beta,gamma), 4)
                 addedPosDict[splitLab[0]].append(tupPos)
                 i+=1
             
@@ -5866,6 +5865,8 @@ class wizardRunning(QDialog, Ui_wizard):
             if self.i == len(self.refList):
                 
                 self.wizStatusLab.setText('Making normal probability plot...')
+                self.wizStatusLab.repaint()
+                QApplication.processEvents()
                 krauseParam = getKrauseParam()
                 if krauseParam:
                     self.finalRes += '\nKrause parameter = {0:.2f}'.format(krauseParam)
@@ -8482,14 +8483,14 @@ class molecool(QThread):
         except Exception:
             pass
        
-def myExceptHook(Type, value, traceback):
+def customExceptHook(Type, value, traceback):
     print_exception(Type, value, traceback)
     pass
 
 ##Run GUI
 if __name__ == '__main__':
     
-    sys.excepthook = myExceptHook               #Accept any errors so GUI doesn't quit.
+    sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
     app = QApplication(sys.argv)
     
     #Splash screen
@@ -8511,8 +8512,8 @@ if __name__ == '__main__':
     
     sys.exit(app.exec_())
 
-#os.chdir('/home/matt/dev/XDTstuff/test')
-#initialiseGlobVars()
+#os.chdir('/home/matt/dev/XDTstuff/test/data/urea')
+#x = ins2all()
 #multipoleMagician()
 #x = ins2all()
 #findCHEMCON()
