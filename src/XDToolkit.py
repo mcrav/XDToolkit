@@ -4,13 +4,13 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from scipy.stats import probplot
 import matplotlib.pyplot as plt
 from ast import literal_eval
-import copy
 from traceback import print_exception
 import subprocess
 import hashlib
 import time
 import itertools
 import numpy as np
+import copy
 import os
 import sys
 import webbrowser
@@ -31,7 +31,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
 
-from devtools import resetmas, timeDec
+from databank import covradii
+from devtools import resetmas, timeDec, atomsInPair
 from backup import backup, loadBackup
 from emailfuncs import sendEmail
 from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
@@ -42,11 +43,13 @@ from wizardfuncs import seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEM
 from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpops, getDorbs, readSUs,
                      getRF2, getKrauseParam, getConvergence, getDMSDA)
 
-from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, isfloat, getCellParams,
-                   findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime)
+from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat, 
+                   getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime)
 
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
                      findCHEMCONbyInputAtoms)
+
+
 
 '''
 #####################################################################
@@ -219,7 +222,6 @@ def ins2all():
     specDistances = {}
     specAngles = {}
     oneCoordLst = ('H(','F(','CL','I(','BR')
-    covradii = {'LU': 1.56, 'PO': 1.46, 'YB': 1.74, 'RU': 1.25, 'U': 1.42, 'TI': 1.32, 'GD': 1.61, 'SE': 1.16, 'SN': 1.41, 'P': 1.06, 'IN': 1.44, 'TC': 1.27, 'K': 2.03, 'I': 1.33, 'PR': 1.65, 'CL': 0.99, 'LA': 1.69, 'TB': 1.59, 'HG': 1.49, 'CO': 1.16, 'PT': 1.3, 'NI': 1.15, 'AL': 1.18, 'TL': 1.48, 'NB': 1.34, 'F': 0.72, 'HF': 1.44, 'SR': 1.91, 'MG': 1.36, 'Y': 1.62, 'PD': 1.28, 'TM': 1.56, 'O': 0.73, 'AT': 1.45, 'BR': 1.14, 'PB': 1.47, 'N': 0.75, 'SC': 1.44, 'SB': 1.41, 'NA': 1.54, 'BA': 1.98, 'FE': 1.17, 'MO': 1.3, 'GA': 1.26, 'V': 1.22, 'XE': 1.31, 'BE': 0.9, 'RH': 1.25, 'ZN': 1.25, 'CA': 1.74, 'SM': 1.62, 'RB': 2.16, 'NE': 0.71, 'CR': 1.18, 'OS': 1.26, 'BI': 1.46, 'ND': 1.64, 'LI': 1.23, 'C': 0.77, 'CE': 1.65, 'S': 1.02, 'KR': 1.12, 'ER': 1.57, 'CU': 1.17, 'B': 0.82, 'SI': 1.11, 'W': 1.3, 'TH': 1.65, 'CD': 1.48, 'IR': 1.27, 'H': 0.32, 'AG': 1.34, 'AS': 1.2, 'CS': 2.35, 'MN': 1.17, 'TE': 1.36, 'PM': 1.63, 'RE': 1.28, 'AR': 0.98, 'EU': 1.85, 'TA': 1.34, 'DY': 1.59, 'HE': 0.93, 'HO': 1.58, 'GE': 1.22, 'ZR': 1.45, 'AU': 1.34}
 
     #Make all possible pairs of atoms in atomPairs
     for atom in atomPos.keys():
@@ -249,8 +251,17 @@ def ins2all():
                 pos2SpecialLab = pos2[1]
 
                 bondDist = getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma)
-
-                if bondDist < (covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.5):
+                cutoffDist = covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.5
+                if atomsInPair(('O(1)', 'NI(1)'), (atom1, atom2)) and bondDist < 3:
+                    print(atom1)
+                    print(atom2)
+                    print(bondDist)
+                    print(cutoffDist)
+                    print(atom1c)
+                    print(atom2c)
+                    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                    
+                if bondDist < cutoffDist:
                     distances[frozenset(tupPair)] = round(bondDist, 4)
                     specDistances[frozenset([pos1SpecialLab, pos2SpecialLab])] = round(bondDist, 4)
                     neebPairs.append(tupPair)
@@ -261,8 +272,15 @@ def ins2all():
                     #Get all x,y,z+-1 combos
                     for combo in getCombos(atom1c):
                         bondDist = getBondDist(combo[0], atom2c, a, b, c, alpha, beta, gamma)
-
-                        if bondDist < (covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.5):
+                        if atomsInPair(('O(1)', 'NI(1)'), (atom1, atom2)) and bondDist < 3:
+                            print(atom1)
+                            print(atom2)
+                            print(bondDist)
+                            print(cutoffDist)
+                            print(atom1c)
+                            print(combo[0])
+                            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                        if bondDist < cutoffDist:
                             tupPair = (atom1, atom2)
 
                             combo1SpecialLab = atom1 + ',combo' + str(i)
@@ -273,7 +291,7 @@ def ins2all():
                             neebPairs.append(tupPair)
                             neebSpecialPairs.append((combo1SpecialLab, pos2SpecialLab))
 
-                            combo1InvSym = copy(pos1InvSym)
+                            combo1InvSym = copy.copy(pos1InvSym)
                             combo1InvSym.insert(0, combo[1])
 
                             specAtomPos[combo1SpecialLab] = (combo[0], combo1InvSym)
@@ -346,7 +364,11 @@ def ins2all():
                 z = eval(item[2])
             newPos = np.array([x,y,z])
             tupPos = coords2tuple(newPos)
-
+            if atomsInPair(('O(8)','MN(1)'),(pair)):
+                print(newPos)
+                print(tupPos)
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                
             addedPos = addedPosDict[splitLab[0]]
             if tupPos not in addedPos:
 
@@ -382,7 +404,10 @@ def ins2all():
                 z = eval(item[2])
             newPos = np.array([x,y,z])
             tupPos = coords2tuple(newPos)
-
+            if atomsInPair(('O(1)','NI(1)'),(pair)):
+                print(newPos)
+                print(tupPos)
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
             addedPos = addedPosDict[splitLab[0]]
             if tupPos not in addedPos:
                 newLab = pair[0] + '.dum' + str(i)
@@ -5420,32 +5445,32 @@ def customExceptHook(Type, value, traceback):
     pass
 
 ##Run GUI
-if __name__ == '__main__':
+#if __name__ == '__main__':
+#
+#    sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
+#    app = QApplication(sys.argv)
+#
+#    #Splash screen
+#    splash_pix = QPixmap('res/flatearth.png')
+#    splash = QSplashScreen(splash_pix)
+#    splash.setMask(splash_pix.mask())
+#    font = QFont()
+#    font.setFamily("Bitstream Vera Sans Mono")
+#    splash.setFont(font)
+#    splash.showMessage('Initializing...',
+#                           Qt.AlignBottom | Qt.AlignLeft,
+#                           Qt.white)
+#    splash.show()
+#
+#    prog = XDToolGui()
+#    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
+#    splash.finish(prog)
+#    prog.show()
+#
+#    sys.exit(app.exec_())
 
-    sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
-    app = QApplication(sys.argv)
-
-    #Splash screen
-    splash_pix = QPixmap('res/flatearth.png')
-    splash = QSplashScreen(splash_pix)
-    splash.setMask(splash_pix.mask())
-    font = QFont()
-    font.setFamily("Bitstream Vera Sans Mono")
-    splash.setFont(font)
-    splash.showMessage('Initializing...',
-                           Qt.AlignBottom | Qt.AlignLeft,
-                           Qt.white)
-    splash.show()
-
-    prog = XDToolGui()
-    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
-    splash.finish(prog)
-    prog.show()
-
-    sys.exit(app.exec_())
-
-#os.chdir('/home/matt/dev/XDTstuff/test/data/urea')
-#x = ins2all()
+os.chdir('/home/matt/dev/XDTstuff/test/data/Ni-tacn')
+x = ins2all()
 #multipoleMagician()
 #x = ins2all()
 #findCHEMCON()

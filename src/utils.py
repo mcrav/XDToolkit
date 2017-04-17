@@ -50,6 +50,31 @@ def labels2list(inputText):
 
     return inputAtomList
 
+def formatLabels(inputAtomList):
+    '''
+    Convert labels c1 to c(1).
+    '''
+    elements = findElements()
+    inputNewAtomList = []
+
+    for atomLab in inputAtomList:
+        newAtomLab = ''
+        if '(' not in atomLab:
+            if atomLab[:2] in elements:
+                newAtomLab = '{0}({1})'.format(atomLab[:2], atomLab[2:])
+            elif atomLab[:1] in elements:
+                newAtomLab = '{0}({1})'.format(atomLab[:1], atomLab[1:])
+            elif atomLab[:3] == 'DUM':
+                newAtomLab = atomLab
+
+            if newAtomLab:
+                inputNewAtomList.append(newAtomLab)
+
+        else:
+            inputNewAtomList.append(atomLab)
+
+    return inputNewAtomList
+
 def isfloat(x):
     '''
     Check if unknown value can be converted to a float. Return result as bool.
