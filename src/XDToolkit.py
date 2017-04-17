@@ -680,7 +680,7 @@ def lowAngleRef(sinthlMin,sinthlMax):
                 newmas.write('!' + line)
 #                newmas.write(line)
 
-            elif line.startswith('SKIP'):
+
                 row = str.split(line)
                 rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.2f} {snlMax:<5.2f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
                 newmas.write(rowStr + '\n')
@@ -2582,6 +2582,51 @@ class prefGui(QDialog, Ui_pref):
         except Exception:
             self.chooseTextPathLab.setText('Current path: ')
 
+class mercury(QThread):
+    '''
+    Mercury
+    '''
+    def __init__(self):
+        QThread.__init__(self)
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        '''
+        Open shelx.ins in Mercury.
+        '''
+        try:
+            if os.path.exists(os.getcwd() + '/shelx.ins'):
+                self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'shelx.ins'], shell = False, cwd = os.getcwd())
+            else:
+                self.mercuryOpen = subprocess.Popen([globMercAbsPath], shell = False, cwd = os.getcwd())
+        except Exception:
+            pass
+
+class molecool(QThread):
+    '''
+    MoleCoolQt
+    '''
+    def __init__(self):
+        QThread.__init__(self)
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        '''
+        Open xd.res/xd.inp in MoleCoolQt.
+        '''
+        try:
+            if os.path.exists(os.getcwd() + '/xd.res'):
+                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.res'], shell = False, cwd = os.getcwd())
+            elif os.path.exists(os.getcwd() + '/xd.inp'):
+                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.inp'], shell = False, cwd = os.getcwd())
+            else:
+                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
+        except Exception:
+            pass
 
 class resmap(QWidget, Ui_resmap):
     '''
@@ -2925,71 +2970,6 @@ class wizardRunning(QDialog, Ui_wizard):
 
         except Exception:
             self.wizStatusLab.setText('''Couldn't setup xd.mas for ''' + self.refList[self.i][4:].lower().replace('-h','-H'))
-
-
-
-
-
-class mercury(QThread):
-    '''
-    Mercury
-    '''
-    def __init__(self):
-        QThread.__init__(self)
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        '''
-        Open shelx.ins in Mercury.
-        '''
-        try:
-            if os.path.exists(os.getcwd() + '/shelx.ins'):
-                self.mercuryOpen = subprocess.Popen([globMercAbsPath, 'shelx.ins'], shell = False, cwd = os.getcwd())
-            else:
-                self.mercuryOpen = subprocess.Popen([globMercAbsPath], shell = False, cwd = os.getcwd())
-        except Exception:
-            pass
-
-class molecool(QThread):
-    '''
-    MoleCoolQt
-    '''
-    def __init__(self):
-        QThread.__init__(self)
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        '''
-        Open xd.res/xd.inp in MoleCoolQt.
-        '''
-        try:
-            if os.path.exists(os.getcwd() + '/xd.res'):
-                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.res'], shell = False, cwd = os.getcwd())
-            elif os.path.exists(os.getcwd() + '/xd.inp'):
-                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath, 'xd.inp'], shell = False, cwd = os.getcwd())
-            else:
-                self.molecoolOpen = subprocess.Popen([molecoolQtAbsPath], shell = False, cwd = os.getcwd())
-        except Exception:
-            pass
-
-
-class loadingScreen(QThread):
-    '''
-    Loading popup while compound initializes.
-    '''
-    def __init__(self):
-        QThread.__init__(self)
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        pass
-
 
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
