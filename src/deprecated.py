@@ -246,3 +246,18 @@ class checkLSMOUT(QThread):
                         self.updateSignal.emit()
 
                     k+=1
+
+#Works but unused
+def getDumNeebs():
+    '''
+    Find neighbouring dummy atoms. Return all neighbours as asym or dummy atoms.
+    '''
+    global globAtomLabs
+
+    atomLabsRaw = copy.copy(globAtomLabs)
+    dumNeebs = {}
+
+    for atom, neebs in atomLabsRaw.items():
+        dumNeebs[atom] = [spec2masLab(neeb) for neeb in neebs]
+
+    return dumNeebs

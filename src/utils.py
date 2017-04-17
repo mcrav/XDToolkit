@@ -4,6 +4,8 @@
 #####################################################################
 '''
 
+import os
+
 def convert2XDLabel(atomLabel):
     '''
     Convert C1 label to C(1) label
@@ -46,7 +48,7 @@ def labels2list(inputText):
     else:
         inputAtomList = [inputText]
 
-return inputAtomList
+    return inputAtomList
 
 def isfloat(x):
     '''
@@ -131,7 +133,7 @@ def findElements():
 
     return elements
 
-    def getNumAtoms():
+def getNumAtoms():
     '''
     Get total number of atoms in compound from shelx.ins or xd.inp.
     '''
@@ -162,7 +164,7 @@ def findElements():
                     atomBool = True
     return int(i)
 
-    def res2inp():
+def res2inp():
     '''
     Rename xd.res to xd.inp.
     '''
@@ -214,7 +216,7 @@ def findMasCHEMCON():
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
 
-    return (chemcon)
+    return chemcon
 
 def totalEstTime():
     '''

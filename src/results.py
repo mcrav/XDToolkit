@@ -87,22 +87,6 @@ def FOUcell():
     os.remove('xd.mas')             #Delete original xd.mas file
     os.rename('xdnew.mas','xd.mas') #Rename xdnew.mas to xd.mas
 
-
-def getDumNeebs():
-    '''
-    Find neighbouring dummy atoms. Return all neighbours as asym or dummy atoms.
-    '''
-    global globAtomLabs
-
-    atomLabsRaw = copy.copy(globAtomLabs)
-    dumNeebs = {}
-
-    for atom, neebs in atomLabsRaw.items():
-        dumNeebs[atom] = [spec2masLab(neeb) for neeb in neebs]
-
-    return dumNeebs
-
-
 def FOU3atoms(atom):
     '''
     Setup XDFOUR instructions in xd.mas to run on the plane of a given atom and 2 of its neighbours.

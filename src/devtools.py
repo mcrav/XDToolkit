@@ -4,7 +4,7 @@
 #####################################################################
 '''
 
-from time import timeDec
+from time import time
 from shutil import copyfile
 
 def resetmas():

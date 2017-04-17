@@ -32,14 +32,21 @@ from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
 
 from devtools import resetmas, timeDec
-from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, isfloat, getCellParams,
-                   findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, addDUM, addCustomLocCoords, totalEstTime)
-from email import sendEmail
+from backup import backup, loadBackup
+from emailfuncs import sendEmail
 from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
-from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable
+from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable, addDUM, addCustomLocCoords
 from resetbond import armRBs, disarmRBs, check4RB, resetBond, autoResetBond, delResetBond
-from chemcon import getEnvSig
 from wizardfuncs import seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON
+
+from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpops, getDorbs, readSUs,
+                     getRF2, getKrauseParam, getConvergence, getDMSDA)
+
+from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, isfloat, getCellParams,
+                   findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime)
+
+from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
+                     findCHEMCONbyInputAtoms)
 
 '''
 #####################################################################
@@ -3325,13 +3332,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         else:
             m = True
-
+        
         try:
             for item in self.wizSnlInput:
                 a = float(str(item.text()))     #checks if input can be converted to float
-
-            if str(self.wizUniSnlMax.text()).strip():
-                a = float(str(item.text()))
+    
+                if str(self.wizUniSnlMax.text()).strip():
+                    a = float(str(item.text()))
 
             s = True
 
@@ -3345,10 +3352,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if c and r and s and f and m:
 
             self.xdWizardBut.setEnabled(True)
-            estTime = totalEstTime()
-            minutes, seconds = divmod(estTime, 60)
-            hours, minutes = divmod(minutes, 60)
-            timeStr = '{0:.0f}hrs {1:.0f}mins {2:.0f}secs'.format(hours, minutes, seconds)
+#            estTime = totalEstTime()
+#            minutes, seconds = divmod(estTime, 60)
+#            hours, minutes = divmod(minutes, 60)
+#            timeStr = '{0:.0f}hrs {1:.0f}mins {2:.0f}secs'.format(hours, minutes, seconds)
             #wizStr = '{0} Estimated running time is {1}'.format('Ready to run XD Wizard.', timeStr)
             wizStr = 'Ready to run XD Wizard.'
             self.wizTestStatusLab.setText(wizStr)
