@@ -16,6 +16,7 @@ import sys
 import webbrowser
 from shutil import copyfile, rmtree
 from collections import Counter
+
 from xdcool import Ui_MainWindow
 from pref import Ui_pref
 from about import Ui_aboutBox
@@ -23,14 +24,22 @@ from wizard import Ui_wizard
 from resmap import Ui_resmap
 from sendBug import Ui_sendBug
 from sendSugg import Ui_sendSugg
-from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen, QPushButton, QApplication, QDialog, QFileDialog, QMainWindow
+
+from PyQt5.QtWidgets import (
+        QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen,
+        QPushButton, QApplication, QDialog, QFileDialog, QMainWindow)
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
 
 from devtools import resetmas, timeDec
-from utils import lab2type, spec2norm, rawInput2labels, labels2list, isfloat
+from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, isfloat, getCellParams,
+                   findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, addDUM, addCustomLocCoords, totalEstTime)
 from email import sendEmail
-from xderrfix import fixLsmCif, removePhantomAtoms, fixBrokenLabels
+from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
+from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable
+from resetbond import armRBs, disarmRBs, check4RB, resetBond, autoResetBond, delResetBond
+from chemcon import getEnvSig
+from wizardfuncs import seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON
 
 '''
 #####################################################################
@@ -86,48 +95,6 @@ def ins2fracPos(insFile):
 
     return (atomPos, a, b, c, alpha, beta, gamma)
 
-def inp2fracPos():
-    '''
-    Get fractional coordinates from xd.inp. Return these and unit cell parameters.
-    '''
-    with open('xd.inp','r') as inp, open('xd.mas','r') as mas:
-        scatTab = False
-        atomPos = {}
-        elements = []
-
-        for line in mas:
-
-            if line.startswith('END SCAT'):
-                scatTab = False
-                break
-
-            elif scatTab:
-                row = str.split(line)
-                if row[0].isalpha():
-                    elements.append(row[0])
-
-            elif line.startswith('CELL '):
-
-                row = str.split(line)
-
-                a = float(row[1])
-                b = float(row[2])
-                c = float(row[3])
-                alpha = float(row[4])
-                beta = float(row[5])
-                gamma = float(row[6])
-
-            elif line.startswith('SCAT'):
-                scatTab = True
-
-        for line in inp:
-            row = str.split(line)
-
-            if '(' in row[0]:
-
-                atomPos[row[0].upper()] = [(np.array([float(row[12]), float(row[13]), float(row[14])]), row[0].upper())]
-
-    return (atomPos, a, b, c, alpha, beta, gamma)
 
 def getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma):
     '''
@@ -142,6 +109,76 @@ def getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma):
     bondDist = np.sqrt(d2)
 
     return bondDist
+
+def getCombos(coord):
+    '''
+    Create all combinations of x, x+1, x-1 for x,y,z. Return combinations.
+    '''
+    combos = []
+
+    xminus = coord[0] - 1
+    yminus = coord[1] - 1
+    zminus = coord[2] - 1
+    xplus = coord[0] + 1
+    yplus = coord[1] + 1
+    zplus = coord[2] + 1
+    x = coord[0]
+    y = coord[1]
+    z = coord[2]
+
+    xs = [x, xminus, xplus]
+    ys = [y, yminus, yplus]
+    zs = [z, zminus, zplus]
+
+    xSym = ['x','x+1','x-1']
+    ySym = ['y','y+1','y-1']
+    zSym = ['z','z+1','z-1']
+
+    for i,xval in enumerate(xs):
+        for j,yval in enumerate(ys):
+            for k,zval in enumerate(zs):
+                combos.append((np.array([xval, yval, zval]), (xSym[i], ySym[j], zSym[k])))
+
+    return(combos)
+
+def coords2tuple(coords):
+    '''
+    Convert numpy array of 3d coordinates to tuple with all numbers to 3 decimal places.
+    Return tuple.
+    '''
+    tupPos = []
+
+    for item in coords:
+        stritem = '{0:.3f}'.format(item).strip()    #Round all numbers to 3 dp and make a string
+        if item == 0:
+            if stritem[0] == '-':           #Change -0. to 0.0
+                stritem = stritem[1:]
+
+        tupPos.append(stritem)
+
+    return tuple(tupPos)
+
+def atoms2angle(atoms, atomPos, distances, metricMatrix):
+    '''
+    Find angle between 3 atoms. Return angle.
+    '''
+    atom1c = atomPos[atoms[0]][0]
+    atom2c = atomPos[atoms[1]][0]
+    atom3c = atomPos[atoms[2]][0]
+
+    r =  distances[frozenset((atoms[1],atoms[0]))]
+    s =  distances[frozenset((atoms[1],atoms[2]))]
+
+    X1 = np.array(atom2c-atom1c)
+    X2 = np.array(atom2c-atom3c)
+
+    cosphi = (np.dot(np.dot(np.transpose(X1),metricMatrix),X2)) / (r*s)
+
+    angle = np.arccos(cosphi)
+
+    degAngle = np.degrees(angle)
+    roundAngle = round(degAngle, 2)
+    return roundAngle
 
 @timeDec
 def ins2all():
@@ -383,76 +420,6 @@ def ins2all():
 
     return (atomLabs, neebTypes, specAngles, specDistances, specAtomPos)
 
-def getCombos(coord):
-    '''
-    Create all combinations of x, x+1, x-1 for x,y,z. Return combinations.
-    '''
-    combos = []
-
-    xminus = coord[0] - 1
-    yminus = coord[1] - 1
-    zminus = coord[2] - 1
-    xplus = coord[0] + 1
-    yplus = coord[1] + 1
-    zplus = coord[2] + 1
-    x = coord[0]
-    y = coord[1]
-    z = coord[2]
-
-    xs = [x, xminus, xplus]
-    ys = [y, yminus, yplus]
-    zs = [z, zminus, zplus]
-
-    xSym = ['x','x+1','x-1']
-    ySym = ['y','y+1','y-1']
-    zSym = ['z','z+1','z-1']
-
-    for i,xval in enumerate(xs):
-        for j,yval in enumerate(ys):
-            for k,zval in enumerate(zs):
-                combos.append((np.array([xval, yval, zval]), (xSym[i], ySym[j], zSym[k])))
-
-    return(combos)
-
-def coords2tuple(coords):
-    '''
-    Convert numpy array of 3d coordinates to tuple with all numbers to 3 decimal places.
-    Return tuple.
-    '''
-    tupPos = []
-
-    for item in coords:
-        stritem = '{0:.3f}'.format(item).strip()    #Round all numbers to 3 dp and make a string
-        if item == 0:
-            if stritem[0] == '-':           #Change -0. to 0.0
-                stritem = stritem[1:]
-
-        tupPos.append(stritem)
-
-    return tuple(tupPos)
-
-def atoms2angle(atoms, atomPos, distances, metricMatrix):
-    '''
-    Find angle between 3 atoms. Return angle.
-    '''
-    atom1c = atomPos[atoms[0]][0]
-    atom2c = atomPos[atoms[1]][0]
-    atom3c = atomPos[atoms[2]][0]
-
-    r =  distances[frozenset((atoms[1],atoms[0]))]
-    s =  distances[frozenset((atoms[1],atoms[2]))]
-
-    X1 = np.array(atom2c-atom1c)
-    X2 = np.array(atom2c-atom3c)
-
-    cosphi = (np.dot(np.dot(np.transpose(X1),metricMatrix),X2)) / (r*s)
-
-    angle = np.arccos(cosphi)
-
-    degAngle = np.degrees(angle)
-    roundAngle = round(degAngle, 2)
-    return roundAngle
-
 
 def getmd5Hash(file):
     '''
@@ -558,951 +525,8 @@ def initialiseGlobVars():
 
 '''
 #####################################################################
-#-------------------UTILITIES----------------------------------------
+#-------------------CHEMCON------------------------------------------
 #####################################################################
-'''
-
-
-
-
-def getCellParams():
-    '''
-    Get unit cell parameters from shelx.ins or xd.mas.
-    '''
-    if os.path.isfile('shelx.ins'):
-        with open('shelx.ins','r') as ins:
-            ins = open('shelx.ins','r')
-
-            for line in ins:
-
-                if line.startswith('CELL'):
-                    row = str.split(line)
-                    a = float(row[2])
-                    b = float(row[3])
-                    c = float(row[4])
-                    alpha = float(row[5])
-                    beta = float(row[6])
-                    gamma = float(row[7])
-
-    elif os.path.isfile('xd.mas'):
-        with open('xd.mas','r') as mas:
-
-            for line in mas:
-
-                if line.startswith('CELL '):
-
-                    row = str.split(line)
-
-                    a = float(row[1])
-                    b = float(row[2])
-                    c = float(row[3])
-                    alpha = float(row[4])
-                    beta = float(row[5])
-                    gamma = float(row[6])
-
-    return [a, b, c, alpha, beta, gamma]
-
-
-def findElements():
-    '''
-    Find elements in compound from shelx.ins or xd.inp. Return list of elements.
-    '''
-    elements = []
-
-    if os.path.isfile('shelx.ins'):
-        with open('shelx.ins','r') as ins:
-            for line in ins:
-                if line.startswith('SFAC'):
-                    row = str.split(line)
-                    elements = [item.upper() for item in row[1:]]
-                    break
-
-    elif os.path.isfile('xd.inp'):
-        with open('xd.inp','r') as inp:
-
-            for line in inp:
-                if line.startswith('END SCAT'):
-                    scatTab = False
-                    break
-
-                elif scatTab:
-                    row = str.split(line)
-                    if row[0].isalpha():
-                        elements.append(row[0])
-
-                elif line.startswith('SCAT '):
-                    scatTab = True
-
-    return elements
-
-
-def addSnlCutoff(snlmin = 0.0, snlmax = 2.0):
-    '''
-    Add sin(theta/lambda) cutoffs to xd.mas.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        for line in mas:
-
-            if line.startswith('SKIP'):
-                row = str.split(line)
-                rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.3f} {snlMax:<5.3f}'.format(*row, snlOn = '*sinthl', snlMin = snlmin, snlMax = snlmax)
-                newmas.write(rowStr + '\n')
-
-            else:
-                newmas.write(line)
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-
-
-
-
-
-
-def getNumAtoms():
-    '''
-    Get total number of atoms in compound from shelx.ins or xd.inp.
-    '''
-    i = 0
-
-    if os.path.isfile('xd.inp'):
-        with open('xd.inp','r') as inp:
-
-            for line in inp:
-
-                if line.startswith('USAGE'):
-                    row = str.split(line)
-                    i = int(row[1])
-                    break
-
-    elif os.path.isfile('shelx.ins'):
-        atomBool = False
-        with open('shelx.ins','r') as ins:
-
-            for line in ins:
-                if line.startswith('HKLF') or line.startswith('REM'):
-                    atomBool = False
-
-                if atomBool and line[:1].isalpha() and not line.startswith('AFIX'):
-                    i+=1
-
-                if line.startswith('FVAR'):
-                    atomBool = True
-    return (int(i))
-
-
-def totalEstTime():
-    '''
-    Estimate total estimated time for XD wizard to run. Return this value.
-    '''
-    numAtoms = getNumAtoms()
-    s = 0.066*numAtoms +1.944
-    ha = 0.342*numAtoms -3.861
-    la = 0.050*numAtoms +1.348
-    mk = 0.351*numAtoms -3.016
-    m = 1.052*numAtoms -19.025
-    nhpam = 0.882*numAtoms -6.180
-
-    totalEstTime = s + ha + la + mk + m + nhpam + 5
-
-    return totalEstTime
-
-
-def check4errors():
-    '''
-    Check for errors in xd_lsm.out. Return errors.
-    '''
-    with open('xd_lsm.out','r') as lsm:
-        complete = False
-        error = ''
-
-        for line in lsm.readlines()[-20:]:
-
-            if line.startswith(' | Total program runtime'):
-                complete = True
-            elif line.strip().startswith('* * * '):
-                error = line
-                complete = False
-            elif line.startswith('Noble gas configuration not recognized for element Cu'):
-                error = line
-                complete = False
-
-    return(complete,error)
-
-
-
-
-
-def res2inp():
-    '''
-    Rename xd.res to xd.inp.
-    '''
-    os.remove('xd.inp')
-    os.rename('xd.res','xd.inp')
-
-
-def backup(folderName):
-    '''
-    Copy refinement files to given folder.
-    '''
-    folder = 'Backup/' + folderName
-    if not os.path.isdir('{}{}'.format(os.getcwd(), '/Backup')):                   #Check to see if backup folder exists
-        os.makedirs('Backup/')                          #If it doesn't exist, make it
-
-                        #Create string of new folder path
-
-    if not os.path.isdir('{}{}{}'.format(os.getcwd(), '/',folder)):                      #Check if new folder exists
-        os.makedirs(folder)                             #If it doesn't exist, make it
-
-    try:                                                #Copy all files to backup folder
-        copyfile('xd.mas',folder + '/xd.mas')           #try and except used in case one of the files
-    except:                                             #doesn't exist i.e. xd.res
-        pass
-    try:
-        copyfile('xd.inp',folder + '/xd.inp')
-    except:
-        pass
-    try:
-        copyfile('xd.res',folder + '/xd.res')
-    except:
-        pass
-    try:
-        copyfile('xd_lsm.out',folder + '/xd_lsm.out')
-    except:
-        pass
-
-def loadBackup(folderName):
-    '''
-    Copy files from given folder to project foler.
-    '''
-    folder = folderName                                 #folderName is the absolute path to the backup folder
-
-    try:                                                #Copy files from backup folder to working directory
-        copyfile(folder + '/xd_lsm.out','xd_lsm.out')   #try and except used in case one of the files doens't exist
-    except:
-        pass
-    try:
-        copyfile(folder + '/xd.mas','xd.mas')
-    except:
-        pass
-    try:
-        copyfile(folder + '/xd.inp','xd.inp')
-    except:
-        pass
-    try:
-        copyfile(folder + '/xd.res','xd.res')
-    except:
-        pass
-
-
-def initialiseMas():
-    '''
-    Fix 'noble gas configuration for CU' error.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        scatTab = False
-
-        for line in mas:
-
-            if line.startswith('END SCAT'):
-                scatTab = False
-
-            if scatTab:
-                if line[:2].upper() == 'CU':
-                    row = str.split(line)
-                    row[11] = '-10'
-
-                    i = 0
-                    for item in row:
-                        if 3 < i < 25:
-                            row[i] = float(item)
-                        i += 1
-                    rowStr = '{0:5}{1:5}{2:5}{3:7}{4:< 4.0f}{5:< 4.0f}{6:< 4.0f}{7:< 4.0f}{8:< 4.0f}{9:< 4.0f}{10:< 4.0f}{11:< 4.0f}{12:< 4.0f}{13:< 4.0f}{14:< 4.0f}{15:< 4.0f}{16:< 4.0f}{17:< 4.0f}{18:< 4.0f}{19:< 4.0f}{20:< 4.0f}{21:< 3.0f}{22:< 8.4f}{23:< 8.4f}{24: .3f}\n'.format(*row)
-                    newmas.write(rowStr)
-                else:
-                    newmas.write(line)
-
-            else:
-                newmas.write(line)
-            if line.startswith('SCAT'):
-                scatTab = True
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-    with open('xd.inp','r') as inp, open('xdnew.inp','w') as newinp:
-
-        i = 0
-        cuFound = False
-
-        for line in inp:
-            if line[:2].upper() == 'CU':
-                cuFound = True
-
-            if cuFound:
-                i+=1
-
-            if i == 3:
-                row = str.split(line)
-                row[0] = 10.0000
-                rowStr = '{0:< 9.4f}{1}\n'.format(*row)
-                newinp.write(rowStr)
-                cuFound = False
-                i = 0
-
-            else:
-                newinp.write(line)
-
-    os.remove('xd.inp')
-    os.rename('xdnew.inp','xd.inp')
-
-def addNCST():
-    '''
-    Fix 'paramter/ncst size should be increased' error.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        i = 40
-
-        for line in mas:                                #Go through xd.mas line by line
-
-            #Add SIZE ncst 30 line at appropriate place
-            if line.startswith('SAVE'):
-                newmas.write(line)
-                newmas.write('SIZE ncst {}\n'.format(i))
-
-            elif not line.startswith('SIZE ncst {}\n'.format(i)):
-                newmas.write(line)
-
-    #Create new xd.mas file
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def addDUM(atom1, atom2, dumI = 1):
-    '''
-    Add dummy atom directly in between two atoms. Return number in name of new dummy atom.
-    '''
-    with open('xd.mas','r') as mas, open('xd.inp','r') as inp:
-        addedDUMs = {}                          #Variable to know what dummy atoms are already added
-
-        #Go through mas file line by line
-        #Find any dummy atoms already there
-        #[:-1] removes \n from end, save every dummy atom coords as key with index as value
-        for line in mas:
-            if line.startswith('DUM'):
-                row = str.split(line)
-                addedDUMs[tuple(row[1:])] = row[0][3:]
-                if row[0] == atom1:
-                    atom1c = [float(row[1]), float(row[2]), float(row[3])]
-                elif row[0] == atom2:
-                    atom2c = [float(row[1]), float(row[2]), float(row[3])]
-
-            elif line.startswith('END ATOM'):
-                break
-
-        atom1Line=[]                            #Lists to save inp lines for each atom
-        atom2Line=[]
-        #***Should add code to search file and index atom labels and dummy atoms to check if labels given are legit.
-
-        #Find lines in xd.inp containing info on chosen atoms, and convert the lines to lists of numbers
-        for line in inp:
-            row = str.split(line)
-            if row[0].upper() == atom1.upper():
-                atom1Line = (str.split(line))
-                atom1c = [float(atom1Line[12]), float(atom1Line[13]), float(atom1Line[14])]
-            elif row[0].upper() == atom2.upper():
-                atom2Line = (str.split(line))
-                atom2c = [float(atom2Line[12]), float(atom2Line[13]), float(atom2Line[14])]
-
-    #Find the average of the x,y and z fractional coordinates of the 2 atoms
-    dumX = (atom1c[0] + atom2c[0]) / 2
-    dumY = (atom1c[1] + atom2c[1]) / 2
-    dumZ = (atom1c[2] + atom2c[2]) / 2
-
-    #Open xd.mas and create new mas file xdnew.mas
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        #Reprint xd.mas and add dummy atom in correct place to xdnew.mas
-        for line in mas:
-            if 'END ATOM' in line:                      #Find correct place in xd.mas to write dummy atoms
-
-                newCoords = [dumX,dumY,dumZ]
-                newCoords = tuple(('{0:.4f}'.format(item) for item in newCoords))
-
-
-                if newCoords in addedDUMs:      #See if new coordinates belong to an existing dummy atom
-                    dumI = addedDUMs[newCoords] #If they do, just return the index of that dummy atom
-
-                else:                                               #If they don't, create a new dummy atom
-                    while str(dumI) in addedDUMs.values():          #While dumI is already a dummy atom in the mas file, increment it by 1
-                        dumI = int(dumI) + 1
-                    #When a dummy atom index not already in the mas file is found, write the new dummy atom in the correct format
-                    dumAtom = '!DUM{0} is halfway between {4} and {5}\nDUM{0:<5}{1:8.4f}{2:8.4f}{3:8.4f}\n'.format(dumI,dumX,dumY,dumZ,atom1,atom2)   #When a valid DUM index has been found write the dummy atom in the correct format
-                    newmas.write(dumAtom)
-
-            newmas.write(line)                          #Write every other line unchanged
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-    return (str(dumI))                                   #Return dumI so that getLocalCoordSys knows what dummy atom label to use
-
-def addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym):
-    '''
-    Add custom local coordinate system.
-    Return letters 'a' and 'w' to confirm the atom and key tables were updated, respectively.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        atomTab = False
-        keyTab = False
-        result = ''
-
-        multipoleBank = {'NO': '00 000 00000 0000000 000000000', '1': '10 111 11111 1111111 111111111',
-                     'CYL': '10 001 00000 0000000 000000000', 'CYLX': '10 001 10000 1000000 000000000',
-                     'CYLXD': '10 001 10000 0000000 000000000', '2': '10 001 10010 1001000 100100010',
-                     'M': '10 110 10011 0110011 100110011', 'MM2': '10 001 10010 1001000 100100010',
-                     '4': '10 001 10000 1000000 100000010', '4MM': '10 001 10000 1000000 100000010',
-                     '3': '10 001 10000 1000010 100001000', '3M': '10 001 10000 1000010 100001000',
-                     '6': '10 001 10000 1000000 100000000', '6MM': '10 001 10000 1000000 100000000'}
-
-        for line in mas:
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-            elif line.startswith('KAPPA'):
-                keyTab = False
-
-            if atomTab:
-                row = str.split(line)
-                if row[0].upper() == Patom.upper():
-
-                    row[1] = atom1
-                    row[2] = axis1
-                    row[4] = atom2
-                    row[5] = axis2
-                    if len(row) > 12:
-                        rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}\n'.format(*row)
-                    else:
-                        rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}\n'.format(*row)
-                    newmas.write(rowStr)
-                    result += 'a'
-                else:
-                    newmas.write(line)
-
-
-            elif keyTab:
-                row = str.split(line)
-                if row[0].upper() == Patom.upper():
-                    try:
-                        rowStr = '{0:8}{1} {2}\n'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[sym])
-                        newmas.write(rowStr)
-                        result += 'w'
-                    except Exception:
-                        newmas.write(line)
-                else:
-                    newmas.write(line)
-            else:
-                newmas.write(line)
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-            elif line.startswith('KEY'):
-                keyTab = True
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-    return result
-
-    
-'''
-######################################################################
-#-------------------RESET BOND----------------------------------------
-######################################################################
-'''
-
-def armRBs():
-    '''
-    Enable all reset bond instructions.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        for line in mas:
-            if line.startswith('!RESET BOND'):
-                newmas.write(line[1:])
-            else:
-                newmas.write(line)
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas', 'xd.mas')
-
-def disarmRBs():
-    '''
-    Disable all reset bond instructions.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        for line in mas:
-            if line.startswith('RESET BOND'):
-                newmas.write('!' + line)
-            else:
-                newmas.write(line)
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas', 'xd.mas')
-
-
-def check4RB():
-    '''
-    Check if reset bond instructions have been added. Return result as bool.
-    '''
-    try:
-        with open('xd.mas') as mas:
-            RB = False
-            H = False
-
-            for line in mas:
-                #Find place in file to write RESET BOND instructions
-                if line.startswith('RESET BOND'):
-                    RB = True
-                    break
-
-                #If there are no Hs then function should return True as no RESET BOND instructions are required.
-                elif line.startswith('H('):
-                    H = True
-
-        if not H:
-            RB = True
-
-        return RB
-
-    except:
-        return False
-
-
-def resetBond(length,atoms,allornot = False):
-    '''
-    Add reset bond instruction to xd.mas for given atoms and length.
-    '''
-    with open('xd.mas', 'r') as mas:
-        atomTab = False
-        resetBonds = {}
-        addedRBs = {}
-
-        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            #If 'All' is unchecked, make dictionary with H atoms inputted by user, their connected C atoms and inputted bond distance (1.09 default)
-            if atomTab and line.startswith('H(') and allornot==False:
-                row = str.split(line)
-                row = [item.upper() for item in row]
-
-                if row[0] in atoms:
-                        resetBonds[row[0]] = [row[1],row[0],length]
-
-            #If 'All' is checked make dictionary with all H atoms, their connected C atoms and inputted bond distance (1.09 default)
-            elif atomTab and line.startswith('H('):
-                row = str.split(line)
-
-                resetBonds[row[0]] = [row[1],row[0],length]
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-            #Add RESET BOND instructions that aren't in the new list to the list so they are written
-            #Any duplicate instructions aren't added and so only the new instruction is added to xd.mas
-            if line.startswith('RESET BOND') or line.startswith('!RESET BOND'):
-                row = str.split(line)
-                i=0
-                for item in row:
-
-                    if item[:1].isdigit():
-                        if row[i-1] not in list(resetBonds.keys()):
-                            resetBonds[row[i-1]] = [row[i-2],row[i-1],row[i]]
-                    i+=1
-    #Open test file to write
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        j = 0
-        startCount = False
-
-        for line in mas:
-            #Find place in file to write RESET BOND instructions
-            if line.startswith('END ATOM'):
-
-                startCount = True
-
-            if j == 5:                      #Print RESET BOND instructions 5 lines after end of atom table
-                newmas.write(line)
-                newmas.write('RESET BOND  ')
-
-                #variable to split RESET BOND onto several lines for easier reading
-                i=1
-                #Go through resetBonds and print the instructions moving to a new line every 7
-                for key in resetBonds:
-                    if key not in list(addedRBs.keys()):
-                        if (i%7==0):
-                            resetIns = '\nRESET BOND  {0} {1} {2}  '.format(resetBonds[key][0], resetBonds[key][1], resetBonds[key][2])
-                            newmas.write(resetIns)
-
-                        else:
-                            resetIns = '{0} {1} {2}  '.format(resetBonds[key][0], resetBonds[key][1], resetBonds[key][2])
-                            newmas.write(resetIns)
-                        i += 1
-
-                    else:
-                        if resetBonds[key][2] != addedRBs[key][2]:
-                            if (i%7==0):
-                                resetIns = '\nRESET BOND  {0} {1} {2}  '.format(resetBonds[key][0], resetBonds[key][1], resetBonds[key][2])
-                                newmas.write(resetIns)
-
-                            else:
-                                resetIns = '{0} {1} {2}  '.format(resetBonds[key][0], resetBonds[key][1], resetBonds[key][2])
-                                newmas.write(resetIns)
-                            i += 1
-
-                newmas.write('\n')
-
-            elif line.startswith('RESET BOND') or line.startswith('!RESET BOND'):
-                pass
-
-            else:
-                newmas.write(line)
-
-            if startCount:
-                j += 1
-
-    #Create new xd.mas file
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-def autoAddResetBond():
-    '''
-    Automatically add reset bond instructions based on detected H environments.
-    '''
-    #Get neighbours by type and label
-    neighboursType = copy.copy(globAtomTypes)
-    neighbourLabsRaw = copy.copy(globAtomLabs)
-    CmethylList=[]
-    XmethylList = []
-    primaryHList = []
-    secondaryHList = []
-    aromaticHList = []
-    acidHList = []
-    alcoholHList = []
-    nitro3HList = []
-    nitro4HList = []
-    alkeneHList = []
-    XXCHList = []
-    H2OHList = []
-    addedRBs = []
-
-    neighbourLabs = {atom:[neeb.split(',')[0] for neeb in neebs] for atom, neebs in neighbourLabsRaw.items()}
-
-    #Go through neighbours by type
-    for atom,neebs in neighboursType.items():
-
-        sig = ''.join(sorted(neebs))
-        #If a C is found if it has the CHHH neebor signature then find the labels of the Hs and add them to methyl list
-        if atom[0:2] == 'C(':
-
-            if sig == 'CHHH':
-                atomNeebLabs = neighbourLabs[atom]
-                for item in atomNeebLabs:
-                    if item[0:2] == 'H(':
-                        CmethylList.append(item)
-
-                #If a C is found if it has the CHHH neebor signature then find the labels of the Hs and add them to methyl list
-            elif sorted(neebs).count('H') == 3 and 'C' not in neebs:
-                atomNeebLabs = neighbourLabs[atom]
-                for item in atomNeebLabs:
-                    if item[0:2] == 'H(':
-                        XmethylList.append(item)
-
-            elif 'HH' in sig and not 'HHH' in sig:
-                atomNeebLabs = neighbourLabs[atom]
-                for item in atomNeebLabs:
-                    if item[0:2] == 'H(':
-                        primaryHList.append(item)
-
-            elif 'H' in sig and not 'HH' in sig and not 'HHH' in sig and len(sig) == 4:
-                atomNeebLabs = neighbourLabs[atom]
-                for item in atomNeebLabs:
-                    if item[0:2] == 'H(':
-                        secondaryHList.append(item)
-
-            elif sig == 'CCH':
-
-                aromaticConfirmed = confirmAromaticity(atom + ',asym')
-
-                if aromaticConfirmed:
-
-                     atomNeebLabs = neighbourLabs[atom]
-                     for item in atomNeebLabs:
-                        if item[0:2] == 'H(':
-                            aromaticHList.append(item)
-
-                elif len(neebs) == 3 and neebs.count('H') == 1 and not aromaticConfirmed:
-                    for atomLab in neighbourLabs[atom]:
-                        if atomLab.startswith('H('):
-                           alkeneHList.append(atomLab)
-                           break
-
-            elif len(neebs) == 3 and neebs.count('H') == 1:
-                for atomLab  in neighbourLabs[atom]:
-                    if atomLab.startswith('H('):
-                        XXCHList.append(atomLab)
-
-        elif atom[0:2] == 'N(':
-
-            if 'H' in neebs:
-                if len(neebs) == 4:
-                    for atomLab in neighbourLabs[atom]:
-                        if atomLab[:2] == 'H(':
-                            nitro4HList.append(atomLab)
-                elif len(neebs) == 3:
-                    for atomLab in neighbourLabs[atom]:
-
-                        if atomLab[:2] == 'H(':
-
-                           nitro3HList.append(atomLab)
-
-        elif atom[:2] == 'O(':
-
-           if 'H' in neebs and 'C' in neebs:
-
-               for atomLab in neighbourLabs[atom]:
-                   if atomLab[:2] == 'C(':
-                       if neighboursType[atomLab].count('O') == 2:
-
-                           for atomLab2 in neighbourLabs[atom]:
-                               if atomLab2[:2] == 'H(':
-                                   acidHList.append(atomLab2)
-                                   break
-
-                       if neighboursType[atomLab].count('O') == 1:
-
-                           for atomLab2 in neighbourLabs[atom]:
-                               if atomLab2[:2] == 'H(':
-                                   alcoholHList.append(atomLab2)
-                                   break
-
-           elif ''.join(neebs) == 'HH':
-
-               for atomLab in neighbourLabs[atom]:
-                   H2OHList.append(atomLab)
-
-    if XXCHList:
-        resetBond('1.08', XXCHList)
-        addedRBs.extend(XXCHList)
-
-    if H2OHList:
-        resetBond('0.96',H2OHList)
-        addedRBs.extend(H2OHList)
-
-    if alcoholHList:
-        resetBond('0.967',alcoholHList)
-        addedRBs.extend(alcoholHList)
-
-    if acidHList:
-        resetBond('1.015',acidHList)
-        addedRBs.extend(acidHList)
-
-    if nitro4HList:
-        resetBond('1.033',nitro4HList)
-        addedRBs.extend(nitro4HList)
-
-    if nitro3HList:
-        resetBond('1.009',nitro3HList)
-        addedRBs.extend(nitro3HList)
-
-    if aromaticHList:
-        resetBond('1.083',aromaticHList)
-        addedRBs.extend(aromaticHList)
-
-    if secondaryHList:
-        resetBond('1.099',secondaryHList)
-        addedRBs.extend(secondaryHList)
-
-    if primaryHList:
-        resetBond('1.092',primaryHList)
-        addedRBs.extend(primaryHList)
-
-    if XmethylList:
-        resetBond('1.066',XmethylList)
-        addedRBs.extend(XmethylList)
-
-    if CmethylList:
-        resetBond('1.059',CmethylList)
-        addedRBs.extend(CmethylList)
-
-    if alkeneHList:
-        resetBond('1.077',alkeneHList)
-        addedRBs.extend(alkeneHList)
-
-    addedRBs = [rb.upper() for rb in addedRBs]
-    return addedRBs
-
-def getPathAromatic(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
-    '''
-    Find a path through the structure from a given atom, limitied by a list of branches already visited.
-    Return a pipe separated string of path in the format 'C(1),asym|N(1),asym|H(1),asym'.
-    Return the last branch in the path.
-    Return the list of visited branches.
-    '''
-    currAtom = atom             #Current atom as program walks through structure.
-    passedAtoms = []            #Atoms already visited in the path.
-
-    newUsedBranches = []        #List of all branches explored in the structure.
-                                #Branches are format 'ATOM~number of steps through path' i.e. 'C(1),asym~2'
-                                #means C(1) was passed on the second step through the structure.
-
-    aromaticConfirmed = False
-    steps = -1                   #Tracks number of steps taken down path.
-
-    while currAtom not in passedAtoms:        #This condition will be satisfied until path can't go anywhere unvisited.
-
-        passedAtoms.append(currAtom)          #Add current atoms to visited atoms list.
-        steps += 1                            #Add step to total number of steps in path
-
-        atomNeebs = atomNeebDict[currAtom.split(',')[0]]        #Get neighbours of current atom.
-
-        if steps == 5:
-
-            for neeb in atomNeebs:
-                if neeb == atom:
-                    aromaticConfirmed = True
-                    return (pathStr, newUsedBranches[-1:], usedBranches, aromaticConfirmed)    #Return the path string, last new branch, and edited list of used branches.
-
-        for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
-            branchTag = '{0}~{1}'.format(neeb, str(steps))  #Make 'C(1),asym~2' format branch tag for current atom and number of steps.
-
-            #If a neighbour of current atom is found that hasn't been visited,
-            #and hasn't been branched too in other trips down the same path.
-            if lab2type(neeb) == 'C' and neeb not in passedAtoms and branchTag not in usedBranches:
-
-                try:
-                    #If this path changes from the previous path at this atom,
-                    #remove all branch tags downstream from current number of steps.
-                    #i.e. if number of steps is 3 only keep branch tags with number of steps 0,1,2,3.
-                    if lastPath[steps] != neeb:
-                        usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-
-                except IndexError:
-                    #If the last path didn't go this far, or it was empty also remove downstream branch tags.
-                    usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-
-                #Add branch tag of every atom in path to list.
-                newUsedBranches.append(branchTag)
-
-                pathStr += neeb + '|'   #Add new atom in path to pipe separated path string.
-                currAtom = neeb         #Make the current atom the new atom, quit the for loop
-                break                   #and look for the next atom along the path.
-
-    pathStr = pathStr.strip('|')        #Remove the | from the end of the path string.
-
-    return (pathStr, newUsedBranches[-1:], usedBranches, aromaticConfirmed)    #Return the path string, last new branch, and edited list of used branches.
-
-
-def confirmAromaticity(atom):
-    '''
-    Check if atom is part of a phenyl ring. Return result as bool.
-    '''
-    lastPath = []
-    paths = []
-    usedBranches = []
-    atomNeebs = copy.copy(globAtomLabs)
-    aromaticConfirmed = False
-
-    while True:
-
-        pathRes = getPathAromatic(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
-
-        if pathRes[3] == True:
-            aromaticConfirmed = True
-            break
-
-        #If no path is returned all paths have been found and the while loop is ended.
-        if not pathRes[0]:
-            break
-
-        else:
-
-            #Store path as a list, to be the last path for the next time getPath is called.
-            lastPath = pathRes[0].split('|')
-
-            #Update usedBranches to list returned from getPath.
-            usedBranches = pathRes[2]
-
-            #Format path to string of atom types e.g. 'CCCNCCCH'
-            pathsFormatted = ''.join([item.split('(')[0] for item in pathRes[0].split('|')])
-
-            paths.append(pathsFormatted)    #Add this path string to list of paths.
-
-            usedBranches.extend(pathRes[1]) #Add the last branch from the current path to the list of used branches.
-
-    #When no more paths can be found or aromatic path has been found return aromatic results.
-    return aromaticConfirmed
-
-def autoResetBond():
-    '''
-    Automatically add reset bond instructions to xd.mas and find out what H atoms have been missed.
-    Return missed atoms.
-    '''
-    resetBondsAdded = autoAddResetBond()
-
-    with open('xd.mas', 'r') as mas:
-        missedAtoms = []
-        atomTab = False
-
-        for line in mas:
-
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            if atomTab and line.startswith('H('):
-                row = str.split(line)
-
-                if row[0].upper() not in resetBondsAdded:
-                    missedAtoms.append(row[0])
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    return missedAtoms
-
-
-def delResetBond():
-    '''
-    Delete all reset bond instructions from xd.mas.
-    '''
-    #Open xd.mas to read and xdnew.mas to write new mas file
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        #Go through xd.mas line by line
-        #If line has reset bond instructions don't write it, otherwise write line unchanged
-        for line in mas:
-            if line.startswith('RESET BOND') or line.startswith('!RESET BOND'):
-                pass
-            else:
-                newmas.write(line)
-
-    os.remove('xd.mas')
-    os.rename('xd.newmas','xd.mas')
-
-'''
-######################################################################
-#-------------------CHEMCON-------------------------------------------
-######################################################################
 '''
 
 def findCHEMCON():
@@ -1546,933 +570,6 @@ def findCHEMCON():
                 CHEMCON[atoms[0]] = []
 
     return CHEMCON
-
-'''
-######################################
-Short guide to path finding algorithm:
-######################################
-
-findAllPaths will start with the first neighbour to starting atom, and exhaust all possibilities,
-before moving to the next neighbour. This applies no matter how many steps you are from the
-starting atom. For example, all branches 5+ steps down would be explored for one 5 step neighbour, before
-any other of the 5 step neighbours were explored.
-
-Only adding the last branch to usedBranches causes this behaviour. If the current path differs from
-the last path at any stage then everything downstream is removed from usedBranches, as these branches
-are no longer used as something has been changed upstream.
-'''
-
-def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
-    '''
-    Find a path through the structure from a given atom, limitied by a list of branches already visited.
-    Return a pipe separated string of path in the format 'C(1),asym|N(1),asym|H(1),asym'.
-    Return the last branch in the path.
-    Return the list of visited branches.
-    '''
-    currAtom = atom             #Current atom as program walks through structure.
-    passedAtoms = []            #Atoms already visited in the path.
-
-    newUsedBranches = []        #List of all branches explored in the structure.
-                                #Branches are format 'ATOM~number of steps through path' i.e. 'C(1),asym~2'
-                                #means C(1) was passed on the second step through the structure.
-
-    steps = -1                   #Tracks number of steps taken down path.
-
-    while currAtom not in passedAtoms:        #This condition will be satisfied until path can't go anywhere unvisited.
-
-        passedAtoms.append(currAtom)          #Add current atoms to visited atoms list.
-        steps += 1                            #Add step to total number of steps in path
-
-        atomNeebs = atomNeebDict[currAtom.split(',')[0]]        #Get neighbours of current atom.
-
-        for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
-            branchTag = '{0}~{1}'.format(neeb, str(steps))  #Make 'C(1),asym~2' format branch tag for current atom and number of steps.
-
-            #If a neighbour of current atom is found that hasn't been visited,
-            #and hasn't been branched too in other trips down the same path.
-            if neeb not in passedAtoms and branchTag not in usedBranches:
-
-                try:
-                    #If this path changes from the previous path at this atom,
-                    #remove all branch tags downstream from current number of steps.
-                    #i.e. if number of steps is 3 only keep branch tags with number of steps 0,1,2,3.
-                    if lastPath[steps] != neeb:
-                        usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-
-                except IndexError:
-                    #If the last path didn't go this far, or it was empty also remove downstream branch tags.
-                    usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-
-                #Add branch tag of every atom in path to list.
-                newUsedBranches.append(branchTag)
-
-                pathStr += neeb + '|'   #Add new atom in path to pipe separated path string.
-                currAtom = neeb         #Make the current atom the new atom, quit the for loop
-                break                   #and look for the next atom along the path.
-
-    pathStr = pathStr.strip('|')        #Remove the | from the end of the path string.
-
-    return (pathStr, newUsedBranches[-1:], usedBranches)    #Return the path string, last new branch, and edited list of used branches.
-
-
-def findAllPaths(atom):
-    '''
-    Find all possible paths through the molecule starting from a given atom. Return all paths in list.
-    '''
-    lastPath = []
-    paths = []
-    usedBranches = []
-    atomNeebs = copy.copy(globAtomLabs)
-
-    while True:
-
-        pathRes = getPath(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
-
-        #If no path is returned all paths have been found and the while loop is ended.
-        if not pathRes[0]:
-            break
-
-        else:
-
-            #Store path as a list, to be the last path for the next time getPath is called.
-            lastPath = pathRes[0].split('|')
-
-            #Update usedBranches to list returned from getPath.
-            usedBranches = pathRes[2]
-
-            #Format path to string of atom types e.g. 'CCCNCCCH'
-            pathsFormatted = ''.join([item.split('(')[0] for item in pathRes[0].split('|')])
-
-            paths.append(pathsFormatted)    #Add this path string to list of paths.
-
-            usedBranches.extend(pathRes[1]) #Add the last branch from the current path to the list of used branches.
-
-    #When no more paths can be found return list of paths.
-    return paths
-
-def getEnvSig(atom):
-    '''
-    Create an md5 hash value for the chemical environment of a given atom. Return this hash value.
-    '''
-    #Sort list of paths alphabetically so it is the same no matter what order paths were found in
-    #Make string with starting atom types followed by , joined sorted list of all paths.
-    pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom)))
-    hashObj = hashlib.md5(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
-    return hashObj.hexdigest()                              #Return digest of hash value.
-
-def removeCHEMCON():
-    '''
-    Remove all CHEMCON from xd.mas.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        atomTab = False
-
-            #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-            #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            if atomTab:
-                row = str.split(line)
-                if len(row) == 13:
-                    rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}\n'.format(*row)
-                    newmas.write(rowStr)
-                else:
-                    newmas.write(line)
-            else:
-                newmas.write(line)
-
-            #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def findCHEMCONbyElement():
-    '''
-    Find atoms of the same element and group them. Return dictionary of groupings.
-    '''
-    with open('xd.mas','r') as mas:
-
-        atomTab = False
-        prevElement = ''
-        CHEMCON = {}
-        currentAtom=''
-
-            #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-            #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            #In atom table make CHEMCON dictionary
-            if atomTab:
-                row = str.split(line)
-
-                #If first two characters are letters i.e. Co, check to see if it is the first time that element appears
-                if line[0:2].isalpha():
-                    if line[0:2] != prevElement:
-                        currentAtom = row[0].upper()
-                        CHEMCON[currentAtom] = []    #Make entry in dictionary for first instance of element in table
-
-                    else:
-                        CHEMCON[currentAtom].append(row[0].upper())    #Add atoms of same element to dictionary
-
-                    prevElement = row[0][0:2]      #Update previous element to current element
-
-                else:
-                    if line[0:1] != prevElement:
-                        currentAtom = row[0].upper()
-                        CHEMCON[currentAtom] = []        #Make entry in dictionary for first instance of element in table
-                    else:
-                        CHEMCON[currentAtom].append(row[0].upper())     #Add atoms of same element to dictionary
-
-                    prevElement = row[0][0:1]       #Update previous element to current element
-            #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    return CHEMCON
-
-
-def findCHEMCONbyInputElement(inputElementList):
-    '''
-    Find atoms of given element and group them. Return grouping.
-    '''
-    with open('xd.mas','r') as mas:
-
-        atomTab = False
-        prevElement = ''
-        CHEMCON = {}
-        currentAtom=''
-        eleList = inputElementList
-        #Convert elements to upper case
-        eleList = [item.upper() for item in eleList]
-
-            #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-            #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            #In atom table make CHEMCON dictionary
-            if atomTab:
-                row = str.split(line)
-
-                #If first two characters are letters i.e. Co, check to see if it is the first time that element appears
-                if line[0:2].isalpha():
-                    if line[0:2].upper() in eleList:
-                        if line[0:2] != prevElement:
-                            currentAtom = row[0].upper()
-                            CHEMCON[currentAtom] = []    #Make entry in dictionary for first instance of element in table
-
-                        else:
-                            CHEMCON[currentAtom].append(row[0].upper())    #Add atoms of same element to dictionary
-                    else:
-                        CHEMCON[row[0].upper()] = []
-                    prevElement = row[0][0:2]      #Update previous element to current element
-
-                else:
-                    if line[0:1].upper() in eleList:
-                        if line[0:1] != prevElement:
-                            currentAtom = row[0].upper()
-                            CHEMCON[currentAtom] = []        #Make entry in dictionary for first instance of element in table
-                        else:
-                            CHEMCON[currentAtom].append(row[0].upper())     #Add atoms of same element to dictionary
-                    else:
-                        CHEMCON[row[0].upper()] = []
-                    prevElement = row[0][0:1]       #Update previous element to current element
-            #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    return CHEMCON
-
-def findCHEMCONbyNeebors():
-    '''
-    Group atoms of the same element with the same nearest neighbours. Return groupings.
-    '''
-    with open('xd.mas','r') as mas:
-
-        atomTab = False                         #Bool to detect if the for loop is in the atom table when going through xd.mas
-        CHEMCON = {}                            #Dict to return CHEMCON for writing to xd.mas with writeCHEMCON()
-        neebsDict = copy.copy(globAtomTypes)    #Dict of nearest neighbours {'C(2):['C','C','H','H']}
-        usedSigs = []                           #List of sigs of chemical environment i.e. CCHN = N bonded to CCH
-        SigParentDict = {}                      #dict with sigs as keys and parent atom labels of that sig as values
-        chemconSig=''
-
-            #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-            #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            #In atom table make CHEMCON dictionary
-            if atomTab:
-                row = str.split(line)
-                row = [item.upper() for item in row]
-                if line[0:1] != 'H':
-
-
-                    if line[0:2].isalpha():
-
-                        neebList = sorted(neebsDict[row[0].upper()])
-                        neebStr=''
-
-                        for item in neebList:
-                            neebStr += item
-                        chemconSig = neebStr + line[0:2].upper()
-
-                        #If first two characters are letters i.e. Co, check to see if it is the first time that chemconSig has appeared
-                        if chemconSig not in usedSigs:
-                            usedSigs.append(chemconSig)
-                            SigParentDict[chemconSig] = row[0].upper()
-                            CHEMCON[row[0].upper()] = []    #Make entry in dictionary for first instance of element in table
-                        else:
-                            CHEMCON[SigParentDict[chemconSig]].append(row[0].upper())    #Add atoms of same element to dictionary
-
-                    else:
-                        neebList = sorted(neebsDict[row[0].upper()])
-
-                        neebStr=''
-
-                        for item in neebList:
-                            neebStr += item
-                        chemconSig = neebStr + line[0:1]
-
-                        #If first two characters are letters i.e. Co, check to see if it is the first time that chemconSig has appeared
-                        if chemconSig not in usedSigs:
-                            usedSigs.append(chemconSig)
-                            SigParentDict[chemconSig] = row[0]
-                            CHEMCON[row[0]] = []    #Make entry in dictionary for first instance of element in table
-                        else:
-                            CHEMCON[SigParentDict[chemconSig]].append(row[0])    #Add atoms of same element to dictionary
-            #Code for Hs
-                else:
-                    if row[1][0:2].isalpha():
-                        neebStr = row[1][0:2].upper()
-                    else:
-                        neebStr = row[1][0:1]
-                    chemconSig = neebStr + line[0:1]
-
-                        #If first two characters are letters i.e. Co, check to see if it is the first time that chemconSig has appeared
-                    if chemconSig not in usedSigs:
-                        usedSigs.append(chemconSig)
-                        SigParentDict[chemconSig] = row[0]
-                        CHEMCON[row[0]] = []    #Make entry in dictionary for first instance of element in table
-                    else:
-                        CHEMCON[SigParentDict[chemconSig]].append(row[0])    #Add atoms of same element to dictionary
-
-            #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    return CHEMCON
-
-def findCHEMCONbyInputAtoms(atomList):
-    '''
-    Group given atoms. Retun grouping.
-    '''
-    with open('xd.mas','r') as mas:
-
-        atomTab = False
-        CHEMCON = {}
-        atomList = atomList
-        parent = ''
-        parent2 = ''          #Parent2 is a new parent if an old parent is overwritten
-        parentFound = False
-        parent2Found = False
-
-            #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-            #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            #In atom table make CHEMCON dictionary
-            if atomTab:
-
-                row = str.split(line)
-
-                if row[0].upper() in atomList:
-
-                    if parentFound == False:
-
-                        CHEMCON[row[0].upper()] = []
-                        parentFound = True
-                        parent = row[0].upper()
-
-                    else:
-                        CHEMCON[parent].append(row[0].upper())
-
-                elif len(row) == 13:
-                    print(row[0])
-                    if not parent2Found:
-                        if row[12] == parent:
-                            parent2 = row[0].upper()
-                            parent2Found = True
-                            CHEMCON[parent2] = []
-
-                    elif row[12] == parent:
-                        CHEMCON[parent2].append(row[0].upper())
-
-
-            #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    return CHEMCON
-
-
-def writeCHEMCON(CHEMCONdict):
-    '''
-    Write CHEMCON column in xd.mas with given groupings.
-    '''
-    atomTab = False
-    CHEMCON = CHEMCONdict
-
-    written = False
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            if atomTab:
-                written = False
-                row = str.split(line)
-
-                #If atom is in dictionary it is added with local coordinate system
-                if row[0].upper() in CHEMCON.keys():
-
-                    #If clause is so that if CHEMCON has already been added for all Cs, you can add CHEMCON for a few of the Cs and the parent will lose its previous CHEMCON
-                    if len(row) != 13:
-                        newmas.write(line)
-                        written = True
-
-                    else:
-                        rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}'.format(*row)
-                        newmas.write(rowStr + '\n')
-                        written = True
-
-                else:
-                    for atom,equi in CHEMCON.items():
-                        if row[0].upper() in equi:
-                            rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}'.format(*row)
-                            newmas.write(rowStr + atom + '\n')
-                            written = True
-
-                if written == False:
-                    newmas.write(line)
-
-            else:
-                newmas.write(line)
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    #Create new xd.mas file
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def check4CHEMCON():
-    '''
-    Check if CHEMCON has been added to xd.mas. Return result as bool.
-    '''
-    atomTab = False
-    chemcon = False
-
-    try:
-        with open('xd.mas','r') as mas:
-
-        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-            for line in mas:
-
-                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                    atomTab = False
-
-                if atomTab:
-                    row = str.split(line)
-                    #If atom is in dictionary it is added with local coordinate system
-                    if len(row) == 13:
-
-                        chemcon = True
-                        break
-
-                if line.startswith('ATOM     ATOM0'):
-                    atomTab = True
-
-    except FileNotFoundError:
-        pass
-
-    return chemcon
-
-'''
-#######################################################################
-#-------------------RESULTS--------------------------------------------
-#######################################################################
-'''
-
-def FFTDetective():
-    '''
-    Find closest atom to highest peak in xd_fft.out. Return atom label.
-    '''
-    with open('xd_fft.out','r') as fft:    #Open output file from XDFFT
-
-        table = False                   #Bool to find start of table with highest peaks
-        j = 0
-        suspectAtom = ('','')           #Variable initialised for atom at top of table
-        peakDict = {}
-
-        for line in fft:                #For loop goes through the table line by line
-
-            if table and line.startswith(' -----'):
-                j+= 1
-                if j == 2:
-                    table = False
-                    break
-
-            if table == True:           #If line is in the table i += 1 to move to the next line
-                row = str.split(line)
-                if len(row) == 10:
-                    peakDict[abs(float(row[9]))] = row[5].upper()
-
-            if line.startswith('  no  peak'):
-                table = True
-
-    biggestPeak = max(peakDict.keys())
-    suspectAtom = (peakDict[biggestPeak], biggestPeak)
-    return suspectAtom
-
-
-def FOUcell():
-    '''
-    Setup XDFOUR instructions in xd.mas to run over the entire unit cell.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        fouBool = False                     #Bool to detect start of XDFOUR instructions
-
-        for line in mas:                            #Go through xd.mas line by line
-
-            if line.startswith('CELL '):            #Find line in xd.mas with dimensions of unit cell
-
-                row = str.split(line)               #Split line into list
-
-                cellA = float(row[1])               #Get the a,b,c dimensions of unit cell and store them as floats
-                cellB = float(row[2])
-                cellC = float(row[3])
-
-                maxCell = max([cellA,cellB,cellC])  #Find the largest of a,b,c
-
-                x = 100/maxCell                     #Get a factor for a,b,c that will make the largest == 100
-
-                fouA = int(cellA*x)                 #Multiply a,b,c by this factor to get nx,y,z values for XDFOUR
-                fouB = int(cellB*x)
-                fouC = int(cellC*x)
-
-                newmas.write(line)
-
-            elif line.startswith('   MODULE *XDFOUR') or line.startswith('   MODULE XDFOUR'):           #Find start of XDFOUR section
-
-                fouBool = True
-
-                newmas.write('   MODULE *XDFOUR' + '\n')                                                #Write header and following lines as whole unit cell instructions
-
-                newmas.write('SELECT *fobs *fmod1  fmod2  print  snlmin  0.000  snlmax  2.000' + '\n')
-                newmas.write('GRID   3-points  perp *cryst' +'\n')
-
-                newmas.write('LIMITS xmin  0.0 xmax  1.0 nx  ' + str(fouA) +'\n')                       #Write lines with n values worked out previously.
-                newmas.write('LIMITS ymin  0.0 ymax  1.0 ny  ' + str(fouB) +'\n')                       #These values determine how many slices are taken in each direction
-                newmas.write('LIMITS zmin  0.0 zmax  1.0 nz  ' + str(fouC) +'\n')                       #so they depend on the lengths in each direction of the unit cell
-
-            elif not fouBool:
-                newmas.write(line)                  #Write every other line in xd.mas unchanged.
-
-            if line.startswith('   END XDFOUR'):    #Change fouBool at end of XDFOUR instructions to resume writing lines unchanged.
-                fouBool = False
-                newmas.write(line)
-
-    os.remove('xd.mas')             #Delete original xd.mas file
-    os.rename('xdnew.mas','xd.mas') #Rename xdnew.mas to xd.mas
-
-
-def getDumNeebs():
-    '''
-    Find neighbouring dummy atoms. Return all neighbours as asym or dummy atoms.
-    '''
-    global globAtomLabs
-
-    atomLabsRaw = copy.copy(globAtomLabs)
-    dumNeebs = {}
-
-    for atom, neebs in atomLabsRaw.items():
-        dumNeebs[atom] = [spec2masLab(neeb) for neeb in neebs]
-
-    return dumNeebs
-
-
-def FOU3atoms(atom):
-    '''
-    Setup XDFOUR instructions in xd.mas to run on the plane of a given atom and 2 of its neighbours.
-    '''
-    atom = atom.upper()                 #Convert atom given in argument to uppercase to avoid problems with upper/lower
-    fouBool = False                     #Bool to detect start of XDFOUR instructions
-    neebsRaw = copy.copy(globAtomLabs)   #Get dict of nearest neighbours with labels for each atom
-    neebs = {}
-
-    for lab, neebors in neebsRaw.items():
-        neebs[lab] = [item.split(',')[0] for item in neebors if item.split(',')[1] == 'asym']
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        for line in mas:                    #Go through mas file line by line
-
-            if line.startswith('   MODULE *XDFOUR') or line.startswith('   MODULE XDFOUR'):                 #Find the start of XDFOUR section.
-                fouBool = True                                                                              #Change fouBool to True so that program knows not to write XDFOUR instructions twice
-                newmas.write('   MODULE *XDFOUR\n')                                                    #Write XDFOUR instructions to make residual map around 3 atoms
-                newmas.write('SELECT *fobs *fmod1  fmod2  print  snlmin  0.000  snlmax  2.000\n')
-                newmas.write('GRID  *3-points  perp  cryst\n')
-
-                rowStr = '{0}{1:7}{2}'.format('ATOM  label ', atom, 'symm  1 trans 0 0 0 *mark on plot')               #Add atom inputted to XDFOUR instructions
-                newmas.write(rowStr + '\n')
-
-                if len(neebs[atom]) > 1:
-                    print(atom)
-                    print(neebs[atom][0])
-                    print(neebs[atom][1])
-                    rowStr = '{0}{1:7}{2}\n'.format('ATOM  label ', neebs[atom][0], 'symm  1 trans 0 0 0 *mark on plot') #If H isn't the target atom add first 2 nearest neighbours in neighbour dict as they will be most likely non-H
-                    newmas.write(rowStr)
-
-                    rowStr = '{0}{1:7}{2}\n'.format('ATOM  label ', neebs[atom][1], 'symm  1 trans 0 0 0 *mark on plot')
-                    newmas.write(rowStr)
-
-                elif len(neebsRaw[atom]) > 1:
-                    print(atom)
-                    print('elif')
-
-                    i = 0
-
-                    for neeb in neebsRaw[atom][:2]:
-                        splitLab = neeb.split(',')
-
-                        pos = globAtomPos[neeb][0]
-                        print(pos)
-                        x = pos[0]
-                        y = pos[1]
-                        z = pos[2]
-                        rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
-                        newmas.write(rowStr)
-                        if i == 1:
-                            break
-                        i+=1
-
-                #1 neighbour atoms
-                else:
-                    print('else')
-                    neighbour = neebsRaw[atom][0]
-                    pos = globAtomPos[neighbour][0]
-                    x,y,z = pos[0], pos[1], pos[2]
-                    splitLab = neighbour.split(',')
-                    rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
-                    newmas.write(rowStr)
-                    for neeb in neebsRaw[neighbour.split(',')[0]]:
-                        if neeb.split(',')[0] != atom:
-                            nextNeighbour = neeb
-                            break
-                    pos = globAtomPos[nextNeighbour][0]
-                    x,y,z = pos[0],pos[1],pos[2]
-                    splitLab = nextNeighbour.split(',')
-                    rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
-                    newmas.write(rowStr)
-
-                newmas.write('LIMITS xmin -2.0 xmax  2.0 nx  50\n')     #Finish writing appropriate XDFOUR instructions
-                newmas.write('LIMITS ymin -2.0 ymax  2.0 ny  50\n')
-                newmas.write('LIMITS zmin  0.0 zmax  0.0 nz  1\n')
-                newmas.write('   END XDFOUR\n')
-
-            elif not fouBool:
-                newmas.write(line)                  #Write every other line in xd.mas unchanged.
-
-            if line.startswith('   END XDFOUR'):    #Change fouBool at end of XDFOUR instructions to resume writing lines unchanged.
-                fouBool = False
-
-    os.remove('xd.mas')                 #Remove xd.mas
-    os.rename('xdnew.mas','xd.mas')     #Rename xdnew.mas to xd.mas
-
-
-def grd2values():
-    '''
-    Get a list of values from xd_fou.grd. Return list.
-    '''
-    values = []
-
-    with open('xd_fou.grd','r') as grd:
-        x = ''
-
-        while not x.startswith('! Values'):
-            x = grd.readline()
-
-        for line in grd.readlines():
-            values.extend([float(item) for item in str.split(line)])
-
-    return values
-
-
-def setupPROPDpops():
-    '''
-    Setup XDPROP instructions in xd.mas to find d-orbital populations.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        for line in mas:                    #Go through mas file line by line
-            if line.startswith('!D-POP'):   #If dpop line is turned off write it without the ! to turn it on
-                newmas.write(line[1:])
-            else:
-                newmas.write(line)          #Write every other line unchanged
-
-    os.remove('xd.mas')                 #Remove xd.mas
-    os.rename('xdnew.mas','xd.mas')     #Rename xdnew.mas to xd.mas
-
-def getDorbs():
-    '''
-    Find d-orbital populations in xd_pro.out. Return populations.
-    '''
-    with open('xd_pro.out','r', encoding = 'utf-8', errors = 'ignore') as pro:      #errors ignore stops an error when the profile out is unreadable because some part isn't utf-8 decodable.
-
-        orbTable = False                                    #Bool to detect d-orbital population section
-        orbPops = []                                        #Initialise list to add orbital populations
-        i = -1                                              #i == -1 so that i == 1 at the first line of the table
-
-        for line in pro:                                    #Go through pro file line by line
-
-            if line.startswith('   z2/xz'):                 #Change orbTable to False once orbital populations have been passed
-                orbTable = False
-
-            elif orbTable:                                  #If in the orbital population table i += 1
-                i+=1
-
-                if i >= 1:                                  #If in the right part of the orbital population table
-                    row = str.split(line)                   #split the line into a list
-                    orbPops.append((row[0],row[3]))         #and append the orbital and the percentage population as a tuple to the orbPops list
-
-            elif line.startswith(' Orbital populations'):   #If at the start of the orbital population table set orbTable to True
-                orbTable = True
-
-    return orbPops  #Return list of tuples with orbitals and their populations
-
-
-def readSUs(file):
-    '''
-    Get all SUs from xd_lsm.out and sort them. Return sorted list of tuples of form (atom, parameter, SU).
-    '''
-    i = 0
-    paramsList = []
-    paramTab = False
-
-    with open(file,'r') as lsm:
-
-        for line in lsm:
-
-            if line.startswith(' ATOM #   1'):
-                paramTab = True
-
-            if paramTab:
-                if line.startswith(' ATOM #'):
-                    row = line.split()
-                    atom = row[4]
-                    i=0
-
-                elif i > 5 and not line.startswith('------'):
-
-                    row = line.split()
-                    if len(row) == 7:
-                         SU = line[48:56]
-                         param = row[0]
-
-                         paramsList.append((atom, param, float(SU)))
-
-            if line.startswith(' SCALE') and len(line.split()) == 7:
-                break
-
-            i+=1
-
-    paramsList.sort(key=lambda item: item[2])
-
-    return paramsList
-
-
-def getRF2(folder=None):
-    '''
-    Get final RF2 value from xd_lsm.out. Return value.
-    '''
-    if not folder:
-        lsm = open('xd_lsm.out','r')
-
-    else:
-        filePath = folder + '/xd_lsm.out'
-        lsm = open(filePath,'r')
-
-    try:
-        finalCycle = False
-        rf2 = ''
-        rFound= False
-
-        for line in lsm:
-            #Find final cycle and line with R-value
-            if finalCycle:
-                if line.startswith('  R{F^2} ='):
-                    row = str.split(line)
-                    rf2 = float(row[2])
-                    rFound = True
-                    finalCycle = False
-
-            elif line.startswith('                      Residuals after final cycle'):
-                finalCycle = True
-
-    finally:
-        lsm.close()
-
-    #Only return anything if R-value has been found, for error handling in the button function
-    if rFound == True:
-        return (rf2*100)
-
-
-def getNumMultipoles():
-    '''
-    Get number of multipoles with significant populations from xd.res.
-    '''
-    i = 30
-    j = 0
-
-    with open('xd.res','r') as res:
-
-        for line in res:
-
-            row = str.split(line)
-            if '(' in row[0]:
-                i = 0
-
-            if 1 < i < 5:
-                for item in row:
-                    if float(item) > 0.02:
-                        j+=1
-
-            i += 1
-
-    return j
-
-def getNumLowAngRefl():
-    '''
-    Get number of reflections with sin(theta/lambda) from xd_lsm.out.'
-    '''
-    i = 0
-
-    with open('xd_lsm.out','r') as lsm:
-        obs = False
-
-        for line in lsm:
-            if line.startswith('   NO.   H   K   L SINTHL'):
-                obs = True
-
-            if obs:
-                row = str.split(line)
-                if row[0].isdigit():
-                    if float(row[4]) < 0.5:
-                        i+=1
-
-            if line.startswith(' Condition(s) met:'):
-                obs = False
-
-    return i
-
-def getKrauseParam():
-    '''
-    Return Krause parameter. If there are no low angle reflections, return None.
-    '''
-    refl = getNumLowAngRefl()
-    mult = getNumMultipoles()
-
-    if refl > 0:
-        return float(mult/refl)
-
-
-def getConvergence(lsmFile):
-    '''
-    Find out if refinement in xd_lsm.out converged. Return result as bool.
-    '''
-    convCritMet = False
-
-    with open(lsmFile,'r') as lsmout:
-
-        for line in lsmout:
-
-            if 'convergence criterion was met' in line:
-                convCritMet = True
-
-    return convCritMet
-
-
-def getDMSDA(lsmFile):
-    '''
-    Get DMSDA results from xd_lsm.out. Return DMSDA results.
-    '''
-    with open(lsmFile,'r')  as lsm:         #Open xd_lsm.out to read
-
-        dmsdaBool = False               #Bool to detect start of DMSDA section
-        dmsdaList = []                  #Initialise list to store DMSDA results
-        dmsdaFull = []                  #Dictionary to store 2 atoms as keys and DMSDA as values
-        parentAtom = ''                 #Initialise string to store starting atom of interatomic vector
-
-        for line in lsm:                #Go through xd_lsm.out line by line
-
-            if line.startswith('-') and dmsdaBool == True:  #Detect end of DMSDA section
-                dmsdaBool = False
-
-            if dmsdaBool == True:                           #If in DMSDA section split line into list
-                row = str.split(line)
-
-                if not line.startswith('      '):   #If starting atom of interatomic vectors is at the start of the current line
-
-                    parentAtom = row[0] #parentAtom = starting atom of interatomic vectors
-                    i = 1               #i = 1 so as not to include the parent atom
-
-                    for item in row[1:]:            #Go through row and find atom labels
-                        if item[0:1].isalpha():
-                            if row[i+1] == '*':            #If there is a star DMSDA value is row[i+3] otherwise it is row[i+2]
-                                dmsdaFull.append((parentAtom, row[i], int(row[i+3])))         #Append DMSDA value to list
-                            else:
-                                dmsdaFull.append((parentAtom, row[i], int(row[i+2])))
-                        i+=1                                                    #Increment i to track current position in line
-
-                else:       #If starting atom of interatomic vectors is at the start of previous line
-
-                    i = 0   #i = 0 this time as first item in row isn't starting atom
-
-                    for item in row:            #Go through row and find atom labels
-                        if item[0:1].isalpha():
-                            if row[i+1] == '*':         #If there is a star DMSDA value is row[i+3] otherwise it is row[i+2]
-                                dmsdaFull.append((parentAtom, row[i], int(row[i+3])))     #Append DMSDA value to list
-                            else:
-                                dmsdaFull.append((parentAtom, row[i], int(row[i+2])))
-                        i += 1                                                  #Increment i to track current position in line
-
-            if line.startswith(' ATOM-->  ATOM    /  DIST  DMSDA ATOM'):        #Detect start of DMSDA section
-                    dmsdaBool = True
-
-        dmsdaList = [item[2] for item in dmsdaFull]
-        #Get list of dmsda values without interatomic vectors
-        averageDMSDA = sum([abs(int(x)) for x in dmsdaList])/len(dmsdaList)    #Calculate average dmsda value
-
-    return (str('%.1f' % averageDMSDA),str(max(dmsdaList)),dmsdaFull) #return tuple of average dmsda, max dmsda and the dmsda dict)
 
 
 '''
@@ -2753,28 +850,6 @@ def kapInpRes(fileName, inpTable, i):
         os.rename('xdnew.buckfast',fileName)
 
 
-def getEleNum():
-    '''
-    Get the number of different elements in the compound. Return number.
-    '''
-    with open('xd.mas','r') as mas:
-
-        scat = False
-        i = 0
-
-        for line in mas:
-            if line.startswith('END SCAT'):
-                break
-
-            if scat:
-                i += 1
-
-            if line.startswith('SCAT'):
-                scat = True
-
-    return i
-
-
 def kapMonRef():
     '''
     Setup xd.mas to refine kappa and monopoles.
@@ -2848,7 +923,7 @@ def nonHPosADPKey():
     Setup key table in xd.mas for refinement of multipoles, and non-H positions and ADPs.
     '''
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-    
+
         keyTab = False
 
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
@@ -2886,6 +961,11 @@ def posADPMultRef():
 
     return warnings
 
+'''
+########################################################################
+#--------------------LOWER SYMMETRY-------------------------------------
+########################################################################
+'''
 
 def mm2Tom():
     '''
@@ -2952,8 +1032,6 @@ def lowerSymTo1():
 
             elif line.startswith('END ATOM'):
                 atomTab = False
-
-
 
             if keyTab:
                 row = str.split(line)
@@ -3170,7 +1248,6 @@ def getLowLocalCoordSys():
 
     return (atomLocCoords)
 
-
 def getMultRes():
     '''
     Get populations of all multipoles from xd.res. Return populations.
@@ -3204,7 +1281,6 @@ def getMultRes():
         res.close()
 
     return multPops
-
 
 def checkMultRes():
     '''
@@ -3260,260 +1336,9 @@ def checkMultRes():
 
 '''
 ########################################################################
-#--------------------MISC-----------------------------------------------
+#--------------------SITESYM--------------------------------------------
 ########################################################################
 '''
-
-def setupmas():
-    '''
-    Setup details in xd.mas for refinement.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        atomTab = False
-
-        for line in mas:
-
-            row = str.split(line)
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            if atomTab:
-                row = str.split(line)
-
-                row[10] = '4'
-
-                if line.startswith('H('):
-                    row[7] = '1'
-
-                if len(row)==13:
-                    rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}'.format(*row)
-                else:
-                    rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}'.format(*row)
-                newmas.write(rowStr + '\n')
-
-            #Set model to multipoles max l = 4
-            elif row[0:2] == ['SELECT','*model']:
-                row = str.split(line)
-                rowStr = row[0] + ' ' + row[1] + '  4  ' + row[3] + '  ' + row[4] + '  ' + row[5] + ' ' + row[6] + ' ' + 'F^2' + '  ' + row[8] + ' ' + row[9] + ' ' + row[10]
-                newmas.write(rowStr + '\n')
-
-            elif line.startswith('!RESET    bond C(1) H(1) 1.09 ...'):
-                pass
-
-            #Add appropriate fmod1
-            elif line.startswith('FOUR') or line.startswith('!FOUR'):
-                row = str.split(line)
-                rowStr = 'FOUR  fmod1  4  2  0  0   fmod2 -1  2  0  0'
-                newmas.write(rowStr + '\n')
-
-            #Add convcrit
-            elif row[0:2] == ['SELECT','cycle']:
-
-                row[2] = '25'
-                row[11] = '*convcrit'
-                row[12] = '0.1E-3'
-                rowStr = ' '.join(row)
-                newmas.write(rowStr + '\n')
-
-            #Turn on rigid bond test
-            elif line.startswith('!DMSDA'):
-                row = str.split(line)
-                rowStr = 'DMSDA    ' + row[1] + '   ' + row[2]
-                newmas.write(rowStr + '\n')
-
-            elif line.startswith('SKIP'):
-                row = str.split(line)
-                rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOff}  {8} {9}'.format(*row, snlOff = 'sinthl')
-                newmas.write(rowStr + '\n')
-
-            else:
-                newmas.write(line)
-
-                #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    #Create new xd.mas file
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def findNeeborType(lstFile):
-    '''
-    Get nearest neighbour types for every atom from lst file. Return nearest neighbour types.
-    '''
-    #neighboursSym uses format {'O1':['C','C']}
-    neighboursSym = {}
-    #Opens lst file from SHELXL refinement. Need to update so user chooses lst file from file explorer.
-    with open(lstFile,'r') as lstFile:
-        bondTab = False
-        i=0
-        j=0
-        atom=''
-
-        for line in lstFile:
-
-            #Find start of bond table
-            if line.startswith(' Bond lengths and angles'):
-                bondTab=True
-
-            #End of bond table
-            if bondTab==True and i==2:
-                bondTab=False
-
-            #If in right part of bond table and line not empty split line into list
-            if bondTab and line.strip():
-                row = str.split(line)
-
-                #If not on the first atom or last line of a block add connected atoms to dictionary
-                if j > 0 and not line.startswith('      '):
-
-
-                    if row[0][:2].isalpha():
-                        neighboursSym[atom].append((row[0][:2]).upper())
-                    else:
-                        neighboursSym[atom].append((row[0][:1]).upper())
-
-                #If on the first line of a block add a new key to dictionary for that atom
-                if 'Distance' in row:
-                    if row[0][:2].isalpha():
-                        atom = (row[0][:2] + '(' + row[0][2:] + ')').upper()
-                    else:
-                        atom = (row[0][:1] + '(' + row[0][1:] + ')').upper()
-                    neighboursSym[atom] = []
-                j += 1
-
-            #Find double empty line at bottom of bond table.
-            if not line.strip():
-                i+=1
-                j=0
-            elif line.strip():
-                i=0
-
-    return neighboursSym
-
-
-def findNeeborLabels(lstFile):
-    '''
-    Get nearest neighbour labels from lst file. Return nearest neighbour labels.
-    '''
-    #neighbours uses format {'O1':['C1','C2']}
-    neighbours = {}
-
-    #Opens lst file from SHELXL refinement. Need to update so user chooses lst file from file explorer.
-    with open(lstFile,'r') as lstFile:
-
-        bondTab = False
-        i=0
-        j=0
-        atom=''
-
-        for line in lstFile:
-
-            #Find start of bond table
-            if line.startswith(' Bond lengths and angles'):
-                bondTab=True
-
-            #End of bond table
-            if bondTab==True and i==2:
-                bondTab=False
-
-            #If in right part of bond table and line not empty split line into list
-            if bondTab and line.strip():
-                row = str.split(line)
-
-                #If not on the first atom or last line of a block add connected atoms to dictionary
-                if j > 0 and not line.startswith('      '):
-
-
-                    if row[0][:2].isalpha():
-                        neighbours[atom].append((row[0][:2].upper() + '(' + row[0][2:] + ')').upper())
-                    else:
-                        neighbours[atom].append((row[0][:1].upper() + '(' + row[0][1:] + ')').upper())
-
-                #If on the first line of a block add a new key to dictionary for that atom
-                if 'Distance' in row:
-                    if row[0][:2].isalpha():
-                        atom = (row[0][:2] + '(' + row[0][2:] + ')').upper()
-                    else:
-                        atom = (row[0][:1] + '(' + row[0][1:] + ')').upper()
-                    neighbours[atom] = []
-                j += 1
-
-            #Find double empty line at bottom of bond table.
-            if not line.strip():
-                i+=1
-                j=0
-            elif line.strip():
-                i=0
-
-    return neighbours
-
-
-def convert2XDLabel(atomLabel):
-    '''
-    Convert C1 label to C(1) label
-    '''
-    if atomLabel[:2].isalpha():
-        newLabel = (atomLabel[:2] + '(' + atomLabel[2:] + ')').upper()
-    else:
-        newLabel = (atomLabel[:1] + '(' + atomLabel[1:] + ')').upper()
-
-    return newLabel
-
-
-def getBondAngles(lstFile):
-    '''
-    Get bond angles from lst file. Return bond angles.
-    '''
-    with open(lstFile, 'r')as lstFile:
-
-        bondAngleDict = {}
-        secondAtomList = []  #List to store list of other nearest neighbours to get the atoms involved in angles
-        i = 0
-        j = 0
-        bondTab = False
-
-        for line in lstFile:
-
-            if j == 2 and bondTab == True:
-                bondTab = False
-
-            if bondTab:
-                if line.strip():
-                    j = 0
-                    row = str.split(line)
-
-                    if 'Distance' in row:
-                        parentAtom = convert2XDLabel(row[0])
-                        bondAngleDict[parentAtom] = []
-                        secondAtomList.clear()
-
-                    else:
-
-                        distanceBeen = False            #Bool to detect if distance number has already been passed in line
-                        i = 0
-                        #Convert atom to XD label format
-                        atomLabStr = convert2XDLabel(row[0])
-                        secondAtomList.append(atomLabStr.upper())
-                        for item in row:
-
-                            if item[0:1].isdigit():
-                                if distanceBeen:
-                                    bondAngleDict[parentAtom].append((item,[atomLabStr, parentAtom, secondAtomList[i]]))
-                                    i+=1
-                                else:
-                                    distanceBeen = True
-                else:
-                    j+=1
-
-                    #Find start of bond table
-            if line.startswith(' Bond lengths and angles'):
-                bondTab=True
-
-        return bondAngleDict
-
 
 def findSITESYM(trackAtom = None):
     '''
@@ -3686,7 +1511,7 @@ def findSITESYM(trackAtom = None):
                     else:
                         atomSyms[atom] = ['1', '21 111n']
 
-#--------------------------------4 NEIGHBOURS-------------------------------------------------------------
+#--------------------------------4 NEIGHBOURS------------------------------------------------------
         #t = tetrahedral, sp = square planar, t/sp = inbetween tetrahedral and square planar, et = elongated tetrahedral, epy = elongated pyramid
         #Atom bonded to 4 identical neighbours = mm2, 1+1+2 neighbours = m, 2+2 neighbours = mm2, 1+3 neighbours = m, all different neigbours = 1
         elif len(neighbours) == 4:
@@ -4092,7 +1917,6 @@ def writeSITESYM(atomSymDict):
 
     return unaddedSym
 
-
 def findUnaddedSym():
     '''
     Find any atoms with 'NO' in the SITESYM column of the atom table. Return atoms.
@@ -4119,6 +1943,13 @@ def findUnaddedSym():
                 atomTab = True
 
     return noSymAtoms
+
+
+'''
+########################################################################
+#--------------------LOCAL COORDINATE SYSTEM----------------------------
+########################################################################
+'''
 
 def spec2masLab(specLab):
     '''
@@ -4411,32 +2242,6 @@ def getLocalCoordSys():
 
     return (atomLocCoords, atomNeebs)
 
-def findMasCHEMCON():
-    '''
-    Get CHEMCON from mas file. Return as dictionary of children and their parents.
-    '''
-    with open('xd.mas','r') as mas:
-
-        atomTab = False
-        chemcon = {}
-
-        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-                break
-
-            if atomTab:
-                row = line.upper().split()
-                if len(row) == 13:
-                    chemcon[row[0]] = row[12]
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    return (chemcon)
-
 def makeLCS():
     '''
     Write local coordinate systems to mas file for all atoms. Return atoms for which local coordinate system could not be found as list.
@@ -4543,302 +2348,6 @@ def writeLocalCoordSys(atomLocCoordsDict):
     os.rename('xdnew.mas','xd.mas')
 
     return unaddedLocCoords                 #List of atoms for which local coordinates haven't been added
-
-
-def multipoleKeyTable():
-    '''
-    Write key table with multipoles based on SITESYM column of atom table.
-    '''
-    #Initialise dictionary containing multipole KEY table settings for common local symmetries.
-    multipoleBank = {'NO': '00 000 00000 0000000 000000000', '1': '10 111 11111 1111111 111111111',
-                     'CYL': '10 001 00000 0000000 000000000', 'CYLX': '10 001 10000 1000000 000000000',
-                     'CYLXD': '10 001 10000 1000000 000000000', '2': '10 001 10010 1001000 100100010',
-                     'M': '10 110 10011 0110011 100110011', 'MM2': '10 001 10010 1001000 100100010',
-                     '4': '10 001 10000 1000000 100000010', '4MM': '10 001 10000 1000000 100000010',
-                     '3': '10 001 10000 1000010 100001000', '3M': '10 001 10000 1000010 100001000',
-                     '6': '10 001 10000 1000000 100000000', '6MM': '10 001 10000 1000000 100000000'}
-
-    XAtoms = ('CL', 'F(', 'BR','I(', 'O(', 'N(')
-    noHexaAtoms = ['C(', 'O(', 'N(']
-
-    with open('xd.mas','r') as mas:
-
-        atomTab = False             #Initialise atomTab and keyTab bools to detect atom table and key table
-        keyTab = False
-        newMultipoles = {}          #Initialise dict to store atom labels and their corresponding multipoles
-        atomSyms = {}
-
-        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-        #In atom table, if a row has no chemcon (12 items in row) add to dictionary for printing to new file.
-        #Atoms with CHEMCON will inherit multipole configuration if everything is set to 0.
-            if atomTab:
-                row = str.split(line.upper())
-
-                if len(row)==12:
-                    atomSyms[row[0]] = row[11]
-                    if line[:2] not in XAtoms:
-                        if line[:2] not in noHexaAtoms:
-                            #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                            newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-                        else:
-                            #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                            newMultStr = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-                            #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                            newMultipoles[row[0]] = newMultStr[:-9] + '000000000'
-                    #If cyl is sym label for a halogen include z2 quadrupole
-                    else:
-                        if row[11] == 'CYL':
-                            if line[:2] != 'F(':
-                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLX'])
-                            else:
-                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLXD'])
-                        else:
-                            newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-
-                elif len(row) == 13:
-                    if row[11] != atomSyms[row[12]]:
-                        if line[:2] not in XAtoms:
-                            if line[:2] not in noHexaAtoms:
-                                #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-
-                            else:
-                                #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                                newMultStr = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-                                #Add new key table line to dict. Multipoles selected from multipoleBank based on SITESYM
-                                newMultipoles[row[0]] = newMultStr[:-9] + '000000000'
-
-                        #If cyl is sym label for a halogen include z2 quadrupole
-                        else:
-                            if row[11] == 'CYL':
-                                if line[:2] != 'F(':
-                                    newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLX'])
-                                else:
-                                    newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank['CYLXD'])
-                            else:
-                                newMultipoles[row[0]] = '{0:8}{1} {2}'.format(row[0], '000 000000 0000000000 000000000000000', multipoleBank[row[11]])
-                            print(newMultipoles[row[0]])
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-        #Find key table the same as with atomTab
-        for line in mas:
-
-            if line.startswith('KAPPA'):
-                keyTab = False
-
-            #In the key table, if the atom needs multipoles they are written
-            #otherwise write all 0s and atom will inherit multipoles from CHEMCON atom.
-            if keyTab:
-                row = str.split(line)
-                if row[0].upper() in newMultipoles:
-                    newmas.write(newMultipoles[row[0].upper()] + '\n')
-                else:
-                    newmas.write('{0:8}{1}\n'.format(row[0].upper(), '000 000000 0000000000 000000000000000 00 000 00000 0000000 000000000'))
-            else:
-                newmas.write(line)
-
-            if line.startswith('KEY     XYZ'):
-                keyTab = True
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def resetKeyTable():
-    '''
-    Reset key table to all 0s.
-    '''
-    keyTab = False
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-        #Go through xd.mas and flip keyTab to true when you reach the start of the atom table and false when you reach the end of the atom table
-        for line in mas:
-
-            if line.startswith('EXTCN'):
-                keyTab = False
-
-            if keyTab:
-                if line[:5] != 'KAPPA':
-                    row = str.split(line)
-
-                    rowStr = '{0:8}{1}'.format(row[0], '000 000000 0000000000 000000000000000 00 000 00000 0000000 000000000')
-                    newmas.write(rowStr + '\n')
-                else:
-                    newmas.write('KAPPA   000000\n')
-
-            else:
-                newmas.write(line)
-
-            if line.startswith('KEY     XYZ'):
-                keyTab = True
-
-    #Create new xd.mas file
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-'''
-########################################################################
-#--------------------WIZARD---------------------------------------------
-########################################################################
-'''
-
-def seqMultRef(l):
-    '''
-    Add multipoles up to a given l value to key table.
-    '''
-    l+=5       #Make l correspond to row index in key table
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        keyTab = False
-
-        for line in mas:
-
-            if line.startswith('KAPPA'):
-                keyTab = False
-
-            if keyTab:
-                row = str.split(line)
-                rowStr = line[:48]
-                for i in range(6,10):
-                    if i <= l:
-                        rowStr += (' ' + row[i])
-                    else:
-                        rowStr += (' ' + ''.join(['0' for char in row[i]]))
-                rowStr += '\n'
-                newmas.write(rowStr)
-
-            else:
-                newmas.write(line)
-
-            if line.startswith('KEY     XYZ'):
-                keyTab = True
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def wizAddResetBond():
-    '''
-    Add reset bond instructions in xdwiz.mas to xd.mas.
-    '''
-
-    rbstr = ''
-    with open('xdwiz.mas', 'r') as rb:
-        for line in rb:
-            if line.startswith('RESET BOND'):
-                rbstr += line
-            elif line.startswith('KEY'):
-                break
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-        for line in mas:
-            if line.startswith('WEIGHT'):
-                newmas.write(line)
-                newmas.write(rbstr)
-            else:
-                newmas.write(line)
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def wizAddLocCoords():
-    '''
-    Add local coordinate systems in xdwiz.mas to xd.mas
-    '''
-    with open('xdwiz.mas','r') as rb:
-        ccstr = ''
-        atomTab = False
-
-        for line in rb:
-            if line.startswith('END ATOM'):
-                atomTab = False
-
-            if atomTab:
-                ccstr += line
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-        for line in mas:
-            if line.startswith('END ATOM'):
-                atomTab = False
-
-            if atomTab:
-                pass
-
-            else:
-                newmas.write(line)
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-                newmas.write(ccstr)
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def wizAddCHEMCON():
-    '''
-    Add CHEMCON from xdwiz.mas to xd.mas.
-    '''
-    with open('xdwiz.mas','r') as rb:
-
-        cc = []
-        atomTab = False
-
-        for line in rb:
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            if atomTab:
-                row = str.split(line)
-                if len(row) == 13:
-                    cc.append(row[12])
-                else:
-                    cc.append(' ')
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        i=0
-
-        for line in mas:
-
-            if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
-                atomTab = False
-
-            if atomTab:
-                row = str.split(line)
-                if len(row) == 13:
-                    row[12] = cc(i)
-                else:
-                    row.append(' ')
-                rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}\n'.format(*row)
-                newmas.write(rowStr)
-
-            else:
-                newmas.write(line)
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-            i+=1
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
 
 
 '''
@@ -4952,52 +2461,6 @@ class XDINI(QThread):
         self.finishedSignal.emit()
 
 
-class checkLSMOUT(QThread):
-    '''
-    *DOESN'T WORK: Checks xd_lsm.out while XDLSM is running.
-    '''
-    updateSignal = pyqtSignal()
-
-    def __init__(self):
-        QThread.__init__(self)
-
-
-    def __del__(self):
-        self.wait()
-
-    def stop(self):
-        self.xdlsmIsRunning = False
-
-    def run(self):
-
-        i = 0
-        self.xdlsmIsRunning = True
-
-        while self.xdlsmIsRunning:
-            time.sleep(1)
-            k = 4
-
-            with open('xd_lsm.out','r') as lsm:
-
-                for line in lsm:
-                    if line.strip().startswith('Residuals after cycle'):
-                        row = str.split(line)
-
-                        if int(row[3]) > i:
-                            i += 1
-                            cycle = row[3]
-                            k = 0
-
-                    elif k == 3:
-                        row = str.split(line)
-                        RF2 = float(row[2])*100
-                        self.statusMsg = 'Cycle {0} - RF<sup>2</sup> = {1:.2f} %'.format(cycle, RF2)
-                        print(self.statusMsg)
-                        self.updateSignal.emit()
-
-                    k+=1
-
-
 class aboutBox(QWidget, Ui_aboutBox):
     '''
     About XD Toolkit window.
@@ -5006,6 +2469,24 @@ class aboutBox(QWidget, Ui_aboutBox):
         super(aboutBox, self).__init__(parent)
         self.setupUi(self)
 
+class sendBug(QDialog, Ui_sendBug):
+    '''
+    Send bug report window.
+    '''
+    def __init__(self, parent=None):
+        super(sendBug, self).__init__(parent)
+        self.setupUi(self)
+        self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
+
+class sendSugg(QDialog, Ui_sendSugg):
+    '''
+    Send suggestion window.
+    '''
+    def __init__(self, parent=None):
+        super(sendSugg, self).__init__(parent)
+        self.setupUi(self)
+
+        self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
 
 class prefGui(QDialog, Ui_pref):
     '''
@@ -5313,7 +2794,7 @@ class wizardRunning(QDialog, Ui_wizard):
                         return
 
                 elif error[1].startswith('Noble gas configuration not recognized for element Cu'):
-                    initialiseMas()
+                    initializeMas()
                     self.i = self.i-2
                     if self.xxxDanger < 4:
                         self.errorFixed = True
@@ -5446,25 +2927,7 @@ class wizardRunning(QDialog, Ui_wizard):
             self.wizStatusLab.setText('''Couldn't setup xd.mas for ''' + self.refList[self.i][4:].lower().replace('-h','-H'))
 
 
-class sendBug(QDialog, Ui_sendBug):
-    '''
-    Send bug report window.
-    '''
-    def __init__(self, parent=None):
-        super(sendBug, self).__init__(parent)
-        self.setupUi(self)
-        self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
 
-
-class sendSugg(QDialog, Ui_sendSugg):
-    '''
-    Send suggestion window.
-    '''
-    def __init__(self, parent=None):
-        super(sendSugg, self).__init__(parent)
-        self.setupUi(self)
-
-        self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
 
 
 class mercury(QThread):
@@ -6178,7 +3641,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
                     elif error[1].startswith('Noble gas configuration not recognized for element Cu'):
 
-                        initialiseMas()
+                        initializeMas()
                         self.xdlsm.start()
         except Exception:
             pass
@@ -7532,7 +4995,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 #########################################################################
 #--------------------TOOLS-----------------------------------------------
 #########################################################################
-    
+
     def addDUMPress(self):
         '''
         Add dummy atom from user input.
