@@ -4,7 +4,7 @@
 #####################################################################
 '''
 
-from time import time
+from time import timeDec
 from shutil import copyfile
 
 def resetmas():
@@ -25,9 +25,9 @@ def timeDec(f):
     Decorator to print total running time of a function.
     '''
     def timeFunc(*args, **kwargs):
-        tzero = time()
+        tzero = time.time()
         rtn = f(*args, **kwargs)
-        tfin = time()
+        tfin = time.time()
         print('{0:40}{1:.7f} s'.format(f.__name__, tfin-tzero))
         return rtn
     return timeFunc

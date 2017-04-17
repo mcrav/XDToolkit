@@ -12,10 +12,6 @@ import time
 import itertools
 import numpy as np
 import os
-import smtplib
-from email.mime.application import MIMEApplication
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import sys
 import webbrowser
 from shutil import copyfile, rmtree
@@ -31,479 +27,16 @@ from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QDialogButtonBox, QSpl
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
 
-from devTools import resetmas, timeDec
+from devtools import resetmas, timeDec
+from utils import lab2type, spec2norm, rawInput2labels, labels2list, isfloat
+from email import sendEmail
+from xderrfix import fixLsmCif, removePhantomAtoms, fixBrokenLabels
 
 '''
 #####################################################################
-#-------------------UTILITIES----------------------------------------
+#-------------------COMPOUND INITIALIZATION--------------------------
 #####################################################################
 '''
-
-def lab2type(atomLabel):
-    '''
-    Convert atom label to atom type, e.g. 'C(2)' to 'C'. Return type.
-    '''
-    return atomLabel.split('(')[0].upper()
-
-def spec2norm(atomLabel):
-    '''
-    Convert special atom label to normal atom label, e.g. 'C(2),asym' to 'C(2)'. Return label.
-    '''
-    return atomLabel.split(',')[0]
-
-def rawInput2Labels(rawInput):
-    '''
-    Convert raw input of unspecified format atom labels to list of correctly formatted labels. Return list.
-    '''
-    return formatLabels(labels2list(rawInput))
-
-def labels2list(inputText):
-    '''
-    Convert raw input of atom labels to list of unformatted atom labels. Return list.
-    '''
-    inputText = inputText.upper()
-    if ',' in inputText:
-        inputText = inputText.replace(' ','').strip(',')
-        inputAtomList = inputText.split(',')
-    elif ' ' in inputText:
-        inputAtomList = inputText.split()
-    else:
-        inputAtomList = [inputText]
-
-    return inputAtomList
-
-def formatLabels(inputAtomList):
-    '''
-    Convert labels c1 to c(1).
-    '''
-    elements = findElements()
-    inputNewAtomList = []
-
-    for atomLab in inputAtomList:
-        newAtomLab = ''
-        if '(' not in atomLab:
-            if atomLab[:2] in elements:
-                newAtomLab = '{0}({1})'.format(atomLab[:2], atomLab[2:])
-            elif atomLab[:1] in elements:
-                newAtomLab = '{0}({1})'.format(atomLab[:1], atomLab[1:])
-            elif atomLab[:3] == 'DUM':
-                newAtomLab = atomLab
-
-            if newAtomLab:
-                inputNewAtomList.append(newAtomLab)
-
-        else:
-            inputNewAtomList.append(atomLab)
-
-    return inputNewAtomList
-
-
-def sendEmail(body = '', email = '', attachments = [], subject = ''):
-    '''
-    Send email to my email account from xdtoolkit@gmail.com
-    '''
-    fromaddr = "xdtoolkit@gmail.com"
-    toaddr = "mcrav@chem.au.dk"
-    msg = MIMEMultipart()
-    msg['From'] = fromaddr
-    msg['To'] = toaddr
-    msg['Subject'] = subject
-
-    for f in attachments:
-
-        with open(f, "rb") as fil:
-            part = MIMEApplication(
-                fil.read(),
-                Name=os.path.basename(f)
-            )
-            part['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(f)
-            msg.attach(part)
-
-    bodyText = '{0}<br><br>Email Address: {1}'.format(body,email)
-    msg.attach(MIMEText(bodyText, 'html'))
-
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login("xdtoolkit@gmail.com", '***')
-    text = msg.as_string()
-    server.sendmail("xdtoolkit@gmail.com", "mcrav@chem.au.dk", text)
-
-    server.quit()
-
-
-def isfloat(x):
-    '''
-    Check if unknown value can be converted to a float. Return result as bool.
-    '''
-    floatBool = True
-
-    try:
-        float(x)
-    except Exception:
-        floatBool = False
-
-    return floatBool
-
-
-def fixLsmCif():
-    '''
-    Add unit cell paramaters to xd_lsm.cif.
-    '''
-    cellParams = getCellParams()
-
-    with open('xd_lsm.cif','r') as cif, open('xd_lsmnew.cif','w') as newcif:
-
-        for line in cif:
-
-            if line.startswith('# Refinement details'):
-
-                cellStr = '\n#Unit Cell Parameters\n\n'
-                cellStr += '{0:35}{1}\n'.format('_cell_length_a', cellParams[0])
-                cellStr += '{0:35}{1}\n'.format('_cell_length_b', cellParams[1])
-                cellStr += '{0:35}{1}\n'.format('_cell_length_c', cellParams[2])
-                cellStr += '{0:35}{1}\n'.format('_cell_angle_alpha', cellParams[3])
-                cellStr += '{0:35}{1}\n'.format('_cell_angle_beta', cellParams[4])
-                cellStr += '{0:35}{1}\n'.format('_cell_angle_gamma', cellParams[5])
-                cellStr += '\n\n'
-                newcif.write(cellStr)
-
-            newcif.write(line)
-
-    os.remove('xd_lsm.cif')
-    os.rename('xd_lsmnew.cif','xd_lsm.cif')
-
-
-def getCellParams():
-    '''
-    Get unit cell parameters from shelx.ins or xd.mas.
-    '''
-    if os.path.isfile('shelx.ins'):
-        with open('shelx.ins','r') as ins:
-            ins = open('shelx.ins','r')
-
-            for line in ins:
-
-                if line.startswith('CELL'):
-                    row = str.split(line)
-                    a = float(row[2])
-                    b = float(row[3])
-                    c = float(row[4])
-                    alpha = float(row[5])
-                    beta = float(row[6])
-                    gamma = float(row[7])
-
-    elif os.path.isfile('xd.mas'):
-        with open('xd.mas','r') as mas:
-
-            for line in mas:
-
-                if line.startswith('CELL '):
-
-                    row = str.split(line)
-
-                    a = float(row[1])
-                    b = float(row[2])
-                    c = float(row[3])
-                    alpha = float(row[4])
-                    beta = float(row[5])
-                    gamma = float(row[6])
-
-    return [a, b, c, alpha, beta, gamma]
-
-
-def findElements():
-    '''
-    Find elements in compound from shelx.ins or xd.inp. Return list of elements.
-    '''
-    elements = []
-
-    if os.path.isfile('shelx.ins'):
-        with open('shelx.ins','r') as ins:
-            for line in ins:
-                if line.startswith('SFAC'):
-                    row = str.split(line)
-                    elements = [item.upper() for item in row[1:]]
-                    break
-
-    elif os.path.isfile('xd.inp'):
-        with open('xd.inp','r') as inp:
-
-            for line in inp:
-                if line.startswith('END SCAT'):
-                    scatTab = False
-                    break
-
-                elif scatTab:
-                    row = str.split(line)
-                    if row[0].isalpha():
-                        elements.append(row[0])
-
-                elif line.startswith('SCAT '):
-                    scatTab = True
-
-    return elements
-
-
-def addSnlCutoff(snlmin = 0.0, snlmax = 2.0):
-    '''
-    Add sin(theta/lambda) cutoffs to xd.mas.
-    '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-
-        for line in mas:
-
-            if line.startswith('SKIP'):
-                row = str.split(line)
-                rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.3f} {snlMax:<5.3f}'.format(*row, snlOn = '*sinthl', snlMin = snlmin, snlMax = snlmax)
-                newmas.write(rowStr + '\n')
-
-            else:
-                newmas.write(line)
-
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
-
-def removePhantomAtoms():
-    '''
-    Remove faulty atoms with format '(e' from xd.mas and xd.inp.
-    '''
-    phantoms = False
-
-    with open('xd.inp','r') as inp, open('xdnew.inp','w') as newinp:
-        i = 3
-        phantomCount = 0
-
-        for line in inp:
-            if line.startswith('('):
-                phantoms = True
-                phantomCount += 1
-                i = 0
-            if i > 2:
-                newinp.write(line)
-            i+=1
-
-
-
-    if phantoms:
-        with open('xd.mas', 'r') as mas, open('xdnew.mas', 'w') as newmas:
-
-
-            atomTab = False
-            keyTab = False
-            scatTab = False
-            kappaPrinted = False
-            k = 0
-
-            for line in mas:
-                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                    atomTab = False
-                elif line.startswith('KAPPA'):
-                    keyTab = False
-                    if kappaPrinted == False:
-                        if k < phantomCount:
-                            k += 1
-                            continue
-
-                elif line.startswith('END SCAT'):
-                    scatTab = False
-
-                if atomTab:
-                    if line.startswith('('):
-                        continue
-                    else:
-                        newmas.write(line)
-
-
-                elif scatTab:
-                    if line.startswith('('):
-                        continue
-                    else:
-                        newmas.write(line)
-
-                elif keyTab:
-                    if line.startswith('('):
-                        continue
-                    else:
-                        newmas.write(line)
-
-                else:
-                    newmas.write(line)
-
-                if line.startswith('ATOM     ATOM0'):
-                    atomTab = True
-
-                elif line.startswith('KEY'):
-                    keyTab = True
-
-                elif line.startswith('SCAT'):
-                    scatTab = True
-
-        os.remove('xd.mas')
-        os.rename('xdnew.mas','xd.mas')
-
-        numElements = 0
-
-        with open('xdnew.inp','r') as inp, open('xd.inp','w') as newinp:
-            i = 0
-            j = 1
-            for line in inp:
-                if line.startswith('USAGE'):
-                    row = str.split(line)
-                    numAtoms = int(row[1])
-                    numElements = int(row[4])
-                    row[1] = str(numAtoms - phantomCount)
-                    row[4] = str(numElements - phantomCount)
-                    rowStr = '{0:10}{1:6}{2:3}{3:4}{4:4}{5:4}{6:4}{7:4}{8:4}{9:4}{10:4}{11:6}{12:3}{13:4}{14}\n'.format(*row)
-                    newinp.write(rowStr)
-                else:                                               #Code to remove extra line(s) of kappa table in inp
-                    if j <= (numElements - phantomCount) and i > 2:
-                        newinp.write(line)
-
-                    elif i <= 2:
-                        newinp.write(line)
-
-                    else:
-                        i = -1
-
-
-                if line[:1] == ' ':
-                    i+= 1
-                else:
-                    i = 0
-
-                if i > 2:
-                    j+=1
-
-
-        os.remove('xdnew.inp')
-
-
-def fixBrokenLabels():
-    '''
-    Change problematic atom labels in shelx.ins.
-    '''
-    try:
-        neebs = copy.copy(globAtomLabs)
-        i = 0
-        atomBool = False
-        elements = []
-
-        with open('shelx.ins','r') as ins, open('shelxnew.ins','w') as newins:
-
-            for line in ins:
-                i = 0
-                if line.startswith('HKLF'):
-                    atomBool = False
-
-                elif line.startswith('SFAC'):
-                    row = str.split(line)
-                    elements = [item.upper() for item in row[1:]]
-
-                if atomBool:
-                    if line[:1].isalpha() and not line.startswith('AFIX'):
-                        row = str.split(line)
-                        atomLab = row[0]
-                        newLab = atomLab.replace('(','').replace(')','')
-                        #Fix labels that are just N or C or Co with no number
-                        if newLab in elements:       #N Na error
-                            newerLab = newLab + str(i)
-                            while newerLab in neebs:
-                                i += 1
-                                newerLab = newLab + str(i)
-                            newLab = newerLab
-                        newLine = '{0:6}{1}'.format(newLab.upper(), line[6:])
-                        newins.write(newLine)
-                    else:
-                        newins.write(line)
-
-                else:
-                    newins.write(line)
-
-                if line.startswith('FVAR'):
-                    atomBool = True
-
-        os.remove('shelx.ins')
-        os.rename('shelxnew.ins', 'shelx.ins')
-
-    finally:
-        try:
-            os.remove('shelxnew.ins')
-        except Exception:
-            pass
-
-
-def getNumAtoms():
-    '''
-    Get total number of atoms in compound from shelx.ins or xd.inp.
-    '''
-    i = 0
-
-    if os.path.isfile('xd.inp'):
-        with open('xd.inp','r') as inp:
-
-            for line in inp:
-
-                if line.startswith('USAGE'):
-                    row = str.split(line)
-                    i = int(row[1])
-                    break
-
-    elif os.path.isfile('shelx.ins'):
-        atomBool = False
-        with open('shelx.ins','r') as ins:
-
-            for line in ins:
-                if line.startswith('HKLF') or line.startswith('REM'):
-                    atomBool = False
-
-                if atomBool and line[:1].isalpha() and not line.startswith('AFIX'):
-                    i+=1
-
-                if line.startswith('FVAR'):
-                    atomBool = True
-    return (int(i))
-
-
-def totalEstTime():
-    '''
-    Estimate total estimated time for XD wizard to run. Return this value.
-    '''
-    numAtoms = getNumAtoms()
-    s = 0.066*numAtoms +1.944
-    ha = 0.342*numAtoms -3.861
-    la = 0.050*numAtoms +1.348
-    mk = 0.351*numAtoms -3.016
-    m = 1.052*numAtoms -19.025
-    nhpam = 0.882*numAtoms -6.180
-
-    totalEstTime = s + ha + la + mk + m + nhpam + 5
-
-    return totalEstTime
-
-
-def check4errors():
-    '''
-    Check for errors in xd_lsm.out. Return errors.
-    '''
-    with open('xd_lsm.out','r') as lsm:
-        complete = False
-        error = ''
-
-        for line in lsm.readlines()[-20:]:
-
-            if line.startswith(' | Total program runtime'):
-                complete = True
-            elif line.strip().startswith('* * * '):
-                error = line
-                complete = False
-            elif line.startswith('Noble gas configuration not recognized for element Cu'):
-                error = line
-                complete = False
-
-    return(complete,error)
-
-
 def ins2fracPos(insFile):
     '''
     Get fractonal coordinates of every atom in shelx.ins. Return these and unit cell parameters.
@@ -696,7 +229,7 @@ def ins2all():
                             neebPairs.append(tupPair)
                             neebSpecialPairs.append((combo1SpecialLab, pos2SpecialLab))
 
-                            combo1InvSym = copy.copy(pos1InvSym)
+                            combo1InvSym = copy(pos1InvSym)
                             combo1InvSym.insert(0, combo[1])
 
                             specAtomPos[combo1SpecialLab] = (combo[0], combo1InvSym)
@@ -1023,6 +556,185 @@ def initialiseGlobVars():
 
                     atomPos.write(str(newPos))
 
+'''
+#####################################################################
+#-------------------UTILITIES----------------------------------------
+#####################################################################
+'''
+
+
+
+
+def getCellParams():
+    '''
+    Get unit cell parameters from shelx.ins or xd.mas.
+    '''
+    if os.path.isfile('shelx.ins'):
+        with open('shelx.ins','r') as ins:
+            ins = open('shelx.ins','r')
+
+            for line in ins:
+
+                if line.startswith('CELL'):
+                    row = str.split(line)
+                    a = float(row[2])
+                    b = float(row[3])
+                    c = float(row[4])
+                    alpha = float(row[5])
+                    beta = float(row[6])
+                    gamma = float(row[7])
+
+    elif os.path.isfile('xd.mas'):
+        with open('xd.mas','r') as mas:
+
+            for line in mas:
+
+                if line.startswith('CELL '):
+
+                    row = str.split(line)
+
+                    a = float(row[1])
+                    b = float(row[2])
+                    c = float(row[3])
+                    alpha = float(row[4])
+                    beta = float(row[5])
+                    gamma = float(row[6])
+
+    return [a, b, c, alpha, beta, gamma]
+
+
+def findElements():
+    '''
+    Find elements in compound from shelx.ins or xd.inp. Return list of elements.
+    '''
+    elements = []
+
+    if os.path.isfile('shelx.ins'):
+        with open('shelx.ins','r') as ins:
+            for line in ins:
+                if line.startswith('SFAC'):
+                    row = str.split(line)
+                    elements = [item.upper() for item in row[1:]]
+                    break
+
+    elif os.path.isfile('xd.inp'):
+        with open('xd.inp','r') as inp:
+
+            for line in inp:
+                if line.startswith('END SCAT'):
+                    scatTab = False
+                    break
+
+                elif scatTab:
+                    row = str.split(line)
+                    if row[0].isalpha():
+                        elements.append(row[0])
+
+                elif line.startswith('SCAT '):
+                    scatTab = True
+
+    return elements
+
+
+def addSnlCutoff(snlmin = 0.0, snlmax = 2.0):
+    '''
+    Add sin(theta/lambda) cutoffs to xd.mas.
+    '''
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+
+        for line in mas:
+
+            if line.startswith('SKIP'):
+                row = str.split(line)
+                rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.3f} {snlMax:<5.3f}'.format(*row, snlOn = '*sinthl', snlMin = snlmin, snlMax = snlmax)
+                newmas.write(rowStr + '\n')
+
+            else:
+                newmas.write(line)
+
+    os.remove('xd.mas')
+    os.rename('xdnew.mas','xd.mas')
+
+
+
+
+
+
+
+
+def getNumAtoms():
+    '''
+    Get total number of atoms in compound from shelx.ins or xd.inp.
+    '''
+    i = 0
+
+    if os.path.isfile('xd.inp'):
+        with open('xd.inp','r') as inp:
+
+            for line in inp:
+
+                if line.startswith('USAGE'):
+                    row = str.split(line)
+                    i = int(row[1])
+                    break
+
+    elif os.path.isfile('shelx.ins'):
+        atomBool = False
+        with open('shelx.ins','r') as ins:
+
+            for line in ins:
+                if line.startswith('HKLF') or line.startswith('REM'):
+                    atomBool = False
+
+                if atomBool and line[:1].isalpha() and not line.startswith('AFIX'):
+                    i+=1
+
+                if line.startswith('FVAR'):
+                    atomBool = True
+    return (int(i))
+
+
+def totalEstTime():
+    '''
+    Estimate total estimated time for XD wizard to run. Return this value.
+    '''
+    numAtoms = getNumAtoms()
+    s = 0.066*numAtoms +1.944
+    ha = 0.342*numAtoms -3.861
+    la = 0.050*numAtoms +1.348
+    mk = 0.351*numAtoms -3.016
+    m = 1.052*numAtoms -19.025
+    nhpam = 0.882*numAtoms -6.180
+
+    totalEstTime = s + ha + la + mk + m + nhpam + 5
+
+    return totalEstTime
+
+
+def check4errors():
+    '''
+    Check for errors in xd_lsm.out. Return errors.
+    '''
+    with open('xd_lsm.out','r') as lsm:
+        complete = False
+        error = ''
+
+        for line in lsm.readlines()[-20:]:
+
+            if line.startswith(' | Total program runtime'):
+                complete = True
+            elif line.strip().startswith('* * * '):
+                error = line
+                complete = False
+            elif line.startswith('Noble gas configuration not recognized for element Cu'):
+                error = line
+                complete = False
+
+    return(complete,error)
+
+
+
+
 
 def res2inp():
     '''
@@ -1090,7 +802,7 @@ def initialiseMas():
     '''
     Fix 'noble gas configuration for CU' error.
     '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w'):
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
 
         scatTab = False
 
@@ -7788,7 +7500,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.CHEMCONStatusLab.setText('xd.mas reset to test file')
 
             else:
-                inputAtomList = rawInput2Labels(inputText)
+                inputAtomList = rawInput2labels(inputText)
 
                 atomLabs = copy.copy(globAtomLabs)
                 atomLabs = atomLabs.keys()
@@ -7836,8 +7548,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.addDUMLab.setText('Invalid input given.')
             return
 
-        atom1 = rawInput2Labels(str(self.Atom1.text()))[0]
-        atom2 = rawInput2Labels(str(self.Atom2.text()))[0]
+        atom1 = rawInput2labels(str(self.Atom1.text()))[0]
+        atom2 = rawInput2labels(str(self.Atom2.text()))[0]
 
         try:
             x = addDUM(atom1, atom2, inputDUMI) #Add dummy atom and store index actually used to x
@@ -7861,13 +7573,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         try:
             Patom = str(self.alcsPAtomInput.text())
-            Patom = rawInput2Labels(Patom)[0]
+            Patom = rawInput2labels(Patom)[0]
             axis1 = str(self.alcsAxis1Input.currentText())
             atom1 = str(self.alcsAtom1Input.text())
-            atom1 = rawInput2Labels(atom1)[0]
+            atom1 = rawInput2labels(atom1)[0]
             axis2 = str(self.alcsAxis2Input.currentText())
             atom2 = str(self.alcsAtom2Input.text())
-            atom2 = rawInput2Labels(atom2)[0]
+            atom2 = rawInput2labels(atom2)[0]
             sym = str(self.alcsLocSymInput.text())
 
             x = addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym)
@@ -8045,7 +7757,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         if self.setupFOURInputBox.isChecked() == True:
             rawInput = str(self.setupFOURInputText.text()).strip().upper()
-            atom = rawInput2Labels(rawInput)[0]
+            atom = rawInput2labels(rawInput)[0]
             try:
                 FOU3atoms(atom)
                 self.xdfour.finishedSignal.connect(self.showResDensMap)
