@@ -36,6 +36,10 @@ def timeDec(f):
 def atomsInPair(atoms, pair):
     inPair = True
     pair = [spec2norm(item) for item in pair]
+
+    for atom in pair:
+        if atom not in atoms:
+            inPair = False
     for atom in atoms:
         if atom not in pair:
             inPair = False

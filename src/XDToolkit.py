@@ -191,7 +191,7 @@ def atoms2angle(atoms, atomPos, distances, metricMatrix):
     return roundAngle
 
 @timeDec
-def ins2all():
+def ins2all(trackBond = None):
     '''
     Find information about compound from shelx.ins input and calculations.
     Return nearest neighbours, atomic positions, bond distances, and bond angles.
@@ -221,20 +221,18 @@ def ins2all():
     distances = {}
     specDistances = {}
     specAngles = {}
-    oneCoordLst = ('H(','F(','CL','I(','BR')
 
     #Make all possible pairs of atoms in atomPairs
     for atom in atomPos.keys():
         for atom2 in atomPos.keys():
-            if atom != atom2 and {atom, atom2} not in atomPairs and not (atom[:2] in oneCoordLst and atom2[:2] in oneCoordLst):
-                atomPairs.append({atom, atom2})
+            if (atom, atom2) not in atomPairs:
+                atomPairs.append((atom, atom2))
     i=0
     #Make list of pairs within bonding distances
     for pair in atomPairs:
 
-        tupPair = tuple(pair)
-        atom1 = tupPair[0]
-        atom2 = tupPair[1]
+        atom1 = pair[0]
+        atom2 = pair[1]
 
         pos1SpecialLab = ''
         pos2SpecialLab = ''
@@ -252,19 +250,22 @@ def ins2all():
 
                 bondDist = getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma)
                 cutoffDist = covradii[atom1[:2].strip('(')] + covradii[atom2[:2].strip('(')] + 0.5
-                if atomsInPair(('O(1)', 'NI(1)'), (atom1, atom2)) and bondDist < 3:
-                    print(atom1)
-                    print(atom2)
-                    print(bondDist)
-                    print(cutoffDist)
-                    print(atom1c)
-                    print(atom2c)
-                    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                
+                #Testing
+                if trackBond:
+                    if atomsInPair(trackBond, (atom1, atom2)) and bondDist < 5:
+                        print(atom1)
+                        print(atom2)
+                        print(bondDist)
+                        print(cutoffDist)
+                        print(atom1c)
+                        print(atom2c)
+                        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
                     
-                if bondDist < cutoffDist:
-                    distances[frozenset(tupPair)] = round(bondDist, 4)
+                if bondDist < cutoffDist and bondDist != 0:
+                    distances[frozenset(pair)] = round(bondDist, 4)
                     specDistances[frozenset([pos1SpecialLab, pos2SpecialLab])] = round(bondDist, 4)
-                    neebPairs.append(tupPair)
+                    neebPairs.append(pair)
                     neebSpecialPairs.append((pos1SpecialLab, pos2SpecialLab))
 
                 else:
@@ -272,15 +273,18 @@ def ins2all():
                     #Get all x,y,z+-1 combos
                     for combo in getCombos(atom1c):
                         bondDist = getBondDist(combo[0], atom2c, a, b, c, alpha, beta, gamma)
-                        if atomsInPair(('O(1)', 'NI(1)'), (atom1, atom2)) and bondDist < 3:
-                            print(atom1)
-                            print(atom2)
-                            print(bondDist)
-                            print(cutoffDist)
-                            print(atom1c)
-                            print(combo[0])
-                            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-                        if bondDist < cutoffDist:
+                        
+                        #Testing
+                        if trackBond:
+                            if atomsInPair(trackBond, (atom1, atom2)) and bondDist < 5:
+                                print(atom1)
+                                print(atom2)
+                                print(bondDist)
+                                print(cutoffDist)
+                                print(atom1c)
+                                print(combo[0])
+                                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+                        if bondDist < cutoffDist and bondDist !=0:
                             tupPair = (atom1, atom2)
 
                             combo1SpecialLab = atom1 + ',combo' + str(i)
@@ -363,12 +367,7 @@ def ins2all():
                 y = eval(item[1])
                 z = eval(item[2])
             newPos = np.array([x,y,z])
-            tupPos = coords2tuple(newPos)
-            if atomsInPair(('O(8)','MN(1)'),(pair)):
-                print(newPos)
-                print(tupPos)
-                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-                
+            tupPos = coords2tuple(newPos)                
             addedPos = addedPosDict[splitLab[0]]
             if tupPos not in addedPos:
 
@@ -5469,8 +5468,8 @@ def customExceptHook(Type, value, traceback):
 #
 #    sys.exit(app.exec_())
 
-os.chdir('/home/matt/dev/XDTstuff/test/data/Ni-tacn')
-x = ins2all()
+os.chdir('/home/matt/dev/XDTstuff/test/data/kmno4')
+x = ins2all(trackBond = ('O(3)','K(0)'))
 #multipoleMagician()
 #x = ins2all()
 #findCHEMCON()
