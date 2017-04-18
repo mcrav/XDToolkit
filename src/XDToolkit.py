@@ -41,7 +41,6 @@ from resetbond import armRBs, disarmRBs, check4RB, resetBond, autoResetBond, del
 from wizardfuncs import seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON
 
 from initfuncs import ins2all
-
 from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpops, getDorbs, readSUs,
                      getRF2, getKrauseParam, getConvergence, getDMSDA)
 
@@ -195,7 +194,7 @@ def findCHEMCON():
                 row = str.split(line)
                 atom = row[0].upper()
                 print(atom)
-                atomEnv = getEnvSig(atom + ',asym')
+                atomEnv = getEnvSig(atom + ',asym', copy.copy(globAtomLabs))
                 globAtomEnv[atom] = atomEnv
                 envs.setdefault(atomEnv,[]).append(atom)
 
@@ -2086,7 +2085,7 @@ class XDINI(QThread):
         '''
         Run XDINI
         '''
-        fixBrokenLabels()
+        fixBrokenLabels(copy.copy(globAtomLabs))
 
         self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd())
         self.startSignal.emit()
@@ -4441,7 +4440,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Handle user clicking automatically add reset bond instructions.
         '''
         try:
-            missedAtoms = autoResetBond()
+            missedAtoms = autoResetBond(copy.copy(globAtomLabs), copy.copy(globAtomTypes))
             resStr = 'Auto RESET BOND finished.' + '\n'
             if len(missedAtoms) > 0:
                 resStr = 'Auto RESET BOND finished.' + '\n' + 'Appropriate bond lengths not found for atoms:' + '\n' + '\n'
@@ -5053,30 +5052,30 @@ def customExceptHook(Type, value, traceback):
     print_exception(Type, value, traceback)
     pass
 
-##Run GUI
-#if __name__ == '__main__':
-#
-#    sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
-#    app = QApplication(sys.argv)
-#
-#    #Splash screen
-#    splash_pix = QPixmap('res/flatearth.png')
-#    splash = QSplashScreen(splash_pix)
-#    splash.setMask(splash_pix.mask())
-#    font = QFont()
-#    font.setFamily("Bitstream Vera Sans Mono")
-#    splash.setFont(font)
-#    splash.showMessage('Initializing...',
-#                           Qt.AlignBottom | Qt.AlignLeft,
-#                           Qt.white)
-#    splash.show()
-#
-#    prog = XDToolGui()
-#    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
-#    splash.finish(prog)
-#    prog.show()
-#
-#    sys.exit(app.exec_())
+#Run GUI
+if __name__ == '__main__':
+
+    sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
+    app = QApplication(sys.argv)
+
+    #Splash screen
+    splash_pix = QPixmap('res/flatearth.png')
+    splash = QSplashScreen(splash_pix)
+    splash.setMask(splash_pix.mask())
+    font = QFont()
+    font.setFamily("Bitstream Vera Sans Mono")
+    splash.setFont(font)
+    splash.showMessage('Initializing...',
+                           Qt.AlignBottom | Qt.AlignLeft,
+                           Qt.white)
+    splash.show()
+
+    prog = XDToolGui()
+    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
+    splash.finish(prog)
+    prog.show()
+
+    sys.exit(app.exec_())
 
 #os.chdir('/home/matt/dev/XDTstuff/test/data/kmno4')
 #x = ins2all(trackBondAtoms = ('O(3)','K(0)'))

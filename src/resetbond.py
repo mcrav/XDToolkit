@@ -3,9 +3,11 @@
 #-------------------RESET BOND----------------------------------------
 ######################################################################
 '''
-
-import os
 from utils import lab2type
+import os
+import sys
+import copy
+
 
 def armRBs():
     '''
@@ -165,13 +167,13 @@ def resetBond(length,atoms,allornot = False):
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
 
-def autoAddResetBond():
+def autoAddResetBond(atomLabDict, atomTypeDict):
     '''
     Automatically add reset bond instructions based on detected H environments.
     '''
     #Get neighbours by type and label
-    neighboursType = copy.copy(globAtomTypes)
-    neighbourLabsRaw = copy.copy(globAtomLabs)
+    neighboursType = atomTypeDict
+    neighbourLabsRaw = copy.copy(atomLabDict)
     CmethylList=[]
     XmethylList = []
     primaryHList = []
@@ -222,10 +224,9 @@ def autoAddResetBond():
 
             elif sig == 'CCH':
 
-                aromaticConfirmed = confirmAromaticity(atom + ',asym')
+                aromaticConfirmed = confirmAromaticity(atom + ',asym', atomLabDict)
 
                 if aromaticConfirmed:
-
                      atomNeebLabs = neighbourLabs[atom]
                      for item in atomNeebLabs:
                         if item[0:2] == 'H(':
@@ -393,19 +394,18 @@ def getPathAromatic(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = '')
     return (pathStr, newUsedBranches[-1:], usedBranches, aromaticConfirmed)    #Return the path string, last new branch, and edited list of used branches.
 
 
-def confirmAromaticity(atom):
+def confirmAromaticity(atom, atomLabsDict):
     '''
     Check if atom is part of a phenyl ring. Return result as bool.
     '''
     lastPath = []
     paths = []
     usedBranches = []
-    atomNeebs = copy.copy(globAtomLabs)
     aromaticConfirmed = False
 
     while True:
 
-        pathRes = getPathAromatic(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
+        pathRes = getPathAromatic(atom, atomLabsDict, usedBranches, lastPath)  #Get a path.
 
         if pathRes[3] == True:
             aromaticConfirmed = True
@@ -416,7 +416,6 @@ def confirmAromaticity(atom):
             break
 
         else:
-
             #Store path as a list, to be the last path for the next time getPath is called.
             lastPath = pathRes[0].split('|')
 
@@ -433,12 +432,12 @@ def confirmAromaticity(atom):
     #When no more paths can be found or aromatic path has been found return aromatic results.
     return aromaticConfirmed
 
-def autoResetBond():
+def autoResetBond(atomLabsDict, atomTypeDict):
     '''
     Automatically add reset bond instructions to xd.mas and find out what H atoms have been missed.
     Return missed atoms.
     '''
-    resetBondsAdded = autoAddResetBond()
+    resetBondsAdded = autoAddResetBond(atomLabsDict, atomTypeDict)
 
     with open('xd.mas', 'r') as mas:
         missedAtoms = []
@@ -478,3 +477,7 @@ def delResetBond():
 
     os.remove('xd.mas')
     os.rename('xd.newmas','xd.mas')
+    
+
+
+

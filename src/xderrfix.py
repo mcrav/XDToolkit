@@ -5,6 +5,7 @@
 '''
 
 import os
+from copy import copy
 
 def check4errors():
     '''
@@ -162,12 +163,12 @@ def removePhantomAtoms():
 
         os.remove('xdnew.inp')
 
-def fixBrokenLabels():
+def fixBrokenLabels(atomLabsDict):
     '''
     Change problematic atom labels in shelx.ins.
     '''
     try:
-        neebs = copy.copy(globAtomLabs)
+        neebs = atomLabsDict.keys()
         i = 0
         atomBool = False
         elements = []

@@ -1,10 +1,11 @@
 from utils import coords2tuple
 from asym2unit import applySymOps
-from devtools import timeDec
+from devtools import timeDec, atomsInPair
 from databank import covradii
 import os
 import numpy as np
 import itertools
+import copy
 
 def ins2fracPos(insFile):
     '''

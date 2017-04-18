@@ -75,14 +75,14 @@ def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
     return (pathStr, newUsedBranches[-1:], usedBranches)    #Return the path string, last new branch, and edited list of used branches.
 
 
-def findAllPaths(atom):
+def findAllPaths(atom, atomLabsDict):
     '''
     Find all possible paths through the molecule starting from a given atom. Return all paths in list.
     '''
     lastPath = []
     paths = []
     usedBranches = []
-    atomNeebs = copy.copy(globAtomLabs)
+    atomNeebs = atomLabsDict
 
     while True:
 
@@ -110,13 +110,13 @@ def findAllPaths(atom):
     #When no more paths can be found return list of paths.
     return paths
 
-def getEnvSig(atom):
+def getEnvSig(atom, atomLabsDict):
     '''
     Create an md5 hash value for the chemical environment of a given atom. Return this hash value.
     '''
     #Sort list of paths alphabetically so it is the same no matter what order paths were found in
     #Make string with starting atom types followed by , joined sorted list of all paths.
-    pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom)))
+    pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom, atomLabsDict)))
     hashObj = hashlib.md5(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
     return hashObj.hexdigest()                              #Return digest of hash value.
 

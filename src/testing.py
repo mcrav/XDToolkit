@@ -22,27 +22,6 @@ def removeHTMLPre(string):
 
 def addHTMLBold(string):
     return '<b>' + string + '</b>'
-#
-#os.chdir('/home/matt/dev/XDTstuff')
-#
-#def getTestDict(bondFile):
-#    '''
-#    Get test dictionary from bond file.
-#    '''
-#    neebs = {}
-#    print(bondFile)
-#    with open(bondFile,'r') as bonds:
-#
-#        for line in bonds:
-#            if line[0].isdigit():
-#                row = str.split(line)
-#
-#                neebs.setdefault(row[1],[]).append(row[2])
-#                neebs.setdefault(row[2],[]).append(row[1])
-#
-#    return neebs
-#
-#
 
 def checkNeebs(testDictRaw):
     '''
@@ -75,42 +54,6 @@ def getDistances(atom, dists):
             print(pair)
             print(dist)
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-#
-#
-#def checkAllNeebs():
-#    '''
-#    Test all neighbours in testData folder.
-#    '''
-#    problems = {}
-#
-#    for folder in os.listdir('testData'):
-#        if folder != 'alanyl-methionine':
-#
-#            os.chdir('/home/matt/dev/XDTstuff/testData/{}'.format(folder))
-#            print(os.getcwd())
-#            testDict = getTestDict('bonds.tsv')
-#
-#            x = checkNeebs(testDict)
-#
-#            if x:
-#                problems[folder] = x
-#                print(x)
-#
-#    for item in problems:
-#        print('\n\n')
-#        print('------------------------------------------')
-#        print(item.upper())
-#        print('')
-#        print(problems[item])
-#    return problems
-#
-#
-#def checkFolder(folder):
-#    '''
-#    Test specific folder.
-#    '''
-#    os.chdir('/home/matt/dev/XDTstuff/testData/{}'.format(folder))
-#    print(checkNeebs(getTestDict('bonds.tsv')))
 
 class TestMainWindow(QMainWindow, Ui_MainWindow):
     '''

@@ -444,7 +444,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.5.0</string>
+   <string>XD Toolkit 0.5.1</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -581,7 +581,7 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-94</y>
+             <y>0</y>
              <width>1077</width>
              <height>568</height>
             </rect>
@@ -1294,8 +1294,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>705</width>
-             <height>432</height>
+             <width>1091</width>
+             <height>474</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_10">
@@ -1861,8 +1861,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>613</width>
-               <height>334</height>
+               <width>1051</width>
+               <height>318</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3341,8 +3341,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>639</width>
-               <height>310</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4054,8 +4054,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>231</width>
-               <height>108</height>
+               <width>1051</width>
+               <height>376</height>
               </rect>
              </property>
              <attribute name="label">
