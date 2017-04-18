@@ -1,5 +1,4 @@
 from quickplot import makeResMap
-from asym2unit import applySymOps
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from scipy.stats import probplot
 import matplotlib.pyplot as plt
@@ -8,7 +7,6 @@ from traceback import print_exception
 import subprocess
 import hashlib
 import time
-import itertools
 import numpy as np
 import copy
 import os
@@ -30,9 +28,7 @@ from PyQt5.QtWidgets import (
         QPushButton, QApplication, QDialog, QFileDialog, QMainWindow)
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
-
-from databank import covradii
-from devtools import resetmas, timeDec, atomsInPair
+from devtools import resetmas, timeDec
 from backup import backup, loadBackup
 from emailfuncs import sendEmail
 from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
@@ -58,8 +54,6 @@ from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, find
 #-------------------COMPOUND INITIALIZATION--------------------------
 #####################################################################
 '''
-
-
 
 def getmd5Hash(file):
     '''
