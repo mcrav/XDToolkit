@@ -1,6 +1,6 @@
 import os
 from test import Ui_MainWindow
-from XDToolkit import rawInput2labels, ins2all, customExceptHook
+from XDToolkit import rawInput2labels, customExceptHook
 from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QGridLayout, QDialogButtonBox, QSplashScreen, QPushButton, QApplication, QDialog, QLineEdit, QFileDialog, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
@@ -9,6 +9,7 @@ import sys
 import shutil
 from ast import literal_eval
 from utils import spec2norm
+from initfuncs import ins2all
 
 def listjoin(listItem, splitter = ' '):
     return splitter.join(listItem).strip(splitter)
@@ -165,8 +166,6 @@ class TestMainWindow(QMainWindow, Ui_MainWindow):
 
         self.addedNeebsLab.setText('')
         self.testLab.setText('')
-
-
 
     def getAtomList(self):
         '''

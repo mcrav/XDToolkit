@@ -6,6 +6,23 @@
 
 import os
 
+def coords2tuple(coords):
+    '''
+    Convert numpy array of 3d coordinates to tuple with all numbers to 3 decimal places.
+    Return tuple.
+    '''
+    tupPos = []
+
+    for item in coords:
+        stritem = '{0:.3f}'.format(item).strip()    #Round all numbers to 3 dp and make a string
+        if item == 0:
+            if stritem[0] == '-':           #Change -0. to 0.0
+                stritem = stritem[1:]
+
+        tupPos.append(stritem)
+
+    return tuple(tupPos)
+
 def convert2XDLabel(atomLabel):
     '''
     Convert C1 label to C(1) label
