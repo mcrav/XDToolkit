@@ -202,7 +202,7 @@ def findCHEMCON():
                 CHEMCON[atoms[0]] = atoms[1:]
             else:
                 CHEMCON[atoms[0]] = []
-
+                
     return CHEMCON
 
 
@@ -314,7 +314,7 @@ def lowAngleRef(sinthlMin,sinthlMax):
                 newmas.write('!' + line)
 #                newmas.write(line)
 
-
+            elif line.startswith('SKIP'):
                 row = str.split(line)
                 rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.2f} {snlMax:<5.2f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
                 newmas.write(rowStr + '\n')
@@ -420,8 +420,8 @@ def setupKappa(mode = 'default'):
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
 
-        kapInpRes('xd.res', inpTable, i, Hpresent)
-        kapInpRes('xd.inp', inpTable, i, Hpresent)
+        kapInpRes('xd.res', inpTable, i)
+        kapInpRes('xd.inp', inpTable, i)
 
     #Create new xd.mas file
     os.remove('xd.mas')
@@ -974,7 +974,7 @@ def checkMultRes():
 ########################################################################
 '''
 
-def findSITESYM(trackAtom = None):
+def findSITESYM(trackAtom = 'C(01A)'):
     '''
     Find local symmetry for all atoms based on nearest neighbours and bond angles.
     Return local symmetry for every atom.
@@ -998,6 +998,7 @@ def findSITESYM(trackAtom = None):
                 atomSyms[atom] = ('cyl','1 c')
             else:
                 atomSyms[atom] = ('cyl','1 m')
+        
 
         #Atom bonded to 2 identical neighbours = mm2, 2 different neighbours = m
         elif len(neighbours) == 2:
@@ -2406,8 +2407,10 @@ class wizardRunning(QDialog, Ui_wizard):
         print(resStr)
         self.folder = backupFolder
         print(self.folder)
-        os.makedirs('Backup/' + self.folder)
-        print('backup made')
+        try:
+            os.makedirs('Backup/' + self.folder)
+        except Exception:
+            print("Invalid backup folder name. Can't continue.")
         if os.path.isfile('shelx.ins') and os.path.isfile('shelx.hkl'):
             print('is shelx.ins')
             self.wizStatusLab.setText('Initializing compound...')
@@ -2594,6 +2597,7 @@ class wizardRunning(QDialog, Ui_wizard):
 
             if wizUniSnlMax and not noUniSnl:
                 addSnlCutoff(snlmin = 0.0, snlmax = wizUniSnlMax)
+            
             if self.collectDat:
                 self.startingTime = time.time()
             self.xdlsm.start()
@@ -2602,8 +2606,9 @@ class wizardRunning(QDialog, Ui_wizard):
             print('xdlsm started')
             self.wizStatusLab.setText('{0} {1}/{2} - {3}'.format('Running XDLSM', refNum, len(self.refList)-1, refName))
 
-        except Exception:
-            self.wizStatusLab.setText('''Couldn't setup xd.mas for ''' + self.refList[self.i][4:].lower().replace('-h','-H'))
+        except Exception as e:
+            print(e)
+            self.wizStatusLab.setText("Couldn't setup xd.mas for {}".format(refName))
 
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
@@ -5070,10 +5075,10 @@ if __name__ == '__main__':
     prog.show()
 
     sys.exit(app.exec_())
-
-#os.chdir('/home/matt/dev/XDTstuff/test/data/kmno4')
+#
+#os.chdir('/home/matt/dev/XDTstuff/test/cosph4')
 #x = ins2all(trackBondAtoms = ('O(3)','K(0)'))
-#multipoleMagician()
+#findSITESYM(trackAtom = 'C(01A)')
 #x = ins2all()
 #findCHEMCON()
 #multipoleMagician()

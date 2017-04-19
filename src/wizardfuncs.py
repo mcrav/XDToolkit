@@ -46,7 +46,6 @@ def wizAddResetBond():
     '''
     Add reset bond instructions in xdwiz.mas to xd.mas.
     '''
-
     rbstr = ''
     with open('xdwiz.mas', 'r') as rb:
         for line in rb:
@@ -54,7 +53,7 @@ def wizAddResetBond():
                 rbstr += line
             elif line.startswith('KEY'):
                 break
-
+            
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
         for line in mas:
             if line.startswith('WEIGHT'):
@@ -108,6 +107,7 @@ def wizAddCHEMCON():
     '''
     Add CHEMCON from xdwiz.mas to xd.mas.
     '''
+    #Read CHEMCON from xdwiz.mas
     with open('xdwiz.mas','r') as rb:
 
         cc = []
@@ -126,24 +126,23 @@ def wizAddCHEMCON():
 
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
-
+            
+    print(cc)
+    #Write CHEMCON to xd.mas
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
 
         i=0
-
         for line in mas:
 
             if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
                 atomTab = False
 
             if atomTab:
-                row = str.split(line)
-                if len(row) == 13:
-                    row[12] = cc(i)
-                else:
-                    row.append(' ')
+                row = line.split()
+                row.append(cc[i])
                 rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}\n'.format(*row)
                 newmas.write(rowStr)
+                i+=1
 
             else:
                 newmas.write(line)
@@ -151,7 +150,7 @@ def wizAddCHEMCON():
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
 
-            i+=1
+            
 
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
