@@ -5,7 +5,7 @@
 '''
 
 import os
-from copy import copy
+from utils import getCellParams
 
 def check4errors():
     '''
@@ -299,3 +299,4 @@ def initializeMas():
 
     os.remove('xd.inp')
     os.rename('xdnew.inp','xd.inp')
+

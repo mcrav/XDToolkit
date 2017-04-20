@@ -6,6 +6,9 @@
 
 import os
 
+def listjoin(listItem, divider):
+    return divider.join(listItem).strip(divider)
+
 def coords2tuple(coords):
     '''
     Convert numpy array of 3d coordinates to tuple with all numbers to 3 decimal places.
@@ -109,6 +112,13 @@ def getCellParams():
     '''
     Get unit cell parameters from shelx.ins or xd.mas.
     '''
+    a = 0
+    b = 0
+    c = 0
+    alpha = 0
+    beta = 0
+    gamma = 0
+    
     if os.path.isfile('shelx.ins'):
         with open('shelx.ins','r') as ins:
             ins = open('shelx.ins','r')

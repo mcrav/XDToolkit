@@ -33,7 +33,7 @@ from backup import backup, loadBackup
 from emailfuncs import sendEmail
 from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
 from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable, addDUM, addCustomLocCoords
-from resetbond import armRBs, disarmRBs, check4RB, resetBond, autoResetBond, delResetBond
+from resetbond import armRBs, disarmRBs, check4RBHs, resetBond, autoResetBond, delResetBond
 from wizardfuncs import seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON
 
 from initfuncs import ins2all
@@ -42,7 +42,7 @@ from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpop
 
 from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat,
                    getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime,
-                   coords2tuple)
+                   coords2tuple, listjoin)
 
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
                      findCHEMCONbyInputAtoms)
@@ -187,7 +187,6 @@ def findCHEMCON():
             if atomTab:
                 row = str.split(line)
                 atom = row[0].upper()
-                print(atom)
                 atomEnv = getEnvSig(atom + ',asym', copy.copy(globAtomLabs))
                 globAtomEnv[atom] = atomEnv
                 envs.setdefault(atomEnv,[]).append(atom)
@@ -202,7 +201,7 @@ def findCHEMCON():
                 CHEMCON[atoms[0]] = atoms[1:]
             else:
                 CHEMCON[atoms[0]] = []
-                
+
     return CHEMCON
 
 
@@ -998,7 +997,7 @@ def findSITESYM(trackAtom = 'C(01A)'):
                 atomSyms[atom] = ('cyl','1 c')
             else:
                 atomSyms[atom] = ('cyl','1 m')
-        
+
 
         #Atom bonded to 2 identical neighbours = mm2, 2 different neighbours = m
         elif len(neighbours) == 2:
@@ -2597,7 +2596,7 @@ class wizardRunning(QDialog, Ui_wizard):
 
             if wizUniSnlMax and not noUniSnl:
                 addSnlCutoff(snlmin = 0.0, snlmax = wizUniSnlMax)
-            
+
             if self.collectDat:
                 self.startingTime = time.time()
             self.xdlsm.start()
@@ -2641,6 +2640,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                                      'Remove the following characters: * ? " / \ < > : |')
         self.permErrorMsg = 'Close MoleCoolQT and try again.'
         self.lstMissingErrorMsg = 'Select add shelx.ins to project folder and try again.'
+        self.atomNoExistErrorMsg = 'Atom not in structure.'
         self.backupConfirmStr = 'Current files backed up to: '
         self.labList = [self.resNPPLab, self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
         self.tabWidget.setCurrentIndex(0)
@@ -2918,8 +2918,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl'):
             self.xdWizINILab.setText('Compound initialized successfully. Follow instructions below and click "Test".')
             try:
+                writeCHEMCON(findCHEMCON())
+                autoResetBond(copy.copy(globAtomLabs), copy.copy(globAtomTypes))
                 self.wizTest()
-            except Exception:
+            except Exception as e:
+                print(e)
                 pass
 
             for item in self.wiz2ndStageObjects:
@@ -2952,7 +2955,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Update GUI labels and return bools of results.
         '''
         c = check4CHEMCON()
-        r = check4RB()
+        r = check4RBHs()
         s = False
         f = os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl')
 
@@ -2981,7 +2984,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         print(s)
         print(f)
         print(m)
-        if c and r and s and f and m:
+        if c and not r and s and f and m:
 
             self.xdWizardBut.setEnabled(True)
 #            estTime = totalEstTime()
@@ -2998,8 +3001,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             if not c:
                 wizStr += '-Add chemical equivalency in CHEMCON tab.<br>'
 
-            if not r:
-                wizStr += '-Add reset bond instructions in RESET BOND tab.<br>'
+            if r:
+                wizStr += '-Add reset bond instructions in RESET BOND tab for atoms:\n\n{}<br>'.format(listjoin(r, ', '))
 
             if not m:
                 wizStr += '{0}{1}'.format('-Add local coordinate system and SITESYM manually for ', ', '.join(missingSym).strip(', '))
@@ -3021,14 +3024,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         testRes = self.wizTest()
         procMsg = '\nProceed anyway?'
-        rWarnMsg = 'No reset bond instructions detected.\n'
+        rWarnMsg = 'No reset bond instructions detected for {}.\n'.format(listjoin(testRes[1], ', '))
         cWarnMsg = 'No chemical constraints detected.\n'
         mWarnMsg = 'No local coordinate system added for {}'.format(', '.join(testRes[2][1]).strip(', '))
         testPassed = True
+        
+        if testRes[1] or not testRes[0] or testRes[2][1] or not testRes[3] or not testRes[4]:
+            testPassed = False
+            
 
-        for item in testRes:
-            if not item:
-                testPassed = False
 
         if testPassed:
             return True
@@ -3039,7 +3043,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 msg = procMsg
                 if not testRes[0]:
                     msg = cWarnMsg + msg
-                if not testRes[1]:
+                if testRes[1]:
                     msg = rWarnMsg + msg
                 if not testRes[2][0]:
                     msg = mWarnMsg + msg
@@ -3145,7 +3149,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 with open(timeFileAbsPath,'a') as lsmTimes:
                     lsmTimes.write('{0:10}{1:<15}{2:<13.2f}{3:<13}{4}\n'.format('WIZ', getNumAtoms(), runningTime,  len(self.xdWizRunning.refList), sys.platform))
 
-        except Exception:   #Handle user cancelling halfway through
+        except Exception as e:   #Handle user cancelling halfway through
+            print(e)
             pass
 
         finally:
@@ -4704,19 +4709,22 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             dmsda = getDMSDA(lsmOutFile)
+            conv=''
             c = getConvergence(lsmOutFile)
             if c:
                 conv = 'Yes'
             else:
                 conv = 'No'
-
-            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(), conv, dmsda[0], dmsda[1])
+            
+            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(lsmOutFile), conv, dmsda[0], dmsda[1])
+            print(resStr)
             SUs = readSUs(lsmOutFile)
             resStr+='<br><br>Largest standard uncertainties<br>'
             for item in reversed(SUs[-10:]):
                 resStr+= '{0:8}{1:8}{2}<br>'.format(item[0], item[1], item[2])
             resStr=resStr[:-4]
             i = 0
+            
             if len(dmsda[2]) > 14:
                 resStr += '<br><br>{0:23}{1:24}{0:23}{1}<br>'.format('INTERATOMIC VECTOR','DMSDA')
                 while i+14 < len(dmsda[2]):
@@ -4737,9 +4745,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 
         #If full results can't be printed, try to print without DMSDA and if that doesn't work print error message
-        except Exception:
+        except Exception as e:
+            print(e)
             try:
-                resStr = 'RF<sup>2</sup> = {0}<br>{1}<br>No DMSDA results found.'.format(getRF2(), getConvergence('xd_lsm.out'))
+                resStr = 'RF<sup>2</sup> = {0}<br>{1}<br>No DMSDA results found.'.format(getRF2(lsmOutFile), getConvergence('xd_lsm.out'))
             except Exception:
                 resStr = 'An error occurred.'
 
@@ -4752,11 +4761,12 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         folder = str(QFileDialog.getExistingDirectory(None, "Choose backup folder to load results from"))
 
+        resStr = ''
+
         if folder:
             resStr = self.makeResStr(folder + '/xd_lsm.out')
 
         self.resBackupLab.setText(resStr)
-
 
     def resBackupSum(self):
         '''
@@ -4768,7 +4778,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         for item in os.listdir(folder):
             c = ''
-            rf2 = getRF2(folder + '/' + item)
+            rf2 = getRF2(folder + '/' + item + '/xd_lsm.out')
             print('got rf2')
             conv = getConvergence(folder + '/' + item + '/xd_lsm.out')
             print(folder + '/' + item + '/xd_lsm.out')
@@ -4810,7 +4820,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             atom = FFTDetective()
-            FOU3atoms(atom[0])
+            FOU3atoms(atom[0], copy.copy(globAtomLabs), copy.copy(globAtomPos))
             self.xdfour.finishedSignal.connect(self.showResDensMap)
             self.xdfour.start()
             self.xdfft.finishedSignal.disconnect(self.FFT2FOUR)
@@ -4841,29 +4851,34 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             rawInput = str(self.setupFOURInputText.text()).strip().upper()
             atom = rawInput2labels(rawInput)[0]
             try:
-                FOU3atoms(atom)
+                FOU3atoms(atom, copy.copy(globAtomLabs), copy.copy(globAtomPos))
+                print('1')
                 self.xdfour.finishedSignal.connect(self.showResDensMap)
+                print('2')
                 self.xdfour.start()
+                print('3')
             except PermissionError:
                 self.setupFOURStatusLab.setText(self.permErrorMsg)
             except FileNotFoundError:
                 self.setupFOURStatusLab.setText(self.lstMissingErrorMsg)
-            except Exception:
-                self.setupFOURStatusLab.setText('An error occurred.')
+            except KeyError:
+                self.setupFOURStatusLab.setText(self.atomNoExistErrorMsg)
 
         elif self.setupFOURFFTBox.isChecked() == True:
             try:
                 self.xdfft.start()
                 self.xdfft.finishedSignal.connect(self.FFT2FOUR)
 
-            except Exception:
+            except Exception as e:
+                print(e)
                 self.setupFOURStatusLab.setText('An error occurred.')
 
         elif self.quickplotGrdBox.isChecked():
             try:
                 self.setupFOURStatusLab.setText('')
                 self.showResDensMap()
-            except Exception:
+            except Exception as e:
+                print(e)
                 self.setupFOURStatusLab.setText('An error occurred.')
 
 
@@ -4927,7 +4942,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         except Exception:
             pass
         try:
-
             dpopList = getDorbs()
             print(dpopList)
             dpopStr = 'd-orbital populations\n\n'
@@ -5053,7 +5067,7 @@ def customExceptHook(Type, value, traceback):
 
 #Run GUI
 if __name__ == '__main__':
-
+    print(os.getcwd())
     sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
     app = QApplication(sys.argv)
 

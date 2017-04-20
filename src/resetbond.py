@@ -5,7 +5,6 @@
 '''
 from utils import lab2type
 import os
-import sys
 import copy
 
 
@@ -39,13 +38,63 @@ def disarmRBs():
     os.remove('xd.mas')
     os.rename('xdnew.mas', 'xd.mas')
 
+def getHList():
+    '''
+    Get list of all hydrogen atom labels from xd.mas. Return list.
+    '''
+    with open('xd.mas','r') as mas:
+        Hs = []
+        for line in mas:
+            atomTab = False
+    
+            #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+            for line in mas:
+    
+                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                    atomTab = False
+    
+                #If 'All' is unchecked, make dictionary with H atoms inputted by user, their connected C atoms and inputted bond distance (1.09 default)
+                if atomTab and line.startswith('H('):
+                    row = line.split()
+                    Hs.append(row[0].upper())
+              
+    
+                if line.startswith('ATOM     ATOM0'):
+                    atomTab = True
+                    
+    return Hs
+
+def getRBHList():
+    '''
+    Get list of all H atoms with reset bond instructions in xd.mas. Return list.
+    '''
+    with open('xd.mas','r') as mas:
+        RBHs = []
+        for line in mas:
+            if line.startswith('RESET BOND') or line.startswith('!RESETBOND'):
+                row = line.split()
+                for item in row:
+                    if item.startswith('H('):
+                        RBHs.append(item)
+                        
+    return RBHs
+
+def check4RBHs():
+    '''
+    Check if there are any hydrogen atoms without reset bond instructions.
+    Return list of these atoms.
+    '''
+    Hs = getHList()
+    RBHs = getRBHList()
+    noRBHs = [item for item in Hs if item not in RBHs]
+    return noRBHs
 
 def check4RB():
     '''
     Check if reset bond instructions have been added. Return result as bool.
     '''
     try:
-        with open('xd.mas') as mas:
+        with open('xd.mas','r') as mas:
             RB = False
             H = False
 
@@ -307,7 +356,7 @@ def autoAddResetBond(atomLabDict, atomTypeDict):
         addedRBs.extend(nitro3HList)
 
     if aromaticHList:
-        resetBond('1.083',aromaticHList)
+        resetBond('1.083', aromaticHList)
         addedRBs.extend(aromaticHList)
 
     if secondaryHList:

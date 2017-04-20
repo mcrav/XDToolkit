@@ -370,7 +370,6 @@ def findCHEMCONbyInputAtoms(atomList):
                         CHEMCON[parent].append(row[0].upper())
 
                 elif len(row) == 13:
-                    print(row[0])
                     if not parent2Found:
                         if row[12] == parent:
                             parent2 = row[0].upper()

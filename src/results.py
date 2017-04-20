@@ -4,6 +4,8 @@
 #######################################################################
 '''
 
+import os
+
 def FFTDetective():
     '''
     Find closest atom to highest peak in xd_fft.out. Return atom label.
@@ -87,13 +89,13 @@ def FOUcell():
     os.remove('xd.mas')             #Delete original xd.mas file
     os.rename('xdnew.mas','xd.mas') #Rename xdnew.mas to xd.mas
 
-def FOU3atoms(atom):
+def FOU3atoms(atom, atomLabs, atomPos):
     '''
     Setup XDFOUR instructions in xd.mas to run on the plane of a given atom and 2 of its neighbours.
     '''
     atom = atom.upper()                 #Convert atom given in argument to uppercase to avoid problems with upper/lower
     fouBool = False                     #Bool to detect start of XDFOUR instructions
-    neebsRaw = copy.copy(globAtomLabs)   #Get dict of nearest neighbours with labels for each atom
+    neebsRaw = atomLabs   #Get dict of nearest neighbours with labels for each atom
     neebs = {}
 
     for lab, neebors in neebsRaw.items():
@@ -131,7 +133,7 @@ def FOU3atoms(atom):
                     for neeb in neebsRaw[atom][:2]:
                         splitLab = neeb.split(',')
 
-                        pos = globAtomPos[neeb][0]
+                        pos = atomPos[neeb][0]
                         print(pos)
                         x = pos[0]
                         y = pos[1]
@@ -146,7 +148,7 @@ def FOU3atoms(atom):
                 else:
                     print('else')
                     neighbour = neebsRaw[atom][0]
-                    pos = globAtomPos[neighbour][0]
+                    pos = atomPos[neighbour][0]
                     x,y,z = pos[0], pos[1], pos[2]
                     splitLab = neighbour.split(',')
                     rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
@@ -155,7 +157,7 @@ def FOU3atoms(atom):
                         if neeb.split(',')[0] != atom:
                             nextNeighbour = neeb
                             break
-                    pos = globAtomPos[nextNeighbour][0]
+                    pos = atomPos[nextNeighbour][0]
                     x,y,z = pos[0],pos[1],pos[2]
                     splitLab = nextNeighbour.split(',')
                     rowStr = 'XYZ label {0} {1:.4f} {2:.4f} {3:.4f} symm  1 trans 0 0 0 *mark on plot\n'.format(splitLab[0],x,y,z)
@@ -277,15 +279,15 @@ def readSUs(file):
     return paramsList
 
 
-def getRF2(folder=None):
+def getRF2(file = None):
     '''
     Get final RF2 value from xd_lsm.out. Return value.
     '''
-    if not folder:
+    if not file:
         lsm = open('xd_lsm.out','r')
 
     else:
-        filePath = folder + '/xd_lsm.out'
+        filePath = file
         lsm = open(filePath,'r')
 
     try:
@@ -296,6 +298,7 @@ def getRF2(folder=None):
         for line in lsm:
             #Find final cycle and line with R-value
             if finalCycle:
+                
                 if line.startswith('  R{F^2} ='):
                     row = str.split(line)
                     rf2 = float(row[2])
@@ -439,4 +442,5 @@ def getDMSDA(lsmFile):
         #Get list of dmsda values without interatomic vectors
         averageDMSDA = sum([abs(int(x)) for x in dmsdaList])/len(dmsdaList)    #Calculate average dmsda value
 
-    return (str('%.1f' % averageDMSDA),str(max(dmsdaList)),dmsdaFull) #return tuple of average dmsda, max dmsda and the dmsda dict)
+    return (str('{0:.1f}'.format(averageDMSDA)),str(max(dmsdaList)),dmsdaFull) #return tuple of average dmsda, max dmsda and the dmsda dict)
+
