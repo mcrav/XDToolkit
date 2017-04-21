@@ -35,7 +35,7 @@ from backup import backup, loadBackup
 from emailfuncs import sendEmail
 from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
 from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable, addDUM, addCustomLocCoords
-from resetbond import armRBs, disarmRBs, check4RBHs, resetBond, autoResetBond, delResetBond
+from resetbond import armRBs, disarmRBs, check4RBHs, check4RB, resetBond, autoResetBond, delResetBond
 from wizardfuncs import seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON
 
 from initfuncs import ins2all
@@ -2690,7 +2690,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.lstMissingErrorMsg = 'Select add shelx.ins to project folder and try again.'
         self.atomNoExistErrorMsg = 'Atom not in structure.'
         self.backupConfirmStr = 'Current files backed up to: '
-        self.labList = [self.resNPPLab, self.loadBackupLab, self.customBackupLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.CHEMCONStatusLab, self.resBackupLab, self.getResLab, self.setupFOURStatusLab, self.getDpopsStatusLab]
+        self.labList = [self.cwdStatusLab, self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.setupFOURBut, self.resNPPBut, self.pkgXDFOURBut, self.pkgXDLab, self.pkgXDFFTBut, self.setupFOURStatusLab, self.getDpopsBut, self.getDpopsStatusLab, self.pkgXDPROPBut, self.XDINILab, self.runXDINIBut, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delResetBondLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.resBackupLab, self.getResLab, self.resNPPLab, self.loadBackupLab]
         self.tabWidget.setCurrentIndex(0)
         toolboxes = [self.rbToolbox, self.backupToolbox, self.resToolbox, self.toolsToolbox]
         for item in toolboxes:
@@ -3085,11 +3085,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         mWarnMsg = 'No local coordinate system added for {}'.format(', '.join(testRes[2][1]).strip(', '))
         testPassed = True
         
-        if testRes[1] or not testRes[0] or testRes[2][1] or not testRes[3] or not testRes[4] or not testRes[5]:
+        if testRes[1] or not testRes[0] or testRes[2][1] or not testRes[3] or not testRes[4]:
             testPassed = False
             
-
-
         if testPassed:
             return True
 
@@ -4302,7 +4300,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                                     statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add SITESYM and local coordinate system manually in 'Tools' tab.'''
                                     self.manRefSetupLab.setText(statusStr)
                                 else:
-                                    self.manRefStatusLab.setText(successStr)
+                                    self.manRefSetupLab.setText(successStr)
                             else:
                                 self.manRefSetupLab.setText(successStr)
 
@@ -5142,6 +5140,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         for label in self.labList:
             label.setText('')
+            
+        try:
+            self.nppCanvas.setParent(None)
+        except Exception:
+            pass
 
 def customExceptHook(Type, value, traceback):
     print_exception(Type, value, traceback)
