@@ -295,7 +295,6 @@ def getAtomList():
         atoms = []
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
-            print(line)
             if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
                 atomTab = False
 

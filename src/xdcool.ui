@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -655,6 +655,22 @@
                   </property>
                   <property name="text">
                    <string>Initialize compound</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="wizCheckNeebsBut">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>200</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Check neighbours</string>
                   </property>
                  </widget>
                 </item>
@@ -1386,6 +1402,9 @@
                   </item>
                   <item>
                    <widget class="QPushButton" name="checkNeebsBut">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="minimumSize">
                      <size>
                       <width>200</width>
@@ -3213,8 +3232,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>411</width>
+               <height>107</height>
               </rect>
              </property>
              <attribute name="label">

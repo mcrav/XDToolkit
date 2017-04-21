@@ -22,12 +22,13 @@ from wizard import Ui_wizard
 from resmap import Ui_resmap
 from sendBug import Ui_sendBug
 from sendSugg import Ui_sendSugg
+from checkneebs import Ui_checkneebs
 
 from PyQt5.QtWidgets import (
         QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen,
         QPushButton, QApplication, QDialog, QFileDialog, QMainWindow, QGridLayout,
-        QScrollArea, QSizePolicy)
-from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
+        QScrollArea, QSizePolicy, QSpacerItem)
+from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject
 from PyQt5.QtGui import QPixmap, QFont
 from devtools import resetmas, timeDec
 from backup import backup, loadBackup
@@ -157,7 +158,21 @@ def initialiseGlobVars():
                         newPos[item] = (tuple(value[0]), value[1])
 
                     atomPos.write(str(newPos))
+                    
+            else:
+                globAtomLabs = {}
+                globAtomTypes = {}
+                globAtomAngles = {}
+                globAtomPos = {}
+                
+    else:
+        globAtomLabs = {}
+        globAtomTypes = {}
+        globAtomAngles = {}
+        globAtomPos = {}
 
+            
+            
 '''
 #####################################################################
 #-------------------CHEMCON------------------------------------------
@@ -2359,51 +2374,37 @@ class NPP(QWidget, Ui_resmap):
             plt.savefig(filename[0])
             self.saveLab.setText('Normal probability plot saved to <i>"{}"</i>'.format(filename[0]))
 
-class checkNeebs(QWidget):
-    '''lambda: exec(self.checkNeebs = checkNeebs()
+class checkNeebs(QWidget, Ui_checkneebs):
+    '''
     Window where user can check that automatically generated neighbours are correct.
     '''
     def __init__(self, parent=None):
-        super(QWidget, self).__init__(parent)
-        
-        self.font = QFont()
-        self.font.setFamily("Bitstream Vera Sans Mono")
-        self.setFont(self.font)
-        
-        self.scroll = QScrollArea()
-        self.widget = QWidget()
-        
-        self.infoLab = QLabel()
-        self.infoLab.setText('''Check that nearest neighbours are correct. If they are incorrect for any atom, you must add the local coordinate system for this atom manually in the "Tools" tab.\n\nAlso, if an H atom in missing/wrongly-included in the nearest neighbours, you must add or delete the reset bond instruction for this atom in the "RESET BOND" tab.''')
-        self.infoLab.setWordWrap(True)
-        self.infoLab.setMinimumSize(900, 0)
+        super(checkNeebs, self).__init__(parent)
+        self.setupUi(self)
         
         atomList = getAtomList()
-        print(atomList)
-    
-        self.layout = QGridLayout()
-        self.layout.addWidget(self.infoLab)
+        if len(atomList) < 30:
+            self.tableLab.setText(self.writeNeebTable(atomList))
         
-        self.tableHeaders = QLabel()
-        self.tableHeaders.setText('\n{0:10}{1}'.format('ATOM', 'NEIGHBOURS'))
-        self.layout.addWidget(self.tableHeaders)
+        else:
+            midPt = int(len(atomList)/2)
+            self.tableLab.setText(self.writeNeebTable(atomList[:midPt]))
+            self.tableLab2.setText(self.writeNeebTable(atomList[midPt:]))    
+            
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
+        self.gridLayout.addWidget(self.scrollArea, 0, 0, 1, 1)
+
+        self.retranslateUi(self)
+        QMetaObject.connectSlotsByName(self)
         
+    def writeNeebTable(self, atomList):
+        tableStr = '\n{0:10}{1}\n'.format('ATOM', 'NEIGHBOURS')
         for i, atom in enumerate(atomList):
             neebs = globAtomLabs[atom]
-            exec('self.atom{} = QLabel()'.format(i))
-            exec('self.atom{0}.setText("<pre><b>{1:10}</b><i>{2}</i></pre>")'.format(i, atom, listjoin([spec2norm(item) for item in neebs], ', ')))
-            exec('self.layout.addWidget(self.atom{})'.format(i))
+            tableStr += '\n<b>{1:10}</b><i>{2}</i>'.format(i, atom, listjoin([spec2norm(item) for item in neebs], ', '))
+        tableStr = '<pre>' + tableStr + '</pre>'
         
-        self.widget.setLayout(self.layout)
-
-        self.scroll.setWidget(self.widget)
-        self.superlayout = QGridLayout()
-        self.superlayout.addWidget(self.scroll)
-        self.setLayout(self.superlayout)
-        self.setWindowTitle('Check Neighbours')
-        self.resize(1000, 500)
-
-        
+        return tableStr
         
 class wizardRunning(QDialog, Ui_wizard):
     '''
@@ -2670,8 +2671,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
 
-        initialiseGlobVars()
-
+        initialiseGlobVars()        
+        self.checkNeebsButs = (self.checkNeebsBut, self.wizCheckNeebsBut)
+        self.enableCheckNeebsButs()
         self.changeUserIns()
 
 
@@ -2845,8 +2847,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         self.xdProgsRunning = [self.xdgeom, self.xdfour, self.xdfft,
                                self.xdprop, self.xdpdf, self.topxd]
-        
-        self.checkNeebsBut.clicked.connect(self.checkNeebsPress)
+
+        for but in self.checkNeebsButs:
+            but.clicked.connect(self.checkNeebsPress)
 
         #If XD program is run and XD path hasn't been set, program prompts user to set it.
         for prog in self.xdProgsRunning:
@@ -2953,9 +2956,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
             else:
                 self.xdWizINILab.setText('Type compound ID and run again.')
-
+                
         elif os.path.isfile('xd.inp'):
             self.wizCheckIni()
+            
+        else:
+            self.xdWizINILab.setText('Invalid project folder.')
+
+
 
     #Check that XDINI has created xd.mas, xd.hkl and xd.inp.
     def wizCheckIni(self):
@@ -3666,8 +3674,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         compoundID4XDINI = str(self.manRefIDInput.text())
         if compoundID4XDINI.strip() != '':
             self.disableXDButs()
-            self.xdini.finishedSignal.connect(self.enableXDButs)
-            self.xdini.start()
+            if os.path.isfile('shelx.ins') and os.path.isfile('shelx.hkl'):
+                self.xdini.finishedSignal.connect(self.enableXDButs)
+                self.xdini.start()
+            else:
+                self.XDINILab.setText('Invalid project folder.')
         else:
             self.XDINILab.setText('Type compound ID and run again.')
 
@@ -3863,6 +3874,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         try:
             initialiseGlobVars()
+            self.enableCheckNeebsButs()
             self.changeUserIns()
             self.resetWizInput()
 
@@ -3934,6 +3946,24 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
     def checkNeebsPress(self):
         self.checkNeebs = checkNeebs()
         self.checkNeebs.show()
+        
+    def enableCheckNeebsButs(self):
+        '''
+        If all global variables exist, enable all check neighbour buttons, otherwise disable them.
+        '''
+        global globAtomLabs
+        global globAtomTypes
+        global globAtomPos
+        global globAtomAngles
+  
+        if globAtomLabs and globAtomTypes and globAtomPos and globAtomAngles:
+            for but in self.checkNeebsButs:
+                but.setEnabled(True)
+        
+        else:
+            for but in self.checkNeebsButs:
+                but.setEnabled(False)
+                
 
 
 #########################################################################
