@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -1385,6 +1385,19 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QPushButton" name="checkNeebsBut">
+                    <property name="minimumSize">
+                     <size>
+                      <width>200</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Check Neighbours</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <spacer name="horizontalSpacer_19">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
@@ -1861,8 +1874,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>318</height>
+               <width>613</width>
+               <height>334</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2824,8 +2837,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>257</width>
+               <height>88</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3000,8 +3013,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>289</height>
+               <width>505</width>
+               <height>214</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3349,8 +3362,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>639</width>
+               <height>310</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4062,8 +4075,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>376</height>
+               <width>231</width>
+               <height>108</height>
               </rect>
              </property>
              <attribute name="label">

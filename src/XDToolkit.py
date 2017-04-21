@@ -25,7 +25,8 @@ from sendSugg import Ui_sendSugg
 
 from PyQt5.QtWidgets import (
         QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen,
-        QPushButton, QApplication, QDialog, QFileDialog, QMainWindow)
+        QPushButton, QApplication, QDialog, QFileDialog, QMainWindow, QGridLayout,
+        QScrollArea, QSizePolicy)
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
 from devtools import resetmas, timeDec
@@ -42,7 +43,7 @@ from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpop
 
 from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat,
                    getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime,
-                   coords2tuple, listjoin)
+                   coords2tuple, listjoin, getAtomList)
 
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
                      findCHEMCONbyInputAtoms)
@@ -2358,7 +2359,52 @@ class NPP(QWidget, Ui_resmap):
             plt.savefig(filename[0])
             self.saveLab.setText('Normal probability plot saved to <i>"{}"</i>'.format(filename[0]))
 
+class checkNeebs(QWidget):
+    '''lambda: exec(self.checkNeebs = checkNeebs()
+    Window where user can check that automatically generated neighbours are correct.
+    '''
+    def __init__(self, parent=None):
+        super(QWidget, self).__init__(parent)
+        
+        self.font = QFont()
+        self.font.setFamily("Bitstream Vera Sans Mono")
+        self.setFont(self.font)
+        
+        self.scroll = QScrollArea()
+        self.widget = QWidget()
+        
+        self.infoLab = QLabel()
+        self.infoLab.setText('''Check that nearest neighbours are correct. If they are incorrect for any atom, you must add the local coordinate system for this atom manually in the "Tools" tab.\n\nAlso, if an H atom in missing/wrongly-included in the nearest neighbours, you must add or delete the reset bond instruction for this atom in the "RESET BOND" tab.''')
+        self.infoLab.setWordWrap(True)
+        self.infoLab.setMinimumSize(900, 0)
+        
+        atomList = getAtomList()
+        print(atomList)
+    
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.infoLab)
+        
+        self.tableHeaders = QLabel()
+        self.tableHeaders.setText('\n{0:10}{1}'.format('ATOM', 'NEIGHBOURS'))
+        self.layout.addWidget(self.tableHeaders)
+        
+        for i, atom in enumerate(atomList):
+            neebs = globAtomLabs[atom]
+            exec('self.atom{} = QLabel()'.format(i))
+            exec('self.atom{0}.setText("<pre><b>{1:10}</b><i>{2}</i></pre>")'.format(i, atom, listjoin([spec2norm(item) for item in neebs], ', ')))
+            exec('self.layout.addWidget(self.atom{})'.format(i))
+        
+        self.widget.setLayout(self.layout)
 
+        self.scroll.setWidget(self.widget)
+        self.superlayout = QGridLayout()
+        self.superlayout.addWidget(self.scroll)
+        self.setLayout(self.superlayout)
+        self.setWindowTitle('Check Neighbours')
+        self.resize(1000, 500)
+
+        
+        
 class wizardRunning(QDialog, Ui_wizard):
     '''
     XD Wizard execution window.
@@ -2799,6 +2845,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         self.xdProgsRunning = [self.xdgeom, self.xdfour, self.xdfft,
                                self.xdprop, self.xdpdf, self.topxd]
+        
+        self.checkNeebsBut.clicked.connect(self.checkNeebsPress)
 
         #If XD program is run and XD path hasn't been set, program prompts user to set it.
         for prog in self.xdProgsRunning:
@@ -3029,7 +3077,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         mWarnMsg = 'No local coordinate system added for {}'.format(', '.join(testRes[2][1]).strip(', '))
         testPassed = True
         
-        if testRes[1] or not testRes[0] or testRes[2][1] or not testRes[3] or not testRes[4]:
+        if testRes[1] or not testRes[0] or testRes[2][1] or not testRes[3] or not testRes[4] or not testRes[5]:
             testPassed = False
             
 
@@ -3882,6 +3930,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
             msg.setText(msgStr)
             msg.exec_()
+            
+    def checkNeebsPress(self):
+        self.checkNeebs = checkNeebs()
+        self.checkNeebs.show()
 
 
 #########################################################################

@@ -258,7 +258,6 @@ def findMasCHEMCON():
 
             if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
                 atomTab = False
-                break
 
             if atomTab:
                 row = line.upper().split()
@@ -285,3 +284,26 @@ def totalEstTime():
     totalEstTime = s + ha + la + mk + m + nhpam + 5
 
     return totalEstTime
+
+def getAtomList():
+    '''
+    Get list of atoms from xd.mas. Return list.
+    '''
+    with open('xd.mas','r') as mas:  
+        
+        atomTab = False
+        atoms = []
+        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+        for line in mas:
+            print(line)
+            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                atomTab = False
+
+            if atomTab:
+                row = line.split()
+                atoms.append(row[0].upper())
+
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+                
+    return atoms
