@@ -36,7 +36,8 @@ from emailfuncs import sendEmail
 from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
 from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable, addDUM, addCustomLocCoords
 from resetbond import armRBs, disarmRBs, check4RBHs, check4RB, resetBond, autoResetBond, delResetBond
-from wizardfuncs import seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON
+from wizardfuncs import (seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON, wizAddMultipoles,
+                         wizAddCustomLCS)
 
 from initfuncs import ins2all
 from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpops, getDorbs, readSUs,
@@ -49,8 +50,13 @@ from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
                      findCHEMCONbyInputAtoms)
 
-
-
+'''
+This file contains the GUI and functions that rely on global variables.
+Some functions that do not rely on global variables are included here as they
+are related to functions that do (i.e. refinement setup functions).
+Likewise, some functions that rely on global variables are contained in other files
+to maintain ordered grouping (i.e. chemcon functions).
+'''
 '''
 #####################################################################
 #-------------------COMPOUND INITIALIZATION--------------------------
@@ -158,21 +164,21 @@ def initialiseGlobVars():
                         newPos[item] = (tuple(value[0]), value[1])
 
                     atomPos.write(str(newPos))
-                    
+
             else:
                 globAtomLabs = {}
                 globAtomTypes = {}
                 globAtomAngles = {}
                 globAtomPos = {}
-                
+
     else:
         globAtomLabs = {}
         globAtomTypes = {}
         globAtomAngles = {}
         globAtomPos = {}
 
-            
-            
+
+
 '''
 #####################################################################
 #-------------------CHEMCON------------------------------------------
@@ -1586,7 +1592,7 @@ def findUnaddedSym():
                 row = str.split(line)
 
                 #If sym label is NO add to list of atoms with unadded SITESYM
-                if row[11] == 'NO':
+                if len(row)==11 or row[11] == 'NO':
                     noSymAtoms.append(row[0])
 
             if line.startswith('ATOM     ATOM0'):
@@ -1999,6 +2005,52 @@ def writeLocalCoordSys(atomLocCoordsDict):
 
     return unaddedLocCoords                 #List of atoms for which local coordinates haven't been added
 
+def check4CustomLCS():
+    
+    masAtoms = {}
+    customAtoms = {}
+    atomTab = False
+    
+    with open('xd.mas','r') as mas:
+
+        for line in mas:
+            if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
+                atomTab = False
+
+            if atomTab:
+                line = line.upper()
+                row = line.split()
+                masAtoms[row[0]] = line
+                
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+                
+    copyfile('xd.mas','xdcopy.mas')
+    multipoleMagician()
+    atomTab = False
+    
+    with open('xd.mas') as mas:
+        
+        for line in mas:
+            if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
+                atomTab = False
+
+            if atomTab:
+                line = line.upper()
+                row = line.split()
+                if line != masAtoms[row[0]]:
+                    customAtoms[row[0]] = masAtoms[row[0]]
+                
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+                
+    os.remove('xd.mas')
+    os.rename('xdcopy.mas', 'xd.mas')
+    
+    print(customAtoms)
+    print("CUSTOM ATOMS\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    return customAtoms
+
 
 '''
 #########################################################################
@@ -2381,31 +2433,31 @@ class checkNeebs(QWidget, Ui_checkneebs):
     def __init__(self, parent=None):
         super(checkNeebs, self).__init__(parent)
         self.setupUi(self)
-        
+
         atomList = getAtomList()
         if len(atomList) < 30:
             self.tableLab.setText(self.writeNeebTable(atomList))
-        
+
         else:
             midPt = int(len(atomList)/2)
             self.tableLab.setText(self.writeNeebTable(atomList[:midPt]))
-            self.tableLab2.setText(self.writeNeebTable(atomList[midPt:]))    
-            
+            self.tableLab2.setText(self.writeNeebTable(atomList[midPt:]))
+
         self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
         self.gridLayout.addWidget(self.scrollArea, 0, 0, 1, 1)
 
         self.retranslateUi(self)
         QMetaObject.connectSlotsByName(self)
-        
+
     def writeNeebTable(self, atomList):
         tableStr = '\n{0:10}{1}\n'.format('ATOM', 'NEIGHBOURS')
         for i, atom in enumerate(atomList):
             neebs = globAtomLabs[atom]
             tableStr += '\n<b>{1:10}</b><i>{2}</i>'.format(i, atom, listjoin([spec2norm(item) for item in neebs], ', '))
         tableStr = '<pre>' + tableStr + '</pre>'
-        
+
         return tableStr
-        
+
 class wizardRunning(QDialog, Ui_wizard):
     '''
     XD Wizard execution window.
@@ -2612,29 +2664,37 @@ class wizardRunning(QDialog, Ui_wizard):
                 kapMonRef()
 
             elif refName.upper() == ('MULTIPOLES'):
-                multipoleMagician()
+#                multipoleMagician()
+                multipoleKeyTable()
 
             elif refName.upper() == ('DIPOLES'):
-                multipoleMagician()
+                #multipoleMagician()
+                wizAddMultipoles()
                 seqMultRef(1)
 
             elif refName.upper().startswith('QUADRUPOLES'):
-                multipoleMagician()
+#                multipoleMagician()
+                wizAddMultipoles()
                 seqMultRef(2)
 
             elif refName.upper().startswith('OCTUPOLES'):
-                multipoleMagician()
+#                multipoleMagician()
+                wizAddMultipoles()
                 seqMultRef(3)
 
             elif refName.upper().startswith('HEXADECAPOLES'):
-                multipoleMagician()
+ #               multipoleMagician()
+                wizAddMultipoles()
                 seqMultRef(4)
 
             elif refName.upper().startswith('MULTIPOLES,'):
-                posADPMultRef()
+                #posADPMultRef()
+                nonHPosADPKey()
 
             elif refName.upper().startswith('LOWER'):
                 lowerSym()
+                print(self.customLCS)
+                wizAddCustomLCS(self.customLCS)
                 print('sym lowered')
 
             elif refName.upper().startswith('FINAL'):
@@ -2671,7 +2731,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
 
-        initialiseGlobVars()        
+        initialiseGlobVars()
         self.checkNeebsButs = (self.checkNeebsBut, self.wizCheckNeebsBut)
         self.enableCheckNeebsButs()
         self.changeUserIns()
@@ -2956,10 +3016,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
             else:
                 self.xdWizINILab.setText('Type compound ID and run again.')
-                
+
         elif os.path.isfile('xd.inp'):
             self.wizCheckIni()
-            
+
         else:
             self.xdWizINILab.setText('Invalid project folder.')
 
@@ -2976,6 +3036,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             try:
                 writeCHEMCON(findCHEMCON())
                 autoResetBond(copy.copy(globAtomLabs), copy.copy(globAtomTypes))
+                multipoleMagician()
                 self.wizTest()
             except Exception as e:
                 print(e)
@@ -3015,7 +3076,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         s = False
         f = os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl')
 
-        multipoleMagician()
         missingSym = findUnaddedSym()
 
         if missingSym:
@@ -3084,10 +3144,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         cWarnMsg = 'No chemical constraints detected.\n'
         mWarnMsg = 'No local coordinate system added for {}'.format(', '.join(testRes[2][1]).strip(', '))
         testPassed = True
-        
+
         if testRes[1] or not testRes[0] or testRes[2][1] or not testRes[3] or not testRes[4]:
             testPassed = False
-            
+
         if testPassed:
             return True
 
@@ -3153,7 +3213,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 wizUniSnlMax = float(str(self.wizUniSnlMax.text()))
             else:
                 wizUniSnlMax = 2.0
-
+            
+            self.xdWizRunning.customLCS = check4CustomLCS()
+        
             copyfile('xd.mas','xdwiz.mas')
 
             self.xdWizRunning.show()
@@ -3940,11 +4002,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
             msg.setText(msgStr)
             msg.exec_()
-            
+
     def checkNeebsPress(self):
         self.checkNeebs = checkNeebs()
         self.checkNeebs.show()
-        
+
     def enableCheckNeebsButs(self):
         '''
         If all global variables exist, enable all check neighbour buttons, otherwise disable them.
@@ -3953,15 +4015,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global globAtomTypes
         global globAtomPos
         global globAtomAngles
-  
+
         if globAtomLabs and globAtomTypes and globAtomPos and globAtomAngles:
             for but in self.checkNeebsButs:
                 but.setEnabled(True)
-        
+
         else:
             for but in self.checkNeebsButs:
                 but.setEnabled(False)
-                
+
 
 
 #########################################################################
@@ -4741,13 +4803,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         try:
             Patom = str(self.alcsPAtomInput.text())
             Patom = rawInput2labels(Patom)[0]
-            axis1 = str(self.alcsAxis1Input.currentText())
+            axis1 = str(self.alcsAxis1Input.currentText()).upper()
             atom1 = str(self.alcsAtom1Input.text())
             atom1 = rawInput2labels(atom1)[0]
-            axis2 = str(self.alcsAxis2Input.currentText())
+            axis2 = str(self.alcsAxis2Input.currentText()).upper()
             atom2 = str(self.alcsAtom2Input.text())
             atom2 = rawInput2labels(atom2)[0]
-            sym = str(self.alcsLocSymInput.text())
+            sym = str(self.alcsLocSymInput.text()).upper()
 
             x = addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym)
             if x == 'aw':
@@ -4795,7 +4857,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 conv = 'Yes'
             else:
                 conv = 'No'
-            
+
             resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(lsmOutFile), conv, dmsda[0], dmsda[1])
             print(resStr)
             SUs = readSUs(lsmOutFile)
@@ -4804,7 +4866,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 resStr+= '{0:8}{1:8}{2}<br>'.format(item[0], item[1], item[2])
             resStr=resStr[:-4]
             i = 0
-            
+
             if len(dmsda[2]) > 14:
                 resStr += '<br><br>{0:23}{1:24}{0:23}{1}<br>'.format('INTERATOMIC VECTOR','DMSDA')
                 while i+14 < len(dmsda[2]):
@@ -5140,7 +5202,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         for label in self.labList:
             label.setText('')
-            
+
         try:
             self.nppCanvas.setParent(None)
         except Exception:

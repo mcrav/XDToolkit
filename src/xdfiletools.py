@@ -338,6 +338,7 @@ def addCustomLocCoords(Patom, atom1, axis1, atom2, axis2, sym):
                     row[2] = axis1
                     row[4] = atom2
                     row[5] = axis2
+                    row[11]= sym
                     if len(row) > 12:
                         rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}{12}\n'.format(*row)
                     else:

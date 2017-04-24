@@ -5,6 +5,7 @@
 '''
 
 import os
+import shutil
 
 def seqMultRef(l):
     '''
@@ -150,7 +151,42 @@ def wizAddCHEMCON():
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
 
-            
+    os.remove('xd.mas')
+    os.rename('xdnew.mas','xd.mas')
+    
+def wizAddMultipoles():
+    '''
+    Copies entire xdwiz.mas file to xd.mas.
+    '''
+    os.remove('xd.mas')
+    shutil.copyfile('xdwiz.mas', 'xd.mas')
+    
+def wizAddCustomLCS(customLCS):
+    '''
+    Add dictionary of custom xd.mas atom table lines to current xd.mas file.
+    '''
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+        atomTab = False
+        
+        for line in mas:
+
+            if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
+                atomTab = False
+
+            if atomTab:
+                row = line.upper().split()
+                
+                if row[0] in customLCS:
+                    newmas.write(customLCS[row[0]])
+                else:
+                    newmas.write(line)
+                    
+            else:
+                newmas.write(line)
+
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
 
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
+

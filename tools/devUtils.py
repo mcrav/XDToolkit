@@ -2,7 +2,7 @@ import os
 
 def findLabels():
     
-   file = open('XD Toolkit.py','r')
+   file = open('XDToolkit.py','r')
    labList = []
    
    for line in file:
@@ -23,8 +23,8 @@ def writeLabList():
 
     labList = findLabels()
 
-    file = open('XD Toolkit.py','r')
-    newfile = open('XD Toolkitnew.py','w')
+    file = open('XDToolkit.py','r')
+    newfile = open('XDToolkitnew.py','w')
     
     for line in file:
         if line.startswith('        self.labList'):
@@ -35,8 +35,8 @@ def writeLabList():
     file.close()
     newfile.close()
 
-    file = open('XD Toolkitnew.py','r')
-    newfile = open('XD Toolkitnew2.py','w')
+    file = open('XDToolkitnew.py','r')
+    newfile = open('XDToolkitnew2.py','w')
     
     for line in file:
         if line.startswith('        self.labList'):
@@ -50,7 +50,10 @@ def writeLabList():
     file.close()
     newfile.close()
 
-    os.remove('XD Toolkitnew.py')
-    os.remove('XD Toolkit.py')
-    os.rename('XD Toolkitnew2.py','XD Toolkit.py')
+    os.remove('XDToolkitnew.py')
+    os.remove('XDToolkit.py')
+    os.rename('XDToolkitnew2.py','XDToolkit.py')
+
+os.chdir('/home/matt/dev/XDToolkit/src')
+writeLabList()
     

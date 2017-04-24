@@ -1,3 +1,39 @@
+def wizAddLocCoords():
+    '''
+    Deprecated. Add local coordinate systems in xdwiz.mas to xd.mas
+    '''
+    with open('xdwiz.mas','r') as rb:
+        ccstr = ''
+        atomTab = False
+
+        for line in rb:
+            if line.startswith('END ATOM'):
+                atomTab = False
+
+            if atomTab:
+                ccstr += line
+
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+        for line in mas:
+            if line.startswith('END ATOM'):
+                atomTab = False
+
+            if atomTab:
+                pass
+
+            else:
+                newmas.write(line)
+
+            if line.startswith('ATOM     ATOM0'):
+                atomTab = True
+                newmas.write(ccstr)
+
+    os.remove('xd.mas')
+    os.rename('xdnew.mas','xd.mas')
+
 def findNeeborType(lstFile):
     '''
     Get nearest neighbour types for every atom from lst file. Return nearest neighbour types.
