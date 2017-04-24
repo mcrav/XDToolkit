@@ -384,3 +384,10 @@ Multipoles,an        14        2.41         linux
 Lowersymmetry        14        2.61         linux
 Finalrefineme        14        0.69         linux
 WIZ       14             17.58        12           linux
+Scalefactors         17        1.14         linux
+Highanglenon-        17        1.38         linux
+LowangleHposi        17        0.94         linux
+Kappaandmonop        17        1.93         linux
+Dipoles              17        2.20         linux
+WIZ       17             11.07        12           linux
+Quadrupoles          17        3.34         linux

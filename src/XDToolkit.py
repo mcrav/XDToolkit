@@ -81,11 +81,12 @@ def inCache(file):
     Find out if project is in cache. Return result as bool and md5 hash of shelx.hkl.
     '''
     global cachePath
+    global cacheHashPath
     inCache = False
 
     hklHash = getmd5Hash(file)
-
-    if os.path.isdir('{}/{}'.format(cachePath, hklHash)):
+    cacheHashPath = '{}/{}'.format(cachePath, hklHash)
+    if os.path.isdir(cacheHashPath):
         inCache = True
 
     return (inCache, hklHash)
@@ -190,40 +191,57 @@ def findCHEMCON():
     Find chemical equivalency in structure. Return CHEMCON dictionary.
     '''
     global globAtomEnv          #Global dictionary of atoms and their chemical environment hash values i.e. {'C(1)':'f11390f0a9cadcbb4f234c8e8ea8d236'}
+    global cacheHashPath
     globAtomEnv = {}
-
-    with open('xd.mas', 'r') as mas:
-
-        envs = {}
-        CHEMCON = {}
-        atomTab = False
-
-        for line in mas:
-
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                atomTab = False
-
-            #Make dictionary of environment hash values and atoms with that environment
-            #i.e. {'f11390f0a9cadcbb4f234c8e8ea8d236' : ['H(4)', 'H(3)']}
-
-            if atomTab:
-                row = str.split(line)
-                atom = row[0].upper()
-                atomEnv = getEnvSig(atom + ',asym', copy.copy(globAtomLabs))
-                globAtomEnv[atom] = atomEnv
-                envs.setdefault(atomEnv,[]).append(atom)
-
-            if line.startswith('ATOM     ATOM0'):
-                atomTab = True
-
-        #Organise hash value dictionary into dictionary of parent atoms that appear first in ATOM table,
-        #and children that appear further down.
-        for env, atoms in envs.items():
-            if len(atoms) > 1:
-                CHEMCON[atoms[0]] = atoms[1:]
-            else:
-                CHEMCON[atoms[0]] = []
-
+    
+    chemconFilePath = '{}/chemcon.buckfast'.format(cacheHashPath)
+    atomEnvFilePath = '{}/atomEnv.buckfast'.format(cacheHashPath)
+    if os.path.isfile(chemconFilePath) and os.path.isfile(atomEnvFilePath):
+        with open(chemconFilePath, 'r') as chemconCache:
+            CHEMCON = literal_eval(chemconCache.read())
+            
+        with open(atomEnvFilePath,'r') as envCache:
+            globAtomEnv = literal_eval(envCache.read())
+            
+    else:
+        with open('xd.mas', 'r') as mas:
+    
+            envs = {}
+            CHEMCON = {}
+            atomTab = False
+    
+            for line in mas:
+    
+                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                    atomTab = False
+    
+                #Make dictionary of environment hash values and atoms with that environment
+                #i.e. {'f11390f0a9cadcbb4f234c8e8ea8d236' : ['H(4)', 'H(3)']}
+    
+                if atomTab:
+                    row = str.split(line)
+                    atom = row[0].upper()
+                    atomEnv = getEnvSig(atom + ',asym', copy.copy(globAtomLabs))
+                    globAtomEnv[atom] = atomEnv
+                    envs.setdefault(atomEnv,[]).append(atom)
+    
+                if line.startswith('ATOM     ATOM0'):
+                    atomTab = True
+    
+            #Organise hash value dictionary into dictionary of parent atoms that appear first in ATOM table,
+            #and children that appear further down.
+            for env, atoms in envs.items():
+                if len(atoms) > 1:
+                    CHEMCON[atoms[0]] = atoms[1:]
+                else:
+                    CHEMCON[atoms[0]] = []
+                    
+            with open(chemconFilePath, 'w') as chemconCache:
+                chemconCache.write(str(CHEMCON))
+                
+            with open(atomEnvFilePath, 'w') as envCache:
+                envCache.write(str(globAtomEnv))
+                
     return CHEMCON
 
 
@@ -2006,11 +2024,11 @@ def writeLocalCoordSys(atomLocCoordsDict):
     return unaddedLocCoords                 #List of atoms for which local coordinates haven't been added
 
 def check4CustomLCS():
-    
+
     masAtoms = {}
     customAtoms = {}
     atomTab = False
-    
+
     with open('xd.mas','r') as mas:
 
         for line in mas:
@@ -2021,16 +2039,16 @@ def check4CustomLCS():
                 line = line.upper()
                 row = line.split()
                 masAtoms[row[0]] = line
-                
+
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
-                
+
     copyfile('xd.mas','xdcopy.mas')
     multipoleMagician()
     atomTab = False
-    
+
     with open('xd.mas') as mas:
-        
+
         for line in mas:
             if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
                 atomTab = False
@@ -2040,13 +2058,13 @@ def check4CustomLCS():
                 row = line.split()
                 if line != masAtoms[row[0]]:
                     customAtoms[row[0]] = masAtoms[row[0]]
-                
+
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
-                
+
     os.remove('xd.mas')
     os.rename('xdcopy.mas', 'xd.mas')
-    
+
     print(customAtoms)
     print("CUSTOM ATOMS\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     return customAtoms
@@ -2343,7 +2361,12 @@ class resmap(QWidget, Ui_resmap):
         '''
         Create residual density map and display it with save button.
         '''
-        fig = makeResMap()
+        i=0
+        self.tempFileName = 'temp_quickplot{}.png'.format(i)
+        while os.path.isfile(self.tempFileName):
+            i+=1
+            self.tempFileName = 'temp_quickplot{}.png'.format(i)
+        fig = makeResMap(self.tempFileName)
         canvas = FigureCanvas(fig)
         canvas.setParent(self)
         saveBut = QPushButton('Save PNG file')
@@ -2364,8 +2387,14 @@ class resmap(QWidget, Ui_resmap):
         '''
         filename = QFileDialog.getSaveFileName(self,"PNG of residual density map",os.getcwd(), "PNG Files (*.png)")
         if filename[0]:
-            makeResMap(filename[0])
+            copyfile(self.tempFileName, filename[0])
             self.saveLab.setText('Residual map saved to <i>"{}"</i>'.format(filename[0]))
+            
+    def closeEvent(self, event):
+        for file in os.listdir(os.getcwd()):
+            if file.startswith('temp_quickplot'):
+                os.remove(file)
+        event.accept()
 
 
 class NPP(QWidget, Ui_resmap):
@@ -2750,7 +2779,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.lstMissingErrorMsg = 'Select add shelx.ins to project folder and try again.'
         self.atomNoExistErrorMsg = 'Atom not in structure.'
         self.backupConfirmStr = 'Current files backed up to: '
-        self.labList = [self.cwdStatusLab, self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.setupFOURBut, self.resNPPBut, self.pkgXDFOURBut, self.pkgXDLab, self.pkgXDFFTBut, self.setupFOURStatusLab, self.getDpopsBut, self.getDpopsStatusLab, self.pkgXDPROPBut, self.XDINILab, self.runXDINIBut, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delResetBondLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.resBackupLab, self.getResLab, self.resNPPLab, self.loadBackupLab]
+        self.labList = [self.cwdStatusLab, self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delResetBondLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.resBackupLab, self.getResLab, self.resNPPLab, self.loadBackupLab]
         self.tabWidget.setCurrentIndex(0)
         toolboxes = [self.rbToolbox, self.backupToolbox, self.resToolbox, self.toolsToolbox]
         for item in toolboxes:
@@ -2805,6 +2834,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.setupFOURBut.clicked.connect(self.addFOURIns)
         self.setupFOURInputText.returnPressed.connect(self.addFOURIns)
         self.setupFOURInputText.textChanged.connect(lambda: self.setupFOURInputBox.setChecked(True))
+        #Laplacian tools
+        self.lapGrdBut.clicked.connect(self.lapMapFromGrd)
         self.delResetBondBut.clicked.connect(self.delResetBondPress)
         self.getResBut.clicked.connect(self.getResPress)
         #Dorb pops
@@ -3017,12 +3048,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             else:
                 self.xdWizINILab.setText('Type compound ID and run again.')
 
-        elif os.path.isfile('xd.inp'):
-            self.wizCheckIni()
-
         else:
             self.xdWizINILab.setText('Invalid project folder.')
-
 
 
     #Check that XDINI has created xd.mas, xd.hkl and xd.inp.
@@ -3031,6 +3058,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Check that XDINI has created all files and test them.
         Unlock second stage of XD Wizard if all files are present, regardless of test result.
         '''
+        self.xdini.finishedSignal.disconnect(self.wizCheckIni)
         if os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl'):
             self.xdWizINILab.setText('Compound initialized successfully. Follow instructions below and click "Test".')
             try:
@@ -3213,9 +3241,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 wizUniSnlMax = float(str(self.wizUniSnlMax.text()))
             else:
                 wizUniSnlMax = 2.0
-            
+
             self.xdWizRunning.customLCS = check4CustomLCS()
-        
+
             copyfile('xd.mas','xdwiz.mas')
 
             self.xdWizRunning.show()
@@ -4693,6 +4721,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Handle user clicking 'Add CHEMCON'.
         '''
+        global globAtomEnv
+        chemcon = {}
+        
         if self.autoCHEMCON.isChecked():
             try:
                 writeCHEMCON(findCHEMCON())
@@ -4707,11 +4738,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             inputText = str(self.inputElementCHEMCON.text().upper())
             inputElementList = labels2list(inputText)
             try:
-                writeCHEMCON(findCHEMCONbyInputElement(inputElementList))
+                chemcon = findCHEMCONbyInputElement(inputElementList)
+                writeCHEMCON(chemcon)
                 self.CHEMCONStatusLab.setText('{} {}'.format('CHEMCON added and xd.mas updated for elements', ', '.join(inputElementList).strip(', ')))
             except PermissionError:
                 self.CHEMCONStatusLab.setText(self.permErrorMsg)
-            except Exception:
+            except Exception as e:
+                print(e)
                 self.CHEMCONStatusLab.setText('An error occurred.')
 
             self.inputElementCHEMCON.setText('')
@@ -4744,16 +4777,29 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 try:
                     statusLabStr = ''
                     if inputAtomList:
-                        writeCHEMCON(findCHEMCONbyInputAtoms(inputAtomList))
+                        chemcon = findCHEMCONbyInputAtoms(inputAtomList)
+                        print(chemcon)
+                        writeCHEMCON(chemcon)
                         statusLabStr = ('{} {}'.format('CHEMCON added and xd.mas updated for', chemconAddedStr))
                     if wrongLabs:
                         statusLabStr += '<br><br>{}{}'.format('\nFollowing atom labels are incorrect: ', ', '.join(wrongLabs).strip(', '))
                     self.CHEMCONStatusLab.setText(statusLabStr)
                 except PermissionError:
                     self.CHEMCONStatusLab.setText(self.permErrorMsg)
-                except Exception:
+                except Exception as e:
+                    print(e)
                     self.CHEMCONStatusLab.setText('An error occurred.')
             self.inputAtomCHEMCON.setText('')
+        
+        if chemcon:
+            envSig = 0
+            for atom, equis in chemcon.items():
+                while str(envSig) in globAtomEnv.values():
+                    envSig += 1
+                globAtomEnv[atom] = str(envSig)
+                for item in equis:
+                    globAtomEnv[item] = str(envSig)
+
         self.changeUserIns()
         self.wizTest()
 
@@ -4844,6 +4890,24 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 #########################################################################
 #--------------------RESULTS---------------------------------------------
 #########################################################################
+
+    def lapMapFromGrd(self):
+        '''
+        Make 2D laplacian map from xd_d2rho.grd file.
+        NASTY HACK!
+        NEED TO WRITE SCRIPT THAT MAKES QUICKPLOT LOOK FOR xd_d2rho.grd INSTEAD OF xd_fou.grd.
+        '''
+        if os.path.isfile('xd_d2rho.grd'):
+            if os.path.isfile('xd_fou.grd'):
+#                copyfile('xd_fou.grd', 'xd_fouCopy.grd')
+                os.remove('xd_fou.grd')
+            os.rename('xd_d2rho.grd', 'xd_fou.grd')
+            try:
+                self.showResDensMap()
+            except Exception as e:
+                print(e)
+                self.setupFOURStatusLab.setText('An error occurred.')
+
 
     def makeResStr(self, lsmOutFile):
         '''

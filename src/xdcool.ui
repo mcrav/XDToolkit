@@ -489,7 +489,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -1893,8 +1893,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>613</width>
-               <height>334</height>
+               <width>1051</width>
+               <height>318</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2849,7 +2849,7 @@
           <item>
            <widget class="QToolBox" name="resToolbox">
             <property name="currentIndex">
-             <number>4</number>
+             <number>3</number>
             </property>
             <widget class="QWidget" name="page_18">
              <property name="geometry">
@@ -3032,8 +3032,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>505</width>
-               <height>214</height>
+               <width>1051</width>
+               <height>260</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3163,6 +3163,55 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="page_2">
+             <attribute name="label">
+              <string>Make laplacian maps</string>
+             </attribute>
+             <layout class="QGridLayout" name="gridLayout_11">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout_7">
+                <property name="leftMargin">
+                 <number>10</number>
+                </property>
+                <property name="topMargin">
+                 <number>10</number>
+                </property>
+                <property name="rightMargin">
+                 <number>10</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>10</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="lapGrdBut">
+                  <property name="maximumSize">
+                   <size>
+                    <width>400</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Make laplacian map from xd_d2rho.grd</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
             <widget class="QWidget" name="page">
              <property name="geometry">
               <rect>
@@ -3232,8 +3281,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>411</width>
-               <height>107</height>
+               <width>1051</width>
+               <height>289</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3381,8 +3430,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>639</width>
-               <height>310</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4094,8 +4143,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>231</width>
-               <height>108</height>
+               <width>1051</width>
+               <height>376</height>
               </rect>
              </property>
              <attribute name="label">

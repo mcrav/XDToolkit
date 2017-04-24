@@ -362,6 +362,7 @@ def ins2all(trackBondAtoms = None):
     Find information about compound from shelx.ins input and calculations.
     Return nearest neighbours, atomic positions, bond distances, and bond angles.
     '''
+    print('ins2all\n~~~~~~~~~~~~~~~~~~~~~~~~')
     if os.path.isfile('shelx.ins'):
         atomPosData = applySymOps(ins2fracPos('shelx.ins')[0])
         atomPos = atomPosData[0]

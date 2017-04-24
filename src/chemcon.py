@@ -83,17 +83,14 @@ def findAllPaths(atom, atomLabsDict):
     paths = []
     usedBranches = []
     atomNeebs = atomLabsDict
-
     while True:
 
         pathRes = getPath(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
-
         #If no path is returned all paths have been found and the while loop is ended.
         if not pathRes[0]:
             break
 
         else:
-
             #Store path as a list, to be the last path for the next time getPath is called.
             lastPath = pathRes[0].split('|')
 
@@ -206,12 +203,12 @@ def findCHEMCONbyInputElement(inputElementList):
     with open('xd.mas','r') as mas:
 
         atomTab = False
-        prevElement = ''
+        elementParents = {}
         CHEMCON = {}
-        currentAtom=''
         eleList = inputElementList
         #Convert elements to upper case
         eleList = [item.upper() for item in eleList]
+        eleList = [item + '(' for item in eleList if len(item)==1]
 
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
@@ -221,35 +218,19 @@ def findCHEMCONbyInputElement(inputElementList):
 
             #In atom table make CHEMCON dictionary
             if atomTab:
-                row = str.split(line)
+                row = line.upper().split()
 
-                #If first two characters are letters i.e. Co, check to see if it is the first time that element appears
-                if line[0:2].isalpha():
-                    if line[0:2].upper() in eleList:
-                        if line[0:2] != prevElement:
-                            currentAtom = row[0].upper()
-                            CHEMCON[currentAtom] = []    #Make entry in dictionary for first instance of element in table
-
-                        else:
-                            CHEMCON[currentAtom].append(row[0].upper())    #Add atoms of same element to dictionary
+                if line[:2] in eleList:
+                    if line[:2] in elementParents:
+                        CHEMCON[elementParents[line[:2]]].append(row[0])
                     else:
-                        CHEMCON[row[0].upper()] = []
-                    prevElement = row[0][0:2]      #Update previous element to current element
-
-                else:
-                    if line[0:1].upper() in eleList:
-                        if line[0:1] != prevElement:
-                            currentAtom = row[0].upper()
-                            CHEMCON[currentAtom] = []        #Make entry in dictionary for first instance of element in table
-                        else:
-                            CHEMCON[currentAtom].append(row[0].upper())     #Add atoms of same element to dictionary
-                    else:
-                        CHEMCON[row[0].upper()] = []
-                    prevElement = row[0][0:1]       #Update previous element to current element
+                        CHEMCON[row[0]] = []
+                        elementParents[line[:2]] = row[0]
+                    
             #Detect start of ATOM table
             if line.startswith('ATOM     ATOM0'):
                 atomTab = True
-
+        
     return CHEMCON
 
 def findCHEMCONbyNeebors():
@@ -462,7 +443,6 @@ def check4CHEMCON():
                     row = str.split(line)
                     #If atom is in dictionary it is added with local coordinate system
                     if len(row) == 13:
-
                         chemcon = True
                         break
 
