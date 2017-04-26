@@ -48,7 +48,7 @@ from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels
                    coords2tuple, listjoin, getAtomList)
 
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
-                     findCHEMCONbyInputAtoms)
+                     findCHEMCONbyInputAtoms, CPPgetEnvSig)
 
 '''
 This file contains the GUI and functions that rely on global variables.
@@ -185,7 +185,7 @@ def initialiseGlobVars():
 #-------------------CHEMCON------------------------------------------
 #####################################################################
 '''
-
+@timeDec
 def findCHEMCON():
     '''
     Find chemical equivalency in structure. Return CHEMCON dictionary.
@@ -196,6 +196,7 @@ def findCHEMCON():
     
     chemconFilePath = '{}/chemcon.buckfast'.format(cacheHashPath)
     atomEnvFilePath = '{}/atomEnv.buckfast'.format(cacheHashPath)
+    
     if os.path.isfile(chemconFilePath) and os.path.isfile(atomEnvFilePath):
         with open(chemconFilePath, 'r') as chemconCache:
             CHEMCON = literal_eval(chemconCache.read())
@@ -221,7 +222,9 @@ def findCHEMCON():
                 if atomTab:
                     row = line.split()
                     atom = row[0].upper()
+                    x = os.getcwd()
                     atomEnv = getEnvSig(atom + ',asym', copy.copy(globAtomLabs))
+                    os.chdir(x)
                     globAtomEnv[atom] = atomEnv
                     envs.setdefault(atomEnv,[]).append(atom)
     
@@ -242,6 +245,7 @@ def findCHEMCON():
             with open(atomEnvFilePath, 'w') as envCache:
                 envCache.write(str(globAtomEnv))
                 
+    print(CHEMCON)
     return CHEMCON
 
 

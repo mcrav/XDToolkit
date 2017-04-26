@@ -8,7 +8,7 @@ import os
 import hashlib
 from subprocess import PIPE, Popen
 from utils import listjoin
-
+from devtools import timeDec
 '''
 ######################################
 Short guide to path finding algorithm:
@@ -25,26 +25,39 @@ are no longer used as something has been changed upstream.
 '''
 
 testDict = {'O(1)': ['C(1),asym'], 'C(1)': ['O(1),asym', 'O(2),asym', 'C(2),asym'], 'O(2)': ['C(1),asym'], 'O(3)': ['C(3),asym', 'H(4),asym'], 'C(3)': ['O(3),asym', 'C(2),asym', 'H(31),asym', 'H(32),asym'], 'H(4)': ['O(3),asym'], 'N(1)': ['C(2),asym', 'H(11),asym', 'H(12),asym', 'H(13),asym'], 'C(2)': ['N(1),asym', 'C(1),asym', 'C(3),asym', 'H(2),asym'], 'H(11)': ['N(1),asym'], 'H(12)': ['N(1),asym'], 'H(13)': ['N(1),asym'], 'H(2)': ['C(2),asym'], 'H(31)': ['C(3),asym'], 'H(32)': ['C(3),asym']}
-testAtom = 'C(3)'
+testAtom = 'H(31),asym'
 
 usedBranches = []
 lastPath = []
 pathStr = ''
 
-def CPPfindAllPaths(atom, atomNeebDict):
-    
+#Mn-dimer with CPPgetEnvSig - 0.5835598 s
+#Mn-dimer with getEnvSig - 580.7068872 s (9mins 40secs)
+
+@timeDec
+def CPPgetEnvSig(atom, atomNeebDict):
+    '''
+    Create an md5 hash value for the chemical environment of a given atom. Return this hash value.
+    This function calls a compiled C++ script.
+    '''
     inputStr = atom
     for item, neebs in atomNeebDict.items():
         inputStr+= '&' + item + '&' + listjoin(neebs, '*')
-
-    cppFC = Popen(['./a.out'], shell=True, stdout=PIPE, stdin=PIPE)
+    os.chdir('/home/matt/dev/XDToolkit/src')
+    cppFC = Popen(['./a.out'], shell=False, stdout=PIPE, stdin=PIPE)
     res = cppFC.communicate(bytes(inputStr, 'utf-8'))[0]
-    print(res.decode('utf-8'))
+    cppFC.terminate()
+    x = res.decode('utf-8')
+    x = atom.split('(')[0].upper() +','.join(sorted(x.split('^')))
+    y = hashlib.md5(bytes(x, 'utf-8'))
+    envHash = y.hexdigest()
+    return envHash
     
-os.chdir('/home/matt/dev/XDToolkit/src')
-CPPfindAllPaths(testAtom,testDict)
+    
 
-def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
+
+    
+def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr=''):
     '''
     Find a path through the structure from a given atom, limitied by a list of branches already visited.
     Return a pipe separated string of path in the format 'C(1),asym|N(1),asym|H(1),asym'.
@@ -53,7 +66,7 @@ def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
     '''
     currAtom = atom             #Current atom as program walks through structure.
     passedAtoms = []            #Atoms already visited in the path.
-
+   
     newUsedBranches = []        #List of all branches explored in the structure.
                                 #Branches are format 'ATOM~number of steps through path' i.e. 'C(1),asym~2'
                                 #means C(1) was passed on the second step through the structure.
@@ -68,8 +81,7 @@ def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
         atomNeebs = atomNeebDict[currAtom.split(',')[0]]        #Get neighbours of current atom.
 
         for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
-            branchTag = '{0}~{1}'.format(neeb, str(steps))  #Make 'C(1),asym~2' format branch tag for current atom and number of steps.
-
+            branchTag = neeb + '~' + str(steps)
             #If a neighbour of current atom is found that hasn't been visited,
             #and hasn't been branched too in other trips down the same path.
             if neeb not in passedAtoms and branchTag not in usedBranches:
@@ -87,11 +99,10 @@ def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
 
                 #Add branch tag of every atom in path to list.
                 newUsedBranches.append(branchTag)
-
                 pathStr += neeb + '|'   #Add new atom in path to pipe separated path string.
                 currAtom = neeb         #Make the current atom the new atom, quit the for loop
                 break                   #and look for the next atom along the path.
-
+    
     pathStr = pathStr.strip('|')        #Remove the | from the end of the path string.
 
     return (pathStr, newUsedBranches[-1:], usedBranches)    #Return the path string, last new branch, and edited list of used branches.
@@ -137,7 +148,8 @@ def getEnvSig(atom, atomLabsDict):
     #Make string with starting atom types followed by , joined sorted list of all paths.
     pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom, atomLabsDict)))
     hashObj = hashlib.md5(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
-    return hashObj.hexdigest()                              #Return digest of hash value.
+    envHash = hashObj.hexdigest()
+    return envHash                             #Return digest of hash value.
 
 def removeCHEMCON():
     '''
@@ -475,3 +487,14 @@ def check4CHEMCON():
         pass
 
     return chemcon
+
+os.chdir('/home/matt/dev/XDToolkit/src')
+print(CPPgetEnvSig(testAtom,testDict))
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
+import timeit
+def wrapper(func, *args, **kwargs):
+     def wrapped():
+         return func(*args, **kwargs)
+     return wrapped
+wrapped = wrapper(getEnvSig, testAtom, testDict)
+print(timeit.timeit(wrapped, number=10000))
