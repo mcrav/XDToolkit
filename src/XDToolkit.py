@@ -219,7 +219,7 @@ def findCHEMCON():
                 #i.e. {'f11390f0a9cadcbb4f234c8e8ea8d236' : ['H(4)', 'H(3)']}
     
                 if atomTab:
-                    row = str.split(line)
+                    row = line.split()
                     atom = row[0].upper()
                     atomEnv = getEnvSig(atom + ',asym', copy.copy(globAtomLabs))
                     globAtomEnv[atom] = atomEnv
@@ -264,7 +264,7 @@ def scaleFacRef():
         for line in mas:
 
             if line.startswith('SELECT cycle'):
-                row = str.split(line)
+                row = line.split()
                 row[2] = '-10'
                 rowStr = ' '.join(row)
                 newmas.write(rowStr + '\n')
@@ -295,12 +295,12 @@ def highAngleRef(sinthlMin,sinthlMax):
                 keyTab = False
 
             if line.startswith('SKIP'):
-                row = str.split(line)
+                row = line.split()
                 rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.3f} {snlMax:<5.3f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
                 newmas.write(rowStr + '\n')
 
             elif keyTab:
-                row = str.split(line)
+                row = line.split()
 
                 if line[:1] != 'H':
                     rowStr = '{0:8}{1}'.format(row[0], '111 111111 0000000000 000000000000000 00 000 00000 0000000 000000000')
@@ -340,7 +340,7 @@ def lowAngleRef(sinthlMin,sinthlMax):
                 keyTab = False
 
             if keyTab:
-                row = str.split(line)
+                row = line.split()
 
                 if line[:1] != 'H':
                     rowStr = '{0:8}{1}'.format(row[0], '000 000000 0000000000 000000000000000 00 000 00000 0000000 000000000')
@@ -354,7 +354,7 @@ def lowAngleRef(sinthlMin,sinthlMax):
 #                newmas.write(line)
 
             elif line.startswith('SKIP'):
-                row = str.split(line)
+                row = line.split()
                 rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOn}  {snlMin:<5.2f} {snlMax:<5.2f}'.format(*row, snlOn = '*sinthl', snlMin = sinthlMin, snlMax = sinthlMax)
                 newmas.write(rowStr + '\n')
 
@@ -393,7 +393,7 @@ def setupKappa(mode = 'default'):
 
             if atomTab:
 
-                row = str.split(line)
+                row = line.split()
                 #Find parent atoms of CHEMCON
                 if len(row) == 12:
                     if not(line.startswith('H(') and Hpresent):
@@ -428,7 +428,7 @@ def setupKappa(mode = 'default'):
             #Find KEEP KAPPA
             elif line.startswith('KEEP') or line.startswith('!KEEP'):
 
-                row = str.split(line)
+                row = line.split()
                 if row[1].upper() == 'KAPPA':
                     j = 1
                     rowStr = 'KEEP     KAPPA'
@@ -487,7 +487,7 @@ def kapInpRes(fileName, inpTable, i):
 
 
                 if line.startswith('USAGE'):
-                    row = str.split(line)
+                    row = line.split()
                     row[4] = str(i)
                     rowStr = '{0:10}{1:6}{2:3}{3:4}{4:4}{5:4}{6:4}{7:4}{8:4}{9:4}{10:4}{11:6}{12:3}{13:4}{14}'.format(*row)
                     newres.write(rowStr + '\n')
@@ -546,7 +546,7 @@ def kapMonRef():
                 keyTab = False
 
             if keyTab:
-                row = str.split(line)
+                row = line.split()
 
                 if line[:5] != 'KAPPA':
                     rowStr = '{0:8}{1}'.format(row[0], '000 000000 0000000000 000000000000000 10 000 00000 0000000 000000000')
@@ -559,7 +559,7 @@ def kapMonRef():
                         newmas.write('KAPPA   000000' + '\n')
 
             elif line.startswith('SKIP'):
-                row = str.split(line)
+                row = line.split()
                 rowStr = '{0:7}{1:5}{2} {3} {4:9}{5} {6} {snlOff}  {8} {9}'.format(*row, snlOff = 'sinthl')
                 newmas.write(rowStr + '\n')
 
@@ -606,7 +606,7 @@ def nonHPosADPKey():
                     keyTab = False
 
             if keyTab:
-                row = str.split(line)
+                row = line.split()
 
                 if line[:1] != 'H':
                     rowStr = '{0:8}{1} {2}'.format(row[0], '111 111111 0000000000 000000000000000', ' '.join(row[5:10]))
@@ -655,7 +655,7 @@ def mm2Tom():
                 atomTab = False
 
             if atomTab:
-                row = str.split(line)
+                row = line.split()
 
                 if row[11] == 'mm2':
                     row[11] = 'm'
@@ -707,7 +707,7 @@ def lowerSymTo1():
                 atomTab = False
 
             if keyTab:
-                row = str.split(line)
+                row = line.split()
 
                 if line[:2] != 'H(':
                     if line.startswith('C('):
@@ -980,7 +980,7 @@ def checkMultRes():
                 keyTab = False
 
             if keyTab:
-                row = str.split(line)
+                row = line.split()
 
                 if line[:1] != 'H':
                     rowStr = line[:46]
@@ -1551,7 +1551,7 @@ def writeSITESYM(atomSymDict):
                 atomTab = False
 
             if atomTab:
-                row = str.split(line)
+                row = line.split()
 
                 #If atom is in dictionary it is added with sym label
                 if row[0].upper() in SITESYMs.keys():
@@ -1607,7 +1607,7 @@ def findUnaddedSym():
                 atomTab = False
 
             if atomTab:
-                row = str.split(line)
+                row = line.split()
 
                 #If sym label is NO add to list of atoms with unadded SITESYM
                 if len(row)==11 or row[11] == 'NO':
@@ -1656,7 +1656,7 @@ def addDUMsym(atomLab, dumI = 1):
         for line in mas:
             if line.startswith('DUM'):
 
-                row = str.split(line)
+                row = line.split()
                 addedDUMs[tuple(row[1:])] = row[0][3:]
 
             elif line.startswith('END ATOM'):
@@ -1990,7 +1990,7 @@ def writeLocalCoordSys(atomLocCoordsDict):
                 atomTab = False
 
             if atomTab:
-                row = str.split(line)
+                row = line.split()
                 atom = row[0].upper()
                 #If atom is in dictionary it is added with local coordinate system
                 if atom in coordSystems.keys():

@@ -6,6 +6,8 @@
 
 import os
 import hashlib
+from subprocess import PIPE, Popen
+from utils import listjoin
 
 '''
 ######################################
@@ -21,6 +23,26 @@ Only adding the last branch to usedBranches causes this behaviour. If the curren
 the last path at any stage then everything downstream is removed from usedBranches, as these branches
 are no longer used as something has been changed upstream.
 '''
+
+testDict = {'O(1)': ['C(1),asym'], 'C(1)': ['O(1),asym', 'O(2),asym', 'C(2),asym'], 'O(2)': ['C(1),asym'], 'O(3)': ['C(3),asym', 'H(4),asym'], 'C(3)': ['O(3),asym', 'C(2),asym', 'H(31),asym', 'H(32),asym'], 'H(4)': ['O(3),asym'], 'N(1)': ['C(2),asym', 'H(11),asym', 'H(12),asym', 'H(13),asym'], 'C(2)': ['N(1),asym', 'C(1),asym', 'C(3),asym', 'H(2),asym'], 'H(11)': ['N(1),asym'], 'H(12)': ['N(1),asym'], 'H(13)': ['N(1),asym'], 'H(2)': ['C(2),asym'], 'H(31)': ['C(3),asym'], 'H(32)': ['C(3),asym']}
+testAtom = 'C(3)'
+
+usedBranches = []
+lastPath = []
+pathStr = ''
+
+def CPPfindAllPaths(atom, atomNeebDict):
+    
+    inputStr = atom
+    for item, neebs in atomNeebDict.items():
+        inputStr+= '&' + item + '&' + listjoin(neebs, '*')
+
+    cppFC = Popen(['./a.out'], shell=True, stdout=PIPE, stdin=PIPE)
+    res = cppFC.communicate(bytes(inputStr, 'utf-8'))[0]
+    print(res.decode('utf-8'))
+    
+os.chdir('/home/matt/dev/XDToolkit/src')
+CPPfindAllPaths(testAtom,testDict)
 
 def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = ''):
     '''
