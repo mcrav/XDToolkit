@@ -31,10 +31,12 @@ usedBranches = []
 lastPath = []
 pathStr = ''
 
-#Mn-dimer with CPPgetEnvSig - 0.5835598 s
-#Mn-dimer with getEnvSig - 580.7068872 s (9mins 40secs)
+#Mn-dimer with CPPgetEnvSig -                      ~730s
+#Mn-dimer unoptimized getEnvSig -                   580.7068872s (9mins 40secs)
+#Mn-dimer optimized getEnvSig -                     312.5087068s (5mins 10secs)
+#Mn-dimer optimized w/ multiprocessing map          149.7411444s (2mins 30secs)
+#Mn-dimer optimized w/ multiprocessing map_async    146.1650229s (2mins 25secs)
 
-@timeDec
 def CPPgetEnvSig(atom, atomNeebDict):
     '''
     Create an md5 hash value for the chemical environment of a given atom. Return this hash value.
@@ -52,95 +54,85 @@ def CPPgetEnvSig(atom, atomNeebDict):
     y = hashlib.md5(bytes(x, 'utf-8'))
     envHash = y.hexdigest()
     return envHash
-    
-    
-
-
-    
-def getPath(atom, atomNeebDict, usedBranches, lastPath=[], pathStr=''):
-    '''
-    Find a path through the structure from a given atom, limitied by a list of branches already visited.
-    Return a pipe separated string of path in the format 'C(1),asym|N(1),asym|H(1),asym'.
-    Return the last branch in the path.
-    Return the list of visited branches.
-    '''
-    currAtom = atom             #Current atom as program walks through structure.
-    passedAtoms = []            #Atoms already visited in the path.
-   
-    newUsedBranches = []        #List of all branches explored in the structure.
-                                #Branches are format 'ATOM~number of steps through path' i.e. 'C(1),asym~2'
-                                #means C(1) was passed on the second step through the structure.
-
-    steps = -1                   #Tracks number of steps taken down path.
-
-    while currAtom not in passedAtoms:        #This condition will be satisfied until path can't go anywhere unvisited.
-
-        passedAtoms.append(currAtom)          #Add current atoms to visited atoms list.
-        steps += 1                            #Add step to total number of steps in path
-
-        atomNeebs = atomNeebDict[currAtom.split(',')[0]]        #Get neighbours of current atom.
-
-        for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
-            branchTag = neeb + '~' + str(steps)
-            #If a neighbour of current atom is found that hasn't been visited,
-            #and hasn't been branched too in other trips down the same path.
-            if neeb not in passedAtoms and branchTag not in usedBranches:
-
-                try:
-                    #If this path changes from the previous path at this atom,
-                    #remove all branch tags downstream from current number of steps.
-                    #i.e. if number of steps is 3 only keep branch tags with number of steps 0,1,2,3.
-                    if lastPath[steps] != neeb:
-                        usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-
-                except IndexError:
-                    #If the last path didn't go this far, or it was empty also remove downstream branch tags.
-                    usedBranches = [item for item in usedBranches if int(item.split('~')[1]) <= steps]
-
-                #Add branch tag of every atom in path to list.
-                newUsedBranches.append(branchTag)
-                pathStr += neeb + '|'   #Add new atom in path to pipe separated path string.
-                currAtom = neeb         #Make the current atom the new atom, quit the for loop
-                break                   #and look for the next atom along the path.
-    
-    pathStr = pathStr.strip('|')        #Remove the | from the end of the path string.
-
-    return (pathStr, newUsedBranches[-1:], usedBranches)    #Return the path string, last new branch, and edited list of used branches.
-
 
 def findAllPaths(atom, atomLabsDict):
     '''
     Find all possible paths through the molecule starting from a given atom. Return all paths in list.
     '''
-    lastPath = []
     paths = []
+    atomNormLabs = {}
+    pathList =[]
+    passedAtoms=[]
     usedBranches = []
-    atomNeebs = atomLabsDict
-    while True:
+    lastPath = []
 
-        pathRes = getPath(atom, atomNeebs, usedBranches, lastPath)  #Get a path.
+
+    for neebs in atomLabsDict.values():
+        for neebLab in neebs:
+            if neebLab not in atomNormLabs:
+                atomNormLabs[neebLab] = neebLab.split(',')[0]
+    
+    while True:
+        
+        currAtom = atom             #Current atom as program walks through structure.
+        passedAtoms=[]
+        pathList=[]
+        pathAppend = pathList.append
+        passAppend = passedAtoms.append
+
+        steps=-1    
+                                    #Branches are format 'ATOM~number of steps through path' i.e. 'C(1),asym~2'
+                                    #means C(1) was passed on the second step through the structure.
+    
+        while currAtom not in passedAtoms:        #This condition will be satisfied until path can't go anywhere unvisited.
+    
+            passAppend(currAtom)          #Add current atoms to visited atoms list.
+            steps += 1                            #Add step to total number of steps in path
+    
+            atomNeebs = atomLabsDict[atomNormLabs[currAtom]]        #Get neighbours of current atom.
+    
+            for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
+                branchTag = (steps, neeb)
+                #If a neighbour of current atom is found that hasn't been visited,
+                #and hasn't been branched too in other trips down the same path.
+                if  branchTag not in usedBranches: 
+                    
+                    if neeb not in passedAtoms:
+                        newUsedBranch = branchTag
+                        currAtom = neeb         #Make the current atom the new atom, quit the for loop
+                        pathAppend(neeb)   #Add new atom in path to pipe separated path string.
+                        
+                        try:
+                            #If this path changes from the previous path at this atom,
+                            #remove all branch tags downstream from current number of steps.
+                            #i.e. if number of steps is 3 only keep branch tags with number of steps 0,1,2,3.
+                            if lastPath[steps] != neeb:
+                                usedBranches = [item for item in usedBranches if item[0] <= steps]
+        
+                        except IndexError:
+                            #If the last path didn't go this far, or it was empty also remove downstream branch tags.
+                            usedBranches = [item for item in usedBranches if item[0] <= steps]
+        
+                        #Add branch tag of every atom in path to list.
+                        break                   #and look for the next atom along the path.
+        
+        usedBranches.append(newUsedBranch)
         #If no path is returned all paths have been found and the while loop is ended.
-        if not pathRes[0]:
+        if not pathList:
             break
 
         else:
-            #Store path as a list, to be the last path for the next time getPath is called.
-            lastPath = pathRes[0].split('|')
-
-            #Update usedBranches to list returned from getPath.
-            usedBranches = pathRes[2]
-
+            lastPath = pathList
             #Format path to string of atom types e.g. 'CCCNCCCH'
-            pathsFormatted = ''.join([item.split('(')[0] for item in pathRes[0].split('|')])
-
-            paths.append(pathsFormatted)    #Add this path string to list of paths.
-
-            usedBranches.extend(pathRes[1]) #Add the last branch from the current path to the list of used branches.
-
+            pathStr=''
+            for item in pathList:
+                pathStr+=item[:2]
+            paths.append(pathStr)  
+            
     #When no more paths can be found return list of paths.
     return paths
 
-def getEnvSig(atom, atomLabsDict):
+def getEnvSig(atomLabsDict, atom):
     '''
     Create an md5 hash value for the chemical environment of a given atom. Return this hash value.
     '''
@@ -148,7 +140,7 @@ def getEnvSig(atom, atomLabsDict):
     #Make string with starting atom types followed by , joined sorted list of all paths.
     pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom, atomLabsDict)))
     hashObj = hashlib.md5(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
-    envHash = hashObj.hexdigest()
+    envHash = (atom, hashObj.hexdigest())
     return envHash                             #Return digest of hash value.
 
 def removeCHEMCON():
@@ -488,13 +480,35 @@ def check4CHEMCON():
 
     return chemcon
 
-os.chdir('/home/matt/dev/XDToolkit/src')
-print(CPPgetEnvSig(testAtom,testDict))
-print('~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
-import timeit
-def wrapper(func, *args, **kwargs):
-     def wrapped():
-         return func(*args, **kwargs)
-     return wrapped
-wrapped = wrapper(getEnvSig, testAtom, testDict)
-print(timeit.timeit(wrapped, number=10000))
+
+
+#import timeit
+
+#def CPPwrapper(func, *args, **kwargs):
+#     def CPPwrapped():
+#         return func(*args, **kwargs)
+#     return CPPwrapped
+#CPPwrapped = CPPwrapper(CPPgetEnvSig, testAtom, testDict)
+#print(timeit.timeit(CPPwrapped, number=1000))
+#x = CPPgetEnvSig(testAtom, testDict)
+#print(x)
+#print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+#def wrapper(func, *args, **kwargs):
+#     def wrapped():
+#         return func(*args, **kwargs)
+#     return wrapped
+#wrapped = wrapper(getEnvSig, testAtom, testDict)
+#print(timeit.timeit(wrapped, number=10000))
+#x = getEnvSig(testAtom, testDict)
+#print(x)
+#import multiprocessing as mp
+#from functools import partial
+#import time
+#os.chdir('/home/matt/dev/XDToolkit/src')
+#y=time.time()
+#
+#pool = mp.Pool()
+#z = pool.map(partial(getEnvSig, atomLabsDict=testDict), testAtom)
+#
+#x=time.time()
+#print(x-y)

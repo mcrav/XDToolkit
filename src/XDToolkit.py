@@ -185,6 +185,9 @@ def initialiseGlobVars():
 #-------------------CHEMCON------------------------------------------
 #####################################################################
 '''
+import multiprocessing as mp
+from functools import partial
+
 @timeDec
 def findCHEMCON():
     '''
@@ -193,11 +196,12 @@ def findCHEMCON():
     global globAtomEnv          #Global dictionary of atoms and their chemical environment hash values i.e. {'C(1)':'f11390f0a9cadcbb4f234c8e8ea8d236'}
     global cacheHashPath
     globAtomEnv = {}
-    
+    atomLabs = copy.copy(globAtomLabs)
+    atoms = [atom + ',asym' for atom in getAtomList()]
     chemconFilePath = '{}/chemcon.buckfast'.format(cacheHashPath)
     atomEnvFilePath = '{}/atomEnv.buckfast'.format(cacheHashPath)
-    
-    if os.path.isfile(chemconFilePath) and os.path.isfile(atomEnvFilePath):
+    x=3
+    if os.path.isfile(chemconFilePath) and os.path.isfile(atomEnvFilePath) and x==4:
         with open(chemconFilePath, 'r') as chemconCache:
             CHEMCON = literal_eval(chemconCache.read())
             
@@ -205,45 +209,30 @@ def findCHEMCON():
             globAtomEnv = literal_eval(envCache.read())
             
     else:
-        with open('xd.mas', 'r') as mas:
-    
-            envs = {}
-            CHEMCON = {}
-            atomTab = False
-    
-            for line in mas:
-    
-                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
-                    atomTab = False
-    
-                #Make dictionary of environment hash values and atoms with that environment
-                #i.e. {'f11390f0a9cadcbb4f234c8e8ea8d236' : ['H(4)', 'H(3)']}
-    
-                if atomTab:
-                    row = line.split()
-                    atom = row[0].upper()
-                    x = os.getcwd()
-                    atomEnv = getEnvSig(atom + ',asym', copy.copy(globAtomLabs))
-                    os.chdir(x)
-                    globAtomEnv[atom] = atomEnv
-                    envs.setdefault(atomEnv,[]).append(atom)
-    
-                if line.startswith('ATOM     ATOM0'):
-                    atomTab = True
-    
-            #Organise hash value dictionary into dictionary of parent atoms that appear first in ATOM table,
-            #and children that appear further down.
-            for env, atoms in envs.items():
-                if len(atoms) > 1:
-                    CHEMCON[atoms[0]] = atoms[1:]
-                else:
-                    CHEMCON[atoms[0]] = []
-                    
-            with open(chemconFilePath, 'w') as chemconCache:
-                chemconCache.write(str(CHEMCON))
+        envs = {}
+        CHEMCON = {}
+        pool = mp.Pool(5)
+        #atomEnv = pool.map(partial(getEnvSig, atomLabs), atoms)
+        atomEnv = pool.map_async(partial(getEnvSig, atomLabs), atoms).get()
+
+        pool.close()
+
+        for item in atomEnv:
+            globAtomEnv[item[0]] = item[1]
+            envs.setdefault(item[1],[]).append(item[0])
+        #Organise hash value dictionary into dictionary of parent atoms that appear first in ATOM table,
+        #and children that appear further down.
+        for env, atoms in envs.items():
+            if len(atoms) > 1:
+                CHEMCON[atoms[0]] = atoms[1:]
+            else:
+                CHEMCON[atoms[0]] = []
                 
-            with open(atomEnvFilePath, 'w') as envCache:
-                envCache.write(str(globAtomEnv))
+        with open(chemconFilePath, 'w') as chemconCache:
+            chemconCache.write(str(CHEMCON))
+            
+        with open(atomEnvFilePath, 'w') as envCache:
+            envCache.write(str(globAtomEnv))
                 
     print(CHEMCON)
     return CHEMCON
@@ -4734,7 +4723,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.CHEMCONStatusLab.setText('CHEMCON added and xd.mas updated')
             except PermissionError:
                 self.CHEMCONStatusLab.setText(self.permErrorMsg)
-            except Exception:
+            except Exception as e:
+                print(e)
                 self.CHEMCONStatusLab.setText('An error occurred.')
 
         elif self.chooseElementCHEMCON.isChecked() == True:
@@ -5280,7 +5270,7 @@ def customExceptHook(Type, value, traceback):
     print_exception(Type, value, traceback)
     pass
 
-#Run GUI
+##Run GUI
 if __name__ == '__main__':
     print(os.getcwd())
     sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
@@ -5305,8 +5295,22 @@ if __name__ == '__main__':
 
     sys.exit(app.exec_())
 #
-#os.chdir('/home/matt/dev/XDTstuff/test/cosph4')
-#x = ins2all(trackBondAtoms = ('O(3)','K(0)'))
+#import timeit
+#os.chdir('/home/matt/dev/XDTstuff/test/carba')
+#def wrapper(func, *args, **kwargs):
+#     def wrapped():
+#         return func(*args, **kwargs)
+#     return wrapped
+#wrapped = wrapper(ins2all)
+#print(timeit.timeit(wrapped, number=1))
+#print('\n\n~~~~~~~~~~~~~~\n\n')
+#x = ins2all()
+#from initfuncs import carbaTest
+#if str(x) != carbaTest:
+#    print('problems')
+#else:
+#    print('fine')
+#x = ins2all()
 #findSITESYM(trackAtom = 'C(01A)')
 #x = ins2all()
 #findCHEMCON()

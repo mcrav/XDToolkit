@@ -8,8 +8,9 @@
 
 std::string pathStr;
 std::string atom;
-std::list<std::string> usedBranches;
-std::vector<std::string> newUsedBranches;
+std::list<std::string> pathList;
+std::list<std::pair<std::string, int>> usedBranches;
+std::pair<std::string, int> newUsedBranch;
 std::vector<std::string> lastPath;
 std::map<std::string, std::list<std::string>> atomNeebDict;   //globAtomLabs
 
@@ -17,7 +18,7 @@ std::map<std::string, std::list<std::string>> atomNeebDict;   //globAtomLabs
 //
 /*Equivalent to python str.split() method. Returns std::list<std::string>*/
 //
-std::list<std::string> splitString2List(std::string input, char delim) {
+std::list<std::string> splitString2List(const std::string input, const char delim) {
   std::list<std::string> inputSplit;
   std::string segment;
   std::istringstream inputISS(input);
@@ -30,7 +31,7 @@ std::list<std::string> splitString2List(std::string input, char delim) {
 //
 /*Equivalent to python str.split() method. Returns std::vector<std::string>*/
 //
-std::vector<std::string> splitString2Vector(std::string input, char delim) {
+std::vector<std::string> splitString2Vector(const std::string input, const char delim) {
   std::vector<std::string> inputSplit;
   std::string segment;
   std::istringstream inputISS(input);
@@ -41,7 +42,8 @@ std::vector<std::string> splitString2Vector(std::string input, char delim) {
 }
 
 void getPath() {
-  pathStr = "";
+  //UNOPT pathStr = "";
+  pathList.empty();
   std::list<std::string> passedAtoms;
   // std::cout<<"getPath"<<std::endl;
   std::string currAtom = atom;
@@ -64,9 +66,9 @@ void getPath() {
     for (std::list<std::string>::const_iterator neebIter = atomNeebs.begin(), end = atomNeebs.end(); neebIter != end; ++neebIter){
       // std::cout<<"for neeb in atomNeebs:"<<std::endl;
       // std::cout<<"neeb = " + *neebIter<<std::endl;
-      std::ostringstream branchTagOSS;
-      branchTagOSS<<*neebIter<<'~'<<steps;
-      std::string branchTag = branchTagOSS.str();
+      // UNOPT std::ostringstream branchTagOSS;
+      std::pair<std::string, int> branchTag {*neebIter, steps};
+      // UNOPT std::string branchTag = branchTagOSS.str();
       // std::cout<<"branchTag = " + branchTag<<std::endl;
 
       //if neeb not in passedAtoms and branchTag not in usedBranches:
@@ -75,17 +77,17 @@ void getPath() {
           // std::cout<<"if neeb not in passedAtoms and branchTag not in usedBranches:" + *neebIter<<std::endl;
           //
           //   std::cout<<"try:"<<std::endl;
-            std::list<std::string> usedBranchesClipped;
+            std::list<std::pair<std::string, int>> usedBranchesClipped;
             // std::cout<<"usedBranchesClipped"<<std::endl;
             // std::cout.flush();
             if (steps < lastPath.size()){
               if (lastPath[steps] != *neebIter){
                 // std::cout<<"if lastPath.at(steps) != *neebIter"<<std::endl;
-                for (std::list<std::string>::const_iterator ubIter = usedBranches.begin(), end = usedBranches.end(); ubIter != end; ++ubIter){
+                for (std::list<std::pair<std::string, int>>::const_iterator ubIter = usedBranches.begin(), end = usedBranches.end(); ubIter != end; ++ubIter){
                   // std::cout<<"try ubIter" + *ubIter<<std::endl;
                   // std::cout<<splitString2Vector(*ubIter, '~')[0]<<std::endl;
                   // std::cout.flush();
-                  if (std::stoi(splitString2Vector(*ubIter, '~')[1]) <= steps){
+                  if (std::get<1>(*ubIter) <= steps){
                     // std::cout<<"Clipping " + *ubIter;
                     usedBranchesClipped.push_back(*ubIter);
                   }
@@ -98,27 +100,25 @@ void getPath() {
               // std::cout.flush();
 
               // std::cout<<"usedBranchesClipped;";
-              for (std::list<std::string>::const_iterator ubIter = usedBranches.begin(), end = usedBranches.end(); ubIter != end; ++ubIter){
+              for (std::list<std::pair<std::string, int>>::const_iterator ubIter = usedBranches.begin(), end = usedBranches.end(); ubIter != end; ++ubIter){
                 // std::cout<<"except ubIter" + *ubIter<<std::endl;
-                if (std::stoi(splitString2Vector(*ubIter, '~')[1]) <= steps){
+                if (std::get<1>(*ubIter) <= steps){
                   usedBranchesClipped.push_back(*ubIter);
                 }
               }
             usedBranches = usedBranchesClipped;
             }
 
-
-
-          newUsedBranches.push_back(branchTag);
-
-          pathStr += *neebIter + '|';
+          newUsedBranch = branchTag;
+          pathList.push_back(*neebIter);
+          //UNOPT pathStr += *neebIter + '|';
           currAtom = *neebIter;
           break;
       }
     }
     }
-  pathStr = pathStr.substr(0,pathStr.size()-1);
-  usedBranches.push_back(newUsedBranches.back());
+  //UNOPT pathStr = pathStr.substr(0,pathStr.size()-1);
+  usedBranches.push_back(newUsedBranch);
   }
 
 //
@@ -133,11 +133,12 @@ std::string findAllPaths(){
       break;
     }
     else {
-      lastPath = splitString2Vector(pathStr, '|');
-
-      std::list<std::string> pathStrSplit = splitString2List(pathStr, '|');
-      for(std::list<std::string>::const_iterator pathIter = pathStrSplit.begin(), end = pathStrSplit.end(); pathIter != end; ++ pathIter){
-        paths += splitString2Vector(*pathIter, '(')[0];
+      //UNOPT lastPath = splitString2Vector(pathStr, '|');
+      lastPath.empty();
+      for(std::list<std::string>::const_iterator pathIter = pathList.begin(), end = pathList.end(); pathIter != end; ++ pathIter){
+        std::string tempPath = *pathIter;
+        paths += tempPath.substr(0,2);
+        lastPath.push_back(*pathIter);
 
       }
       paths += '^';
