@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import (
         QPushButton, QApplication, QDialog, QFileDialog, QMainWindow, QGridLayout,
         QScrollArea, QSizePolicy, QSpacerItem)
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject
-from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtGui import QPixmap, QFont, QStandardItem, QStandardItemModel
 from devtools import resetmas, timeDec
 from backup import backup, loadBackup
 from emailfuncs import sendEmail
@@ -214,7 +214,6 @@ def findCHEMCON():
         pool = mp.Pool(5)
         #atomEnv = pool.map(partial(getEnvSig, atomLabs), atoms)
         atomEnv = pool.map_async(partial(getEnvSig, atomLabs), atoms).get()
-
         pool.close()
 
         for item in atomEnv:
@@ -233,8 +232,7 @@ def findCHEMCON():
             
         with open(atomEnvFilePath, 'w') as envCache:
             envCache.write(str(globAtomEnv))
-                
-    print(CHEMCON)
+
     return CHEMCON
 
 
@@ -270,7 +268,7 @@ def scaleFacRef():
     os.rename('xdnew.mas','xd.mas')
 
 
-def highAngleRef(sinthlMin,sinthlMax):
+def highAngleRef(sinthlMin, sinthlMax):
     '''
     Setup xd.mas to refine high angle non-H positions and ADPs.
     '''
@@ -2758,7 +2756,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.enableCheckNeebsButs()
         self.changeUserIns()
 
-
         #Check for XD files and if they are not there prompt user to find directory.
         if not self.settings.value('xdpath'):
             self.findXD()
@@ -2938,7 +2935,32 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         #If XD program is run and XD path hasn't been set, program prompts user to set it.
         for prog in self.xdProgsRunning:
             prog.warningSignal.connect(self.findXD)
-
+            
+        self.model = QStandardItemModel()
+        self.wizSeqMultBox = QStandardItem("Add multipoles one by one.")
+        self.wizSeqMultBox.setCheckState(Qt.Checked)
+        self.wizSeqMultBox.setCheckable(True)
+        self.model.appendRow(self.wizSeqMultBox)
+        
+        self.wizLowerSymBox = QStandardItem("Try lowering symmetry at end of refinement.")
+        self.wizLowerSymBox.setCheckState(Qt.Checked)
+        self.wizLowerSymBox.setCheckable(True)
+        self.model.appendRow(self.wizLowerSymBox)
+        self.wizAdvList.setModel(self.model)
+        
+        self.wizAdvOptBut.clicked.connect(self.wizAdvOptToggle)
+        self.wizAdvOptOpen = False
+        
+    def wizAdvOptToggle(self):
+        '''
+        Handler to expand/collapse advanced wizard options.
+        '''
+        if not self.wizAdvOptOpen:
+            self.wizAdvList.setMaximumSize(2000, 400)
+            self.wizAdvOptOpen = True
+        else:
+            self.wizAdvList.setMaximumSize(0,0)
+            self.wizAdvOptOpen = False
 #########################################################################
 #--------------------EMAIL-----------------------------------------------
 #########################################################################
@@ -5287,8 +5309,10 @@ if __name__ == '__main__':
                            Qt.AlignBottom | Qt.AlignLeft,
                            Qt.white)
     splash.show()
-
+    
     prog = XDToolGui()
+    
+    
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
     splash.finish(prog)
     prog.show()

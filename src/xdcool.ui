@@ -465,12 +465,21 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Run XDLSM with current xd.mas and xd.inp files in project folder.</string>
+        </property>
         <property name="text">
          <string> Run XDLSM</string>
         </property>
         <property name="icon">
          <iconset>
           <normaloff>../res/play.ico</normaloff>../res/play.ico</iconset>
+        </property>
+        <property name="shortcut">
+         <string>Ctrl+R</string>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -485,11 +494,14 @@
     </item>
     <item row="2" column="0" colspan="4">
      <widget class="QTabWidget" name="tabWidget">
+      <property name="toolTip">
+       <string>Setup chemical equivalency constraints</string>
+      </property>
       <property name="autoFillBackground">
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -583,7 +595,7 @@
              <x>0</x>
              <y>0</y>
              <width>1077</width>
-             <height>568</height>
+             <height>577</height>
             </rect>
            </property>
            <property name="autoFillBackground">
@@ -593,16 +605,16 @@
             <item row="0" column="0">
              <layout class="QVBoxLayout" name="wizLayout">
               <property name="leftMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <property name="topMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <property name="rightMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <property name="bottomMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <item>
                <widget class="QLabel" name="label_11">
@@ -1001,24 +1013,99 @@
                  <number>5</number>
                 </property>
                 <item>
-                 <widget class="QCheckBox" name="wizSeqMultBox">
-                  <property name="text">
-                   <string>Add higher-order multipoles one by one (slower)</string>
+                 <widget class="QPushButton" name="wizAdvOptBut">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
                   </property>
-                  <property name="checked">
-                   <bool>true</bool>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="text">
+                   <string> Advanced</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>../res/arrow_down.png</normaloff>../res/arrow_down.png</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>10</width>
+                    <height>10</height>
+                   </size>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QCheckBox" name="lowerSymBox">
-                  <property name="text">
-                   <string>Try reducing local symmetry at end of refinement (slower)</string>
+                 <widget class="QListView" name="wizAdvList">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
-                  <property name="checked">
-                   <bool>true</bool>
+                  <property name="maximumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="palette">
+                   <palette>
+                    <active>
+                     <colorrole role="Base">
+                      <brush brushstyle="SolidPattern">
+                       <color alpha="255">
+                        <red>222</red>
+                        <green>222</green>
+                        <blue>222</blue>
+                       </color>
+                      </brush>
+                     </colorrole>
+                    </active>
+                    <inactive>
+                     <colorrole role="Base">
+                      <brush brushstyle="SolidPattern">
+                       <color alpha="255">
+                        <red>222</red>
+                        <green>222</green>
+                        <blue>222</blue>
+                       </color>
+                      </brush>
+                     </colorrole>
+                    </inactive>
+                    <disabled>
+                     <colorrole role="Base">
+                      <brush brushstyle="SolidPattern">
+                       <color alpha="255">
+                        <red>232</red>
+                        <green>232</green>
+                        <blue>232</blue>
+                       </color>
+                      </brush>
+                     </colorrole>
+                    </disabled>
+                   </palette>
+                  </property>
+                  <property name="frameShape">
+                   <enum>QFrame::NoFrame</enum>
+                  </property>
+                  <property name="isWrapping" stdset="0">
+                   <bool>false</bool>
+                  </property>
+                  <property name="spacing">
+                   <number>10</number>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_8">
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                 </layout>
                 </item>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -1118,7 +1205,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>Reuse reset bond and chemical equivalency instructions from last run</string>
+                 <string>Reuse reset bond and chemical constraints instructions from last run</string>
                 </property>
                </widget>
               </item>
@@ -1134,7 +1221,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>Test</string>
+                 <string>Prerun Test</string>
                 </property>
                </widget>
               </item>
@@ -1318,16 +1405,16 @@
             <item row="0" column="0">
              <layout class="QVBoxLayout" name="verticalLayout_55">
               <property name="leftMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <property name="topMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <property name="rightMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <property name="bottomMargin">
-               <number>10</number>
+               <number>20</number>
               </property>
               <item>
                <widget class="QLabel" name="label_10">
@@ -1339,7 +1426,7 @@
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_12">
                 <property name="bottomMargin">
-                 <number>10</number>
+                 <number>0</number>
                 </property>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -1358,7 +1445,7 @@
                   <item>
                    <widget class="QLabel" name="label_5">
                     <property name="text">
-                     <string>    Compound ID:</string>
+                     <string> Compound ID:</string>
                     </property>
                    </widget>
                   </item>
@@ -1366,7 +1453,7 @@
                    <widget class="QLineEdit" name="manRefIDInput">
                     <property name="maximumSize">
                      <size>
-                      <width>181</width>
+                      <width>150</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1385,7 +1472,7 @@
                    <widget class="QPushButton" name="runXDINIBut">
                     <property name="minimumSize">
                      <size>
-                      <width>200</width>
+                      <width>232</width>
                       <height>0</height>
                      </size>
                     </property>
@@ -1394,6 +1481,9 @@
                       <width>200</width>
                       <height>16777215</height>
                      </size>
+                    </property>
+                    <property name="toolTip">
+                     <string>Run XDINI with shelx.ins and shelx.hkl in project folder</string>
                     </property>
                     <property name="text">
                      <string>Initialize compound</string>
@@ -1412,7 +1502,7 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>Check Neighbours</string>
+                     <string>Check neighbours</string>
                     </property>
                    </widget>
                   </item>
@@ -1860,10 +1950,13 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>RESET BOND</string>
+        <string>Reset Bonds</string>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Constrain X-H bond lengths</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0">
+        <item row="1" column="0">
          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0">
           <property name="leftMargin">
            <number>20</number>
@@ -1894,7 +1987,7 @@
                <x>0</x>
                <y>0</y>
                <width>1051</width>
-               <height>318</height>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -1904,16 +1997,16 @@
               <item row="0" column="0">
                <layout class="QVBoxLayout" name="verticalLayout_33">
                 <property name="leftMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <widget class="QLabel" name="label_36">
@@ -2328,8 +2421,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>499</width>
-               <height>310</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2339,16 +2432,16 @@
               <item row="0" column="0">
                <layout class="QVBoxLayout" name="verticalLayout_24">
                 <property name="leftMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_52">
@@ -2533,12 +2626,12 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>304</width>
-               <height>100</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
-              <string>Disable/enable all reset bond instructions</string>
+              <string>Bulk edit reset bond instructions</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_18">
               <item row="0" column="0">
@@ -2561,7 +2654,7 @@
                    <widget class="QPushButton" name="armRBBut">
                     <property name="minimumSize">
                      <size>
-                      <width>250</width>
+                      <width>300</width>
                       <height>0</height>
                      </size>
                     </property>
@@ -2589,6 +2682,12 @@
                  <layout class="QHBoxLayout" name="horizontalLayout_34">
                   <item>
                    <widget class="QPushButton" name="disarmRBBut">
+                    <property name="minimumSize">
+                     <size>
+                      <width>300</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
                       <width>250</width>
@@ -2602,6 +2701,33 @@
                   </item>
                   <item>
                    <widget class="QLabel" name="disarmRBLab">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="delResetBondBut">
+                    <property name="maximumSize">
+                     <size>
+                      <width>300</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Remove all reset bond instructions</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="delResetBondLab">
                     <property name="text">
                      <string/>
                     </property>
@@ -2626,70 +2752,6 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="page_16">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>312</width>
-               <height>88</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Delete all reset bond instructions</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_24">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_36">
-                <property name="leftMargin">
-                 <number>10</number>
-                </property>
-                <property name="topMargin">
-                 <number>10</number>
-                </property>
-                <property name="rightMargin">
-                 <number>10</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>10</number>
-                </property>
-                <item>
-                 <widget class="QPushButton" name="delResetBondBut">
-                  <property name="maximumSize">
-                   <size>
-                    <width>300</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Remove all reset bond instructions</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="delResetBondLab">
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_4">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
            </widget>
           </item>
          </layout>
@@ -2698,7 +2760,7 @@
       </widget>
       <widget class="QWidget" name="tab_5">
        <attribute name="title">
-        <string>CHEMCON</string>
+        <string>Chemical Constraints</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
@@ -2849,15 +2911,15 @@
           <item>
            <widget class="QToolBox" name="resToolbox">
             <property name="currentIndex">
-             <number>3</number>
+             <number>4</number>
             </property>
             <widget class="QWidget" name="page_18">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>257</width>
-               <height>88</height>
+               <width>1051</width>
+               <height>260</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2887,7 +2949,7 @@
                    </size>
                   </property>
                   <property name="text">
-                   <string>Read output from xd_lsm.out</string>
+                   <string>Show output from xd_lsm.out</string>
                   </property>
                  </widget>
                 </item>
@@ -2923,8 +2985,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>684</width>
-               <height>110</height>
+               <width>1051</width>
+               <height>260</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2934,16 +2996,16 @@
               <item row="0" column="0">
                <layout class="QVBoxLayout" name="verticalLayout_32">
                 <property name="leftMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout">
@@ -3043,16 +3105,16 @@
               <item row="0" column="0">
                <layout class="QVBoxLayout" name="verticalLayout_16">
                 <property name="leftMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <widget class="QRadioButton" name="setupFOURFFTBox">
@@ -3164,6 +3226,14 @@
              </layout>
             </widget>
             <widget class="QWidget" name="page_2">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>1051</width>
+               <height>260</height>
+              </rect>
+             </property>
              <attribute name="label">
               <string>Make laplacian maps</string>
              </attribute>
@@ -3217,8 +3287,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>265</width>
-               <height>88</height>
+               <width>1051</width>
+               <height>260</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3282,7 +3352,7 @@
                <x>0</x>
                <y>0</y>
                <width>1051</width>
-               <height>289</height>
+               <height>260</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3329,6 +3399,9 @@
                         <width>300</width>
                         <height>16777215</height>
                        </size>
+                      </property>
+                      <property name="toolTip">
+                       <string>Run XDPROP and show d-orbital populations</string>
                       </property>
                       <property name="text">
                        <string>Get d-orbital populations</string>
@@ -3420,7 +3493,7 @@
              <number>1</number>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <property name="tabSpacing">
              <number>6</number>
@@ -3817,8 +3890,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>258</width>
-               <height>290</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3828,16 +3901,16 @@
               <item row="0" column="0">
                <layout class="QVBoxLayout" name="verticalLayout_6">
                 <property name="leftMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <widget class="QLabel" name="dumLab">
@@ -4000,8 +4073,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>344</width>
-               <height>194</height>
+               <width>1051</width>
+               <height>347</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4154,16 +4227,16 @@
               <item row="1" column="0">
                <layout class="QVBoxLayout" name="verticalLayout_34">
                 <property name="leftMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>20</number>
+                 <number>10</number>
                 </property>
                 <item>
                  <widget class="QPushButton" name="loadBackupBut">
@@ -4207,8 +4280,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>673</width>
-               <height>90</height>
+               <width>1051</width>
+               <height>376</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4333,16 +4406,16 @@
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_17">
           <property name="leftMargin">
-           <number>10</number>
+           <number>20</number>
           </property>
           <property name="topMargin">
-           <number>10</number>
+           <number>20</number>
           </property>
           <property name="rightMargin">
-           <number>10</number>
+           <number>20</number>
           </property>
           <property name="bottomMargin">
-           <number>10</number>
+           <number>20</number>
           </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="3,1">
@@ -4355,7 +4428,7 @@
                <number>5</number>
               </property>
               <property name="topMargin">
-               <number>5</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
                <number>5</number>
@@ -4550,6 +4623,9 @@
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
+   <property name="toolTip">
+    <string>Open up settings and set paths to external programs.</string>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -4581,6 +4657,9 @@
    <property name="text">
     <string>Open Project Folder in File Explorer</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="toolbarSettings">
    <property name="icon">
@@ -4607,7 +4686,7 @@
   <action name="toolbarMolecool">
    <property name="icon">
     <iconset>
-     <normaloff>../res/molecoolico.png</normaloff>../res/molecoolico.png</iconset>
+     <normaloff>../res/molecoolico_cropped.png</normaloff>../res/molecoolico_cropped.png</iconset>
    </property>
    <property name="text">
     <string>MoleCoolQt</string>
@@ -4667,13 +4746,13 @@
   <action name="toolbarMercury">
    <property name="icon">
     <iconset>
-     <normaloff>../res/mercury_48x48.png</normaloff>../res/mercury_48x48.png</iconset>
+     <normaloff>../res/mol_view_icon.png</normaloff>../res/mol_view_icon.png</iconset>
    </property>
    <property name="text">
     <string>Mercury</string>
    </property>
    <property name="toolTip">
-    <string>Open structure in Mercury</string>
+    <string>Open structure in molecule viewer</string>
    </property>
   </action>
   <action name="menuLoadShelx">
@@ -4703,7 +4782,7 @@
     <string>Openmas</string>
    </property>
    <property name="toolTip">
-    <string>Open mas file in text editor</string>
+    <string>Open xd.mas file in text editor</string>
    </property>
    <property name="priority">
     <enum>QAction::HighPriority</enum>

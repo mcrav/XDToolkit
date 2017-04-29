@@ -62,9 +62,9 @@
          <item>
           <widget class="QLabel" name="infoLab">
            <property name="text">
-            <string>If nearest neighbours are incorrect for any atom, you must add the local coordinate system for this atom manually in the &quot;Tools&quot; tab.
+            <string>If nearest neighbours are incorrect for any atom, you should add the local coordinate system for this atom manually in the &quot;Tools&quot; tab.
 
-Also, if an H atom in missing/wrongly-included in the nearest neighbours, you must add or delete the reset bond instruction for this atom in the &quot;RESET BOND&quot; tab.</string>
+Also, if an H atom in missing/wrongly-included in the nearest neighbours, you should add or delete the reset bond instruction for this atom in the &quot;RESET BOND&quot; tab.</string>
            </property>
            <property name="wordWrap">
             <bool>true</bool>
