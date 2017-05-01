@@ -74,7 +74,7 @@ def getmd5Hash(file):
     if os.path.isfile(file):
         with open(file,'r') as hkl:
             hklTxt = hkl.read()
-            hklHash = hashlib.md5(bytes(hklTxt, 'utf-8')).hexdigest()
+            hklHash = hashlib.sha256(bytes(hklTxt, 'utf-8')).hexdigest()
 
     return hklHash
 
@@ -204,10 +204,10 @@ def findCHEMCON():
     if os.path.isfile(chemconFilePath) and os.path.isfile(atomEnvFilePath) and x==4:
         with open(chemconFilePath, 'r') as chemconCache:
             CHEMCON = literal_eval(chemconCache.read())
-            
+
         with open(atomEnvFilePath,'r') as envCache:
             globAtomEnv = literal_eval(envCache.read())
-            
+
     else:
         envs = {}
         CHEMCON = {}
@@ -226,7 +226,7 @@ def findCHEMCON():
             for line in mas:
                 if atomTableEnds(line):
                     atomTab = False
-    
+
                 elif atomTab:
                     row = line.upper().split()
                     atomHash = globAtomEnv[row[0]]
@@ -235,17 +235,17 @@ def findCHEMCON():
                         CHEMCON[row[0]] = []
                     else:
                         CHEMCON[hashParents[atomHash]].append(row[0])
-                        
+
                 elif atomTableBegins(line):
                     atomTab = True
-                    
-                
+
+
         with open(chemconFilePath, 'w') as chemconCache:
             chemconCache.write(str(CHEMCON))
-            
+
         with open(atomEnvFilePath, 'w') as envCache:
             envCache.write(str(globAtomEnv))
-            
+
     return CHEMCON
 
 
@@ -2393,7 +2393,7 @@ class resmap(QWidget, Ui_resmap):
         if filename[0]:
             copyfile(self.tempFileName, filename[0])
             self.saveLab.setText('Residual map saved to <i>"{}"</i>'.format(filename[0]))
-            
+
     def closeEvent(self, event):
         for file in os.listdir(os.getcwd()):
             if file.startswith('temp_quickplot'):
@@ -2886,7 +2886,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.wizSnlInput = [self.wizHighSnlMin, self.wizHighSnlMax, self.wizLowSnlMin, self.wizLowSnlMax]
         for item in self.wizSnlInput:
             item.editingFinished.connect(self.wizTest)
-            
+
         self.xdWizINIBut.clicked.connect(self.xdWizINI)
         self.xdWizardBut.clicked.connect(self.xdWizRun)
         self.xdWizCmpID.returnPressed.connect(self.xdWizINI)
@@ -2950,24 +2950,24 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         #If XD program is run and XD path hasn't been set, program prompts user to set it.
         for prog in self.xdProgsRunning:
             prog.warningSignal.connect(self.findXD)
-            
+
         self.model = QStandardItemModel()
         self.wizSeqMultBox = QStandardItem("Add multipoles one by one.")
         self.wizSeqMultBox.setCheckState(Qt.Checked)
         self.wizSeqMultBox.setCheckable(True)
         self.model.appendRow(self.wizSeqMultBox)
-        
+
         self.wizLowerSymBox = QStandardItem("Try lowering symmetry at end of refinement.")
         self.wizLowerSymBox.setCheckState(Qt.Checked)
         self.wizLowerSymBox.setCheckable(True)
         self.model.appendRow(self.wizLowerSymBox)
         self.wizAdvList.setModel(self.model)
-        
+
         self.wizAdvList.setStyleSheet('padding: 10px;')
-        
+
         self.wizAdvOptBut.clicked.connect(self.wizAdvOptToggle)
         self.wizAdvOptOpen = False
-        
+
     def wizAdvOptToggle(self):
         '''
         Handler to expand/collapse advanced wizard options.
@@ -3093,6 +3093,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.xdini.finishedSignal.disconnect(self.wizCheckIni)
         if os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl'):
             self.xdWizINILab.setText('Compound initialized successfully. Follow instructions below and click "Test".')
+            self.manRefIDInput.setText(str(self.xdWizCmpID.text()))
             try:
                 writeCHEMCON(findCHEMCON())
                 autoResetBond(copy.copy(globAtomLabs), copy.copy(globAtomTypes))
@@ -3133,7 +3134,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         c = check4CHEMCON()
         r = check4RBHs()
-        s = False
+        s = True
         f = os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl')
 
         missingSym = findUnaddedSym()
@@ -3144,25 +3145,29 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         else:
             m = True
 
-        try:
-            for item in self.wizSnlInput:
-                a = float(str(item.text()))     #checks if input can be converted to float
+#        try:
+#            for item in self.wizSnlInput:
+#                a = float(str(item.text()))     #checks if input can be converted to float
+#
+#                if str(self.wizUniSnlMax.text()).strip():
+#                    a = float(str(item.text()))
+#
+#            s = True
+#
+#
+#        except ValueError:
+#            s = False
+        for item in self.wizSnlInput:
+            if not isfloat(str(item.text())):
+                s = False
 
-                if str(self.wizUniSnlMax.text()).strip():
-                    a = float(str(item.text()))
+        uniSnlStr = str(self.wizUniSnlMax.text()).strip()
+        if uniSnlStr:
+            if not isfloat(uniSnlStr):
+                s = False
 
-            s = True
-
-        except ValueError:
-            s = False
-        print(c)
-        print('chemcon')
-        print(r)
-        print(s)
-        print(f)
-        print(m)
         if c and not r and s and f and m:
-            
+
             if self.wizLowSnlMin.isEnabled():
                 self.xdWizardBut.setEnabled(True)
 #            estTime = totalEstTime()
@@ -3187,6 +3192,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
             if not s:
                 wizStr += '-Invalid input for sin(&theta;/&lambda;) cutoffs.<br>'
+                self.xdWizardBut.setEnabled(False)
 
             if not f:
                 wizStr += '-Starting files not found. Initialize compound.'
@@ -3818,6 +3824,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Handle XDINI finishing.
         '''
         self.XDINILab.setText('Compound initialized successfully. Ready to begin refinement.')                         #Sets status label to 'XDINI finished'
+        self.xdWizINILab.setText('Compound initialized successfully. Follow instructions below and click "Test".')
+        self.xdWizCmpID.setText(str(self.manRefIDInput.text()))
         self.refChosen()
         self.runXDINIBut.setText('Run XDINI')
         self.check4res()
@@ -3997,7 +4005,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             hkl = False
         if not os.path.isfile('shelx.ins'):
             ins = False
-            
+
         if not hkl or not ins:
             msg = QMessageBox()
             msg.setWindowTitle('Files not found')
@@ -4006,10 +4014,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 msgStr = "Couldn't find <i>shelx.ins</i>."
             elif not hkl and ins:
                 msgStr = "Couldn't find <i>shelx.hkl</i>."
-            
+
             elif not ins and not hkl:
                 msgStr = "Couldn't find <i>shelx.ins</i> or <i>shelx.hkl</i>."
-            
+
             msg.setText(msgStr)
             msg.exec_()
 
@@ -4019,7 +4027,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.changeUserIns()
             self.resetWizInput()
 
-        except Exception:               
+        except Exception:
             self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
 
     def openCwd(self):
@@ -4056,7 +4064,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         folder = str(QFileDialog.getExistingDirectory(None, "Select Structure Solution Folder"))
         projectFolder = os.getcwd()
-        
+
         for file in os.listdir(folder):
             if file[-4:] == '.res':
                 copyfile((folder + '/' + file), (projectFolder  + '/shelx.ins'))
@@ -4775,7 +4783,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         global globAtomEnv
         chemcon = {}
-        
+
         if self.autoCHEMCON.isChecked():
             try:
                 writeCHEMCON(findCHEMCON())
@@ -4843,7 +4851,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     print(e)
                     self.CHEMCONStatusLab.setText('An error occurred.')
             self.inputAtomCHEMCON.setText('')
-        
+
         if chemcon:
             envSig = 0
             for atom, equis in chemcon.items():
@@ -5346,16 +5354,16 @@ if __name__ == '__main__':
                            Qt.AlignBottom | Qt.AlignLeft,
                            Qt.white)
     splash.show()
-    
+
     prog = XDToolGui()
-    
-    
+
+
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
     splash.finish(prog)
     prog.show()
 
     sys.exit(app.exec_())
-#
+##
 #import timeit
 #os.chdir('/home/matt/dev/XDTstuff/test/carba')
 #def wrapper(func, *args, **kwargs):
@@ -5371,6 +5379,7 @@ if __name__ == '__main__':
 #    print('problems')
 #else:
 #    print('fine')
+
 #x = ins2all()
 #findSITESYM(trackAtom = 'C(01A)')
 #x = ins2all()

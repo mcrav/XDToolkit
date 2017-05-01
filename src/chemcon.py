@@ -51,7 +51,7 @@ def CPPgetEnvSig(atom, atomNeebDict):
     cppFC.terminate()
     x = res.decode('utf-8')
     x = atom.split('(')[0].upper() +','.join(sorted(x.split('^')))
-    y = hashlib.md5(bytes(x, 'utf-8'))
+    y = hashlib.sha256(bytes(x, 'utf-8'))
     envHash = y.hexdigest()
     return envHash
 
@@ -139,7 +139,7 @@ def getEnvSig(atomLabsDict, atom):
     #Sort list of paths alphabetically so it is the same no matter what order paths were found in
     #Make string with starting atom types followed by , joined sorted list of all paths.
     pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom, atomLabsDict)))
-    hashObj = hashlib.md5(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
+    hashObj = hashlib.sha256(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
     envHash = (atom, hashObj.hexdigest())
     return envHash                             #Return digest of hash value.
 

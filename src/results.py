@@ -5,6 +5,8 @@
 '''
 
 import os
+import subprocess as sub
+from utils import getAtomList
 
 def FFTDetective():
     '''
@@ -444,3 +446,32 @@ def getDMSDA(lsmFile):
 
     return (str('{0:.1f}'.format(averageDMSDA)),str(max(dmsdaList)),dmsdaFull) #return tuple of average dmsda, max dmsda and the dmsda dict)
 
+def setupmasTOPXD(atom):
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+        
+        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+        for line in mas:
+            #Detect end of ATOM table
+            if line.startswith('ATBP *atoms'):
+                row = line.split()
+                row[2] = atom
+                newLine = ' '.join(row) + '\n'
+                newmas.write(newLine)
+
+            else:
+                newmas.write(line)
+
+    os.remove('xd.mas')
+    os.rename('xdnew.mas','xd.mas')
+
+def runTOPXD(atomList):
+    for atom in atomList:
+        setupmasTOPXD(atom)
+        file = open('topxd_' + atom, 'w')
+        topxd = sub.Popen('/home/matt/dev/XDTstuff/xd-distr/bin/topxd', shell = False, cwd = os.getcwd(), stdout = file)
+        topxd.wait()
+        file.close()
+        
+        
+os.chdir('/home/matt/dev/XDTstuff/topxdtest')
+runTOPXD(getAtomList())

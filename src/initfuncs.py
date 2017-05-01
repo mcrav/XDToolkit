@@ -6,6 +6,8 @@ import os
 import numpy as np
 import itertools
 import copy
+import multiprocessing as mp
+from functools import partial
 #from time import time
 
 def ins2fracPos(insFile):
@@ -83,6 +85,23 @@ def getCombos(coord, xSymOps, ySymOps, zSymOps):
                 combos.append((np.array([xval, yval, zval]), (xSymOps[i], ySymOps[j], zSymOps[k])))
 
     return(combos)
+
+def getCombosMp(xSymOps, ySymOps, zSymOps, coord):
+    '''
+    Create all combinations of x, x+1, x-1 for x,y,z. Return combinations.
+    '''
+    combos = []
+
+    xs = [coord[0], coord[0]-1, coord[0]+1]
+    ys = [coord[1], coord[1]-1, coord[1]+1]
+    zs = [coord[2], coord[2]-1, coord[2]+1]
+
+    for i,xval in enumerate(xs):
+        for j,yval in enumerate(ys):
+            for k,zval in enumerate(zs):
+                combos.append((np.array([xval, yval, zval]), (xSymOps[i], ySymOps[j], zSymOps[k])))
+
+    return(tuple(coord), combos)
 
 def atoms2angle(atoms, atomPos, distances, metricMatrix):
     '''
@@ -198,6 +217,7 @@ def makeMetricMatrix(a, b, c, alpha, beta, gamma):
     return np.array([[a**2, a*b*np.cos(gamma), a*c*np.cos(beta)],
                     [b*a*np.cos(gamma), b**2, b*c*np.cos(alpha)],
                     [c*a*np.cos(beta), c*b*np.cos(alpha), c**2]])
+    
 @timeDec
 def findBondingAtoms(unitCellParams, atomPairs, atomPos, specAtomPos, trackBondAtoms = None):
     '''
@@ -209,9 +229,21 @@ def findBondingAtoms(unitCellParams, atomPairs, atomPos, specAtomPos, trackBondA
     zSymOps = ['z','z+1','z-1']
     specDistances = {}
     distances = {}
+    atomList = []
     neebPairs = []
     neebSpecialPairs = []
     i=0                 #i is counter for creating .combo1 type labels
+    comboDict = {}
+    
+    for pair in atomPairs:
+        if pair[0] not in atomList:
+            atomList.append(pair[0])
+        if pair[1] not in atomList:
+            atomList.append(pair[1])    
+    
+    for atom in atomList:
+        for pos in atomPos[atom]:
+            comboDict[tuple(pos[0])] = getCombos(pos[0], xSymOps, ySymOps, zSymOps)
 
     for pair in atomPairs:
 
@@ -245,7 +277,9 @@ def findBondingAtoms(unitCellParams, atomPairs, atomPos, specAtomPos, trackBondA
 
                 else:
                     #Get all x,y,z+-1 combos
-                    for combo in getCombos(atom1c, xSymOps, ySymOps, zSymOps):
+                    #for combo in getCombos(atom1c, xSymOps, ySymOps, zSymOps):
+                    for combo in comboDict[tuple(pos[0])]:
+                        
                         bondDist = getBondDist(combo[0], atom2c, *unitCellParams)
                         #Testing
                         if trackBondAtoms:
