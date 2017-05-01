@@ -82,7 +82,7 @@
      <item>
       <widget class="QCheckBox" name="incFilesBox">
        <property name="text">
-        <string>Send shelx.ins, shelx.hkl files for debugging.</string>
+        <string>Send shelx.ins and shelx.hkl files for debugging.</string>
        </property>
       </widget>
      </item>

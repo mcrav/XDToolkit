@@ -3,7 +3,7 @@
 #-------------------RESET BOND----------------------------------------
 ######################################################################
 '''
-from utils import lab2type
+from utils import lab2type, atomTableBegins, atomTableEnds
 import os
 import copy
 
@@ -50,7 +50,7 @@ def getHList():
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
             for line in mas:
     
-                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                if atomTableEnds(line):
                     atomTab = False
     
                 #If 'All' is unchecked, make dictionary with H atoms inputted by user, their connected C atoms and inputted bond distance (1.09 default)
@@ -59,7 +59,7 @@ def getHList():
                     Hs.append(row[0].upper())
               
     
-                if line.startswith('ATOM     ATOM0'):
+                if atomTableBegins(line):
                     atomTab = True
                     
     return Hs
@@ -129,7 +129,7 @@ def resetBond(length,atoms,allornot = False):
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             #If 'All' is unchecked, make dictionary with H atoms inputted by user, their connected C atoms and inputted bond distance (1.09 default)
@@ -146,7 +146,7 @@ def resetBond(length,atoms,allornot = False):
 
                 resetBonds[row[0]] = [row[1],row[0],length]
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
             #Add RESET BOND instructions that aren't in the new list to the list so they are written
@@ -494,7 +494,7 @@ def autoResetBond(atomLabsDict, atomTypeDict):
 
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab and line.startswith('H('):
@@ -503,7 +503,7 @@ def autoResetBond(atomLabsDict, atomTypeDict):
                 if row[0].upper() not in resetBondsAdded:
                     missedAtoms.append(row[0])
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     return missedAtoms

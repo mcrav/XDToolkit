@@ -6,6 +6,12 @@
 
 import os
 
+def atomTableEnds(line):
+    return (line.startswith('END ATOM') or line.startswith('!') or line.startswith('DUM'))
+
+def atomTableBegins(line):
+    return (line.startswith('ATOM     ATOM0'))
+
 def listjoin(listItem, divider):
     return divider.join(listItem).strip(divider)
 
@@ -256,7 +262,7 @@ def findMasCHEMCON():
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -264,7 +270,7 @@ def findMasCHEMCON():
                 if len(row) == 13:
                     chemcon[row[0]] = row[12]
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     return chemcon
@@ -295,14 +301,16 @@ def getAtomList():
         atoms = []
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
                 row = line.split()
                 atoms.append(row[0].upper())
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
                 
     return atoms
+
+

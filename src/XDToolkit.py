@@ -14,6 +14,8 @@ import sys
 import webbrowser
 from shutil import copyfile, rmtree
 from collections import Counter
+import multiprocessing as mp
+from functools import partial
 
 from xdcool import Ui_MainWindow
 from pref import Ui_pref
@@ -45,7 +47,7 @@ from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpop
 
 from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat,
                    getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime,
-                   coords2tuple, listjoin, getAtomList)
+                   coords2tuple, listjoin, getAtomList, atomTableBegins, atomTableEnds)
 
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
                      findCHEMCONbyInputAtoms, CPPgetEnvSig)
@@ -185,8 +187,6 @@ def initialiseGlobVars():
 #-------------------CHEMCON------------------------------------------
 #####################################################################
 '''
-import multiprocessing as mp
-from functools import partial
 
 @timeDec
 def findCHEMCON():
@@ -212,27 +212,40 @@ def findCHEMCON():
         envs = {}
         CHEMCON = {}
         pool = mp.Pool(5)
-        #atomEnv = pool.map(partial(getEnvSig, atomLabs), atoms)
         atomEnv = pool.map_async(partial(getEnvSig, atomLabs), atoms).get()
         pool.close()
 
         for item in atomEnv:
-            globAtomEnv[item[0]] = item[1]
+            globAtomEnv[spec2norm(item[0])] = item[1]
             envs.setdefault(item[1],[]).append(item[0])
         #Organise hash value dictionary into dictionary of parent atoms that appear first in ATOM table,
         #and children that appear further down.
-        for env, atoms in envs.items():
-            if len(atoms) > 1:
-                CHEMCON[atoms[0]] = atoms[1:]
-            else:
-                CHEMCON[atoms[0]] = []
+        hashParents = {}
+        with open('xd.mas','r') as mas:
+            atomTab = False
+            for line in mas:
+                if atomTableEnds(line):
+                    atomTab = False
+    
+                elif atomTab:
+                    row = line.upper().split()
+                    atomHash = globAtomEnv[row[0]]
+                    if atomHash not in hashParents:
+                        hashParents[atomHash] = row[0]
+                        CHEMCON[row[0]] = []
+                    else:
+                        CHEMCON[hashParents[atomHash]].append(row[0])
+                        
+                elif atomTableBegins(line):
+                    atomTab = True
+                    
                 
         with open(chemconFilePath, 'w') as chemconCache:
             chemconCache.write(str(CHEMCON))
             
         with open(atomEnvFilePath, 'w') as envCache:
             envCache.write(str(globAtomEnv))
-
+            
     return CHEMCON
 
 
@@ -379,7 +392,7 @@ def setupKappa(mode = 'default'):
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -447,7 +460,7 @@ def setupKappa(mode = 'default'):
             else:
                 newmas.write(line)
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
         kapInpRes('xd.res', inpTable, i)
@@ -642,7 +655,7 @@ def mm2Tom():
 
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -664,7 +677,7 @@ def mm2Tom():
             else:
                 newmas.write(line)
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     #Create new xd.mas file
@@ -721,7 +734,7 @@ def lowerSymTo1():
             if line.startswith('KEY     XYZ'):
                 keyTab = True
 
-            elif line.startswith('ATOM     ATOM0'):
+            elif atomTableBegins(line):
                 atomTab = True
 
     #Create new xd.mas file
@@ -1538,7 +1551,7 @@ def writeSITESYM(atomSymDict):
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -1573,7 +1586,7 @@ def writeSITESYM(atomSymDict):
             else:
                 newmas.write(line)
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     #Create new xd.mas file
@@ -1594,7 +1607,7 @@ def findUnaddedSym():
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -1604,7 +1617,7 @@ def findUnaddedSym():
                 if len(row)==11 or row[11] == 'NO':
                     noSymAtoms.append(row[0])
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     return noSymAtoms
@@ -1977,7 +1990,7 @@ def writeLocalCoordSys(atomLocCoordsDict):
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -2005,7 +2018,7 @@ def writeLocalCoordSys(atomLocCoordsDict):
             else:
                 newmas.write(line)
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     #Create new xd.mas file
@@ -2023,7 +2036,7 @@ def check4CustomLCS():
     with open('xd.mas','r') as mas:
 
         for line in mas:
-            if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -2031,7 +2044,7 @@ def check4CustomLCS():
                 row = line.split()
                 masAtoms[row[0]] = line
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     copyfile('xd.mas','xdcopy.mas')
@@ -2041,7 +2054,7 @@ def check4CustomLCS():
     with open('xd.mas') as mas:
 
         for line in mas:
-            if line.startswith('END ATOM') or line.startswith('!DUM') or line.startswith('DUM'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -2050,7 +2063,7 @@ def check4CustomLCS():
                 if line != masAtoms[row[0]]:
                     customAtoms[row[0]] = masAtoms[row[0]]
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     os.remove('xd.mas')
@@ -2771,7 +2784,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.backupConfirmStr = 'Current files backed up to: '
         self.labList = [self.cwdStatusLab, self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delResetBondLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.resBackupLab, self.getResLab, self.resNPPLab, self.loadBackupLab]
         self.tabWidget.setCurrentIndex(0)
-        toolboxes = [self.rbToolbox, self.backupToolbox, self.resToolbox, self.toolsToolbox]
+        toolboxes = [self.rbToolbox, self.resToolbox, self.toolsToolbox]
         for item in toolboxes:
             item.setCurrentIndex(0)
         #Display current working directory on startup.
@@ -2869,9 +2882,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.toolbarMercury.triggered.connect(self.openMerc)
         self.toolbarRes2Inp.triggered.connect(self.res2inpPress)
 
-        self.xdWizardTestBut.clicked.connect(self.wizTest)
-        self.wiz2ndStageObjects = [self.wizBackupInput, self.xdWizardBut, self.wizReuseMasBut, self.wizUniSnlMax, self.xdWizardTestBut, self.wizHighSnlMin, self.wizHighSnlMax, self.wizLowSnlMin, self.wizLowSnlMax]
+        self.wiz2ndStageObjects = [self.wizAdvOptBut, self.wizBackupInput, self.xdWizardBut, self.wizReuseMasBut, self.wizUniSnlMax, self.wizHighSnlMin, self.wizHighSnlMax, self.wizLowSnlMin, self.wizLowSnlMax]
         self.wizSnlInput = [self.wizHighSnlMin, self.wizHighSnlMax, self.wizLowSnlMin, self.wizLowSnlMax]
+        for item in self.wizSnlInput:
+            item.editingFinished.connect(self.wizTest)
+            
         self.xdWizINIBut.clicked.connect(self.xdWizINI)
         self.xdWizardBut.clicked.connect(self.xdWizRun)
         self.xdWizCmpID.returnPressed.connect(self.xdWizINI)
@@ -2947,6 +2962,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.wizLowerSymBox.setCheckable(True)
         self.model.appendRow(self.wizLowerSymBox)
         self.wizAdvList.setModel(self.model)
+        
+        self.wizAdvList.setStyleSheet('padding: 10px;')
         
         self.wizAdvOptBut.clicked.connect(self.wizAdvOptToggle)
         self.wizAdvOptOpen = False
@@ -3139,13 +3156,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         except ValueError:
             s = False
         print(c)
+        print('chemcon')
         print(r)
         print(s)
         print(f)
         print(m)
         if c and not r and s and f and m:
-
-            self.xdWizardBut.setEnabled(True)
+            
+            if self.wizLowSnlMin.isEnabled():
+                self.xdWizardBut.setEnabled(True)
 #            estTime = totalEstTime()
 #            minutes, seconds = divmod(estTime, 60)
 #            hours, minutes = divmod(minutes, 60)
@@ -3158,13 +3177,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             wizStr = ''
 
             if not c:
-                wizStr += '-Add chemical equivalency in CHEMCON tab.<br>'
+                wizStr += '-Add chemical constraints.<br>'
 
             if r:
-                wizStr += '-Add reset bond instructions in RESET BOND tab for atoms:\n\n{}<br>'.format(listjoin(r, ', '))
+                wizStr += '-Add bond constraints for atoms:\n\n{}<br>'.format(listjoin(r, ', '))
 
             if not m:
-                wizStr += '{0}{1}'.format('-Add local coordinate system and SITESYM manually for ', ', '.join(missingSym).strip(', '))
+                wizStr += '{0}{1}'.format('-Add local coordinate system and local symmetry manually for ', ', '.join(missingSym).strip(', '))
 
             if not s:
                 wizStr += '-Invalid input for sin(&theta;/&lambda;) cutoffs.<br>'
@@ -3183,7 +3202,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         testRes = self.wizTest()
         procMsg = '\nProceed anyway?'
-        rWarnMsg = 'No reset bond instructions detected for {}.\n'.format(listjoin(testRes[1], ', '))
+        rWarnMsg = 'No bond restraints detected for {}.\n'.format(listjoin(testRes[1], ', '))
         cWarnMsg = 'No chemical constraints detected.\n'
         mWarnMsg = 'No local coordinate system added for {}'.format(', '.join(testRes[2][1]).strip(', '))
         testPassed = True
@@ -3232,15 +3251,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
             self.xdWizRunning.rejected.connect(self.xdWizFinished)
             self.xdWizRunning.finishedSignal.connect(self.xdWizFinished)
-
-            if self.wizSeqMultBox.isChecked():
+            if self.wizSeqMultBox.checkState():
                 self.xdWizRunning.refList = ['0 - XDINI', '1 - Scale factors', '2 - High angle non-H positions and ADPs',
                             '3 - Low angle H positions and isotropic ADPs', '4 - Kappa and monopoles', '5 - Dipoles',
                             '6 - Quadrupoles', '7 - Octupoles', '8 - Hexadecapoles',
                             '9 - Multipoles, and non-H positions and ADPs', '10 - Lower symmetry',
                             '11 - Final refinement']
 
-            if not self.lowerSymBox.isChecked():
+            if not self.wizLowerSymBox.checkState():
                 self.xdWizRunning.refList = self.xdWizRunning.refList[:-2]
 
             global wizHighSnlMin
@@ -3975,13 +3993,33 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.resetLabels()
         self.check4res()
 
+        if not os.path.isfile('shelx.hkl'):
+            hkl = False
+        if not os.path.isfile('shelx.ins'):
+            ins = False
+            
+        if not hkl or not ins:
+            msg = QMessageBox()
+            msg.setWindowTitle('Files not found')
+            msgStr = ''
+            if not ins and hkl:
+                msgStr = "Couldn't find <i>shelx.ins</i>."
+            elif not hkl and ins:
+                msgStr = "Couldn't find <i>shelx.hkl</i>."
+            
+            elif not ins and not hkl:
+                msgStr = "Couldn't find <i>shelx.ins</i> or <i>shelx.hkl</i>."
+            
+            msg.setText(msgStr)
+            msg.exec_()
+
         try:
             initialiseGlobVars()
             self.enableCheckNeebsButs()
             self.changeUserIns()
             self.resetWizInput()
 
-        except Exception:
+        except Exception:               
             self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
 
     def openCwd(self):
@@ -4017,8 +4055,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         hkl = False
 
         folder = str(QFileDialog.getExistingDirectory(None, "Select Structure Solution Folder"))
-        projectFolder = str(QFileDialog.getExistingDirectory(None, "Select Project Folder"))
-
+        projectFolder = os.getcwd()
+        
         for file in os.listdir(folder):
             if file[-4:] == '.res':
                 copyfile((folder + '/' + file), (projectFolder  + '/shelx.ins'))
@@ -4028,7 +4066,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 hkl = False
 
         if ins and hkl:
-            os.chdir(projectFolder)
             self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
             initialiseGlobVars()
             return True
@@ -4280,7 +4317,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         snlMin = str(self.manRefSnlMin.text()).strip()
         snlMax= str(self.manRefSnlMax.text()).strip()
         r = check4RB()
-        rWarnMsg = 'No reset bond instructions detected.\n'
+        rWarnMsg = 'No bond constraints detected.\n'
         c = check4CHEMCON()
         cWarnMsg = 'No chemical constraints detected.\n'
         procMsg = '\nProceed anyway?'
@@ -4402,7 +4439,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
                                 missingSym = findUnaddedSym()
                                 if missingSym:
-                                    statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add SITESYM and local coordinate system manually in 'Tools' tab.'''
+                                    statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add local symmetry and local coordinate system manually in 'Tools' tab.'''
                                     self.manRefSetupLab.setText(statusStr)
                                 else:
                                     self.manRefSetupLab.setText(successStr)
@@ -4414,7 +4451,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                         missingSym = findUnaddedSym()
 
                         if missingSym != []:
-                            statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add SITESYM and local coordinate system manually in 'Tools' tab.'''
+                            statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add local symmetry and local coordinate system manually in 'Tools' tab.'''
                             self.manRefSetupLab.setText(statusStr)
                         else:
                             self.manRefSetupLab.setText(successStr)
@@ -4453,7 +4490,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         try:
             successStr = 'xd.mas updated. Ready to run XDLSM.'
             failureStr = 'Error encountered. xd.mas not setup.'
-            rWarnMsg = 'No reset bond instructions detected.\n'
+            rWarnMsg = 'No bond constraints detected.\n'
             cWarnMsg = 'No chemical constraints detected.\n'
             procMsg = '\nProceed anyway?'
             if not c or not r:
@@ -4478,7 +4515,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
                         missingSym = findUnaddedSym()
                         if missingSym:
-                            statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add SITESYM and local coordinate system manually in 'Tools' tab.'''
+                            statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add local symmetry and local coordinate system manually in 'Tools' tab.'''
                             self.manRefSetupLab.setText(statusStr)
                         else:
                             self.manRefStatusLab.setText(successStr)
@@ -4499,7 +4536,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
                     missingSym = findUnaddedSym()
                     if missingSym:
-                        statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add SITESYM and local coordinate system manually in 'Tools' tab.'''
+                        statusStr = 'Unable to find local coordinate system for atoms: ' + ', '.join(missingSym) + '''\nPlease add local symmetry and local coordinate system manually in 'Tools' tab.'''
                         self.manRefSetupLab.setText(statusStr)
                     else:
                         self.manRefStatusLab.setText(successStr)
@@ -4546,14 +4583,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             c = check4CHEMCON()
 
             if not c:
-                reqStr += '''- Add chemical equivalency in 'CHEMCON' tab before setting up xd.mas.\n'''
+                reqStr += '''- Add chemical constraints before setting up xd.mas.\n'''
 
         if refNum in (2,3,4,5,6,7,8,9,10,11):
 
             r = check4RB()
 
             if not r:
-                reqStr += '''- Add reset bond instructions in 'RESET BOND' tab before setting up xd.mas.'''
+                reqStr += '''- Add bond constraints before setting up xd.mas.'''
 
         self.manRefSetupLab.setText(reqStr)
 
@@ -4630,9 +4667,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             missedAtoms = autoResetBond(copy.copy(globAtomLabs), copy.copy(globAtomTypes))
-            resStr = 'Auto RESET BOND finished.' + '\n'
+
             if len(missedAtoms) > 0:
-                resStr = 'Auto RESET BOND finished.' + '\n' + 'Appropriate bond lengths not found for atoms:' + '\n' + '\n'
+                resStr = 'Appropriate bond constraints not found for atoms:' + '\n' + '\n'
 
                 i = 0
                 for atom in missedAtoms:
@@ -4645,9 +4682,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
                 resStr = resStr[:-2]
 
-                resStr += '\n' + '\n' + ' Please add these bond lengths manually before continuing.'
+                resStr += '\n' + '\n' + ' Please add these bond constraints manually before continuing.'
             else:
-                resStr = 'Auto RESET BOND finished.' + '\n' + 'RESET BOND instructions added for all H atoms.'
+                resStr =  'Bond constraints added for all H atoms.'
             self.autoResetBondStatusLab.setText(resStr)
         except:
             self.autoResetBondStatusLab.setText('An error occurred. Please check ins file is in project folder.')
@@ -4698,7 +4735,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 resetBond(str(self.resetLengthInput.text()),None,True)
             statusStr = ''
             if resetAtomList:
-                statusStr += '{}{}<br>Bond length: {}'.format('RESET BOND instructions added for atoms ',resetAtomStr, str(self.resetLengthInput.text()))
+                statusStr += '{}{}<br>Bond length: {}'.format('Bond constraints added for atoms ',resetAtomStr, str(self.resetLengthInput.text()))
             if wrongAtoms:
                 statusStr += '<br><br>{}{}'.format('Following atom labels are incorrect: ', ', '.join(wrongAtoms).strip(', '))
             self.resetBondStatusLab.setText(statusStr)
@@ -4729,12 +4766,12 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 
 #########################################################################
-#--------------------CHEMCON---------------------------------------------
+#--------------------CHEMICAL CONSTRAINTS--------------------------------
 #########################################################################
 
     def runCHEMCON(self):
         '''
-        Handle user clicking 'Add CHEMCON'.
+        Handle user clicking 'Add chemical constraints'.
         '''
         global globAtomEnv
         chemcon = {}
@@ -4742,7 +4779,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if self.autoCHEMCON.isChecked():
             try:
                 writeCHEMCON(findCHEMCON())
-                self.CHEMCONStatusLab.setText('CHEMCON added and xd.mas updated')
+                self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas updated')
             except PermissionError:
                 self.CHEMCONStatusLab.setText(self.permErrorMsg)
             except Exception as e:
@@ -4756,7 +4793,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             try:
                 chemcon = findCHEMCONbyInputElement(inputElementList)
                 writeCHEMCON(chemcon)
-                self.CHEMCONStatusLab.setText('{} {}'.format('CHEMCON added and xd.mas updated for elements', ', '.join(inputElementList).strip(', ')))
+                self.CHEMCONStatusLab.setText('{} {}'.format('Chemical constraints added and xd.mas updated for elements', ', '.join(inputElementList).strip(', ')))
             except PermissionError:
                 self.CHEMCONStatusLab.setText(self.permErrorMsg)
             except Exception as e:
@@ -4796,7 +4833,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                         chemcon = findCHEMCONbyInputAtoms(inputAtomList)
                         print(chemcon)
                         writeCHEMCON(chemcon)
-                        statusLabStr = ('{} {}'.format('CHEMCON added and xd.mas updated for', chemconAddedStr))
+                        statusLabStr = ('{} {}'.format('Chemical constraints added and xd.mas updated for', chemconAddedStr))
                     if wrongLabs:
                         statusLabStr += '<br><br>{}{}'.format('\nFollowing atom labels are incorrect: ', ', '.join(wrongLabs).strip(', '))
                     self.CHEMCONStatusLab.setText(statusLabStr)

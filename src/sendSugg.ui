@@ -73,7 +73,7 @@
        <item>
         <widget class="QLineEdit" name="emailAdInput">
          <property name="text">
-          <string/>
+          <string>Only include if you want a response</string>
          </property>
          <property name="placeholderText">
           <string>Only include if you are happy to be contacted</string>

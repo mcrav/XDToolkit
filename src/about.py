@@ -12,7 +12,7 @@ class Ui_aboutBox(object):
     def setupUi(self, aboutBox):
         aboutBox.setObjectName("aboutBox")
         aboutBox.setWindowModality(QtCore.Qt.WindowModal)
-        aboutBox.resize(767, 250)
+        aboutBox.resize(767, 270)
         font = QtGui.QFont()
         font.setFamily("Consolas")
         font.setPointSize(10)

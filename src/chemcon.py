@@ -7,7 +7,7 @@
 import os
 import hashlib
 from subprocess import PIPE, Popen
-from utils import listjoin
+from utils import listjoin, atomTableBegins, atomTableEnds
 from devtools import timeDec
 '''
 ######################################
@@ -154,7 +154,7 @@ def removeCHEMCON():
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
             #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -168,7 +168,7 @@ def removeCHEMCON():
                 newmas.write(line)
 
             #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     os.remove('xd.mas')
@@ -189,7 +189,7 @@ def findCHEMCONbyElement():
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
             #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             #In atom table make CHEMCON dictionary
@@ -216,7 +216,7 @@ def findCHEMCONbyElement():
 
                     prevElement = row[0][0:1]       #Update previous element to current element
             #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     return CHEMCON
@@ -239,7 +239,7 @@ def findCHEMCONbyInputElement(inputElementList):
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
             #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             #In atom table make CHEMCON dictionary
@@ -254,7 +254,7 @@ def findCHEMCONbyInputElement(inputElementList):
                         elementParents[line[:2]] = row[0]
                     
             #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
         
     return CHEMCON
@@ -275,7 +275,7 @@ def findCHEMCONbyNeebors():
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
             #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             #In atom table make CHEMCON dictionary
@@ -335,7 +335,7 @@ def findCHEMCONbyNeebors():
                         CHEMCON[SigParentDict[chemconSig]].append(row[0])    #Add atoms of same element to dictionary
 
             #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     return CHEMCON
@@ -357,7 +357,7 @@ def findCHEMCONbyInputAtoms(atomList):
             #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
             #Detect end of ATOM table
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             #In atom table make CHEMCON dictionary
@@ -388,7 +388,7 @@ def findCHEMCONbyInputAtoms(atomList):
 
 
             #Detect start of ATOM table
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     return CHEMCON
@@ -408,7 +408,7 @@ def writeCHEMCON(CHEMCONdict):
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
 
-            if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+            if atomTableEnds(line):
                 atomTab = False
 
             if atomTab:
@@ -441,7 +441,7 @@ def writeCHEMCON(CHEMCONdict):
             else:
                 newmas.write(line)
 
-            if line.startswith('ATOM     ATOM0'):
+            if atomTableBegins(line):
                 atomTab = True
 
     #Create new xd.mas file
@@ -462,7 +462,7 @@ def check4CHEMCON():
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
             for line in mas:
 
-                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                if atomTableEnds(line):
                     atomTab = False
 
                 if atomTab:
@@ -472,7 +472,7 @@ def check4CHEMCON():
                         chemcon = True
                         break
 
-                if line.startswith('ATOM     ATOM0'):
+                if atomTableBegins(line):
                     atomTab = True
 
     except FileNotFoundError:

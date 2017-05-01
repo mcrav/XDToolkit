@@ -444,7 +444,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.5.1</string>
+   <string>XD Toolkit 0.5.2</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -466,7 +466,7 @@
          </size>
         </property>
         <property name="toolTip">
-         <string>Run XDLSM with current xd.mas and xd.inp files in project folder.</string>
+         <string/>
         </property>
         <property name="text">
          <string> Run XDLSM</string>
@@ -495,7 +495,7 @@
     <item row="2" column="0" colspan="4">
      <widget class="QTabWidget" name="tabWidget">
       <property name="toolTip">
-       <string>Setup chemical equivalency constraints</string>
+       <string/>
       </property>
       <property name="autoFillBackground">
        <bool>true</bool>
@@ -509,6 +509,9 @@
       <widget class="QWidget" name="tab_7">
        <attribute name="title">
         <string>Wizard</string>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Setup instructions for XD Wizard</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_32">
         <item row="0" column="0">
@@ -595,7 +598,7 @@
              <x>0</x>
              <y>0</y>
              <width>1077</width>
-             <height>577</height>
+             <height>544</height>
             </rect>
            </property>
            <property name="autoFillBackground">
@@ -680,6 +683,9 @@
                     <width>200</width>
                     <height>0</height>
                    </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>Check that automatically generated nearest neighbours are correct</string>
                   </property>
                   <property name="text">
                    <string>Check neighbours</string>
@@ -772,6 +778,9 @@
                     </property>
                     <property name="acceptDrops">
                      <bool>true</bool>
+                    </property>
+                    <property name="inputMethodHints">
+                     <set>Qt::ImhNone</set>
                     </property>
                     <property name="text">
                      <string>0.7</string>
@@ -1007,13 +1016,16 @@
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_53">
                 <property name="topMargin">
-                 <number>5</number>
+                 <number>0</number>
                 </property>
                 <property name="bottomMargin">
                  <number>5</number>
                 </property>
                 <item>
                  <widget class="QPushButton" name="wizAdvOptBut">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="maximumSize">
                    <size>
                     <width>100</width>
@@ -1210,22 +1222,6 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="xdWizardTestBut">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>200</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>Prerun Test</string>
-                </property>
-               </widget>
-              </item>
-              <item>
                <widget class="Line" name="line_7">
                 <property name="maximumSize">
                  <size>
@@ -1318,6 +1314,9 @@
       <widget class="QWidget" name="tab">
        <attribute name="title">
         <string>Manual Refinement</string>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Do refinement step by step</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_6">
         <item row="0" column="0">
@@ -1500,6 +1499,9 @@
                       <width>200</width>
                       <height>0</height>
                      </size>
+                    </property>
+                    <property name="toolTip">
+                     <string>Check that automatically generated nearest neighbours are correct</string>
                     </property>
                     <property name="text">
                      <string>Check neighbours</string>
@@ -1771,6 +1773,11 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="manRefSetupLab">
+                  <property name="font">
+                   <font>
+                    <italic>true</italic>
+                   </font>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -1867,6 +1874,11 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="manRefBackupLab">
+                  <property name="font">
+                   <font>
+                    <italic>true</italic>
+                   </font>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -1950,7 +1962,7 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>Reset Bonds</string>
+        <string>Bond Constraints</string>
        </attribute>
        <attribute name="toolTip">
         <string>Constrain X-H bond lengths</string>
@@ -1979,19 +1991,19 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="page_11">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>593</width>
+               <height>314</height>
               </rect>
              </property>
              <attribute name="label">
-              <string>Automatically add reset bond instructions</string>
+              <string>Automatically add bond constraints</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_19">
               <item row="0" column="0">
@@ -2421,12 +2433,12 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>425</width>
+               <height>305</height>
               </rect>
              </property>
              <attribute name="label">
-              <string>Manually add reset bond instructions</string>
+              <string>Manually add bond constraints</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_20">
               <item row="0" column="0">
@@ -2555,7 +2567,7 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>Add reset bond instructions</string>
+                     <string>Add bond constraints</string>
                     </property>
                    </widget>
                   </item>
@@ -2596,6 +2608,11 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="resetBondStatusLab">
+                  <property name="font">
+                   <font>
+                    <italic>true</italic>
+                   </font>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -2631,7 +2648,7 @@
               </rect>
              </property>
              <attribute name="label">
-              <string>Bulk edit reset bond instructions</string>
+              <string>Bulk edit bond constraints</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_18">
               <item row="0" column="0">
@@ -2762,6 +2779,9 @@
        <attribute name="title">
         <string>Chemical Constraints</string>
        </attribute>
+       <attribute name="toolTip">
+        <string>Setup chemical equivalency constraints</string>
+       </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2835,17 +2855,10 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_30">
-            <property name="text">
-             <string>Make sure you haven't set any two atoms equivalent that have different SITESYMs!</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QPushButton" name="addCHEMCONBut">
             <property name="maximumSize">
              <size>
-              <width>200</width>
+              <width>300</width>
               <height>16777215</height>
              </size>
             </property>
@@ -2853,7 +2866,7 @@
              <enum>Qt::LeftToRight</enum>
             </property>
             <property name="text">
-             <string>Add CHEMCON</string>
+             <string>Add chemical constraints</string>
             </property>
            </widget>
           </item>
@@ -2893,6 +2906,9 @@
        <attribute name="title">
         <string>Results</string>
        </attribute>
+       <attribute name="toolTip">
+        <string>Analyse results and create diagrams</string>
+       </attribute>
        <layout class="QGridLayout" name="gridLayout_16">
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -2911,15 +2927,15 @@
           <item>
            <widget class="QToolBox" name="resToolbox">
             <property name="currentIndex">
-             <number>4</number>
+             <number>5</number>
             </property>
             <widget class="QWidget" name="page_18">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>260</height>
+               <width>257</width>
+               <height>88</height>
               </rect>
              </property>
              <attribute name="label">
@@ -2955,6 +2971,11 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="getResLab">
+                  <property name="font">
+                   <font>
+                    <italic>false</italic>
+                   </font>
+                  </property>
                   <property name="textFormat">
                    <enum>Qt::AutoText</enum>
                   </property>
@@ -2985,8 +3006,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>260</height>
+               <width>664</width>
+               <height>90</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3094,8 +3115,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>260</height>
+               <width>485</width>
+               <height>173</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3202,13 +3223,6 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="resFourMap">
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <spacer name="verticalSpacer_9">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>
@@ -3230,8 +3244,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>260</height>
+               <width>328</width>
+               <height>67</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3287,8 +3301,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>260</height>
+               <width>265</width>
+               <height>88</height>
               </rect>
              </property>
              <attribute name="label">
@@ -3324,6 +3338,11 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="resNPPLab">
+                  <property name="font">
+                   <font>
+                    <italic>true</italic>
+                   </font>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -3469,6 +3488,9 @@
        <attribute name="title">
         <string>Tools</string>
        </attribute>
+       <attribute name="toolTip">
+        <string>Add local coordinate systems and dummy atoms</string>
+       </attribute>
        <layout class="QGridLayout" name="gridLayout_7">
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -3493,7 +3515,7 @@
              <number>1</number>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <property name="tabSpacing">
              <number>6</number>
@@ -3863,6 +3885,11 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="alcsStatusLab">
+                  <property name="font">
+                   <font>
+                    <italic>true</italic>
+                   </font>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -3890,8 +3917,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>238</width>
+               <height>270</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4043,6 +4070,11 @@
                 </item>
                 <item>
                  <widget class="QLabel" name="addDUMLab">
+                  <property name="font">
+                   <font>
+                    <italic>true</italic>
+                   </font>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -4073,8 +4105,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1051</width>
-               <height>347</height>
+               <width>344</width>
+               <height>194</height>
               </rect>
              </property>
              <attribute name="label">
@@ -4185,6 +4217,9 @@
        <attribute name="title">
         <string>Backup</string>
        </attribute>
+       <attribute name="toolTip">
+        <string>Load backups</string>
+       </attribute>
        <layout class="QGridLayout" name="gridLayout_31">
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -4201,198 +4236,142 @@
            <number>20</number>
           </property>
           <item>
-           <widget class="QToolBox" name="backupToolbox">
-            <property name="lineWidth">
-             <number>1</number>
-            </property>
-            <property name="currentIndex">
+           <layout class="QVBoxLayout" name="verticalLayout_19">
+            <property name="topMargin">
              <number>0</number>
             </property>
-            <property name="tabSpacing">
-             <number>6</number>
-            </property>
-            <widget class="QWidget" name="page_15">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>1051</width>
-               <height>376</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Load backup</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_23">
-              <item row="1" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_34">
-                <property name="leftMargin">
-                 <number>10</number>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="loadBackupBut">
+                <property name="maximumSize">
+                 <size>
+                  <width>150</width>
+                  <height>16777215</height>
+                 </size>
                 </property>
-                <property name="topMargin">
-                 <number>10</number>
+                <property name="text">
+                 <string>Load backup</string>
                 </property>
-                <property name="rightMargin">
-                 <number>10</number>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="loadBackupLab">
+                <property name="font">
+                 <font>
+                  <italic>true</italic>
+                 </font>
                 </property>
-                <property name="bottomMargin">
-                 <number>10</number>
+                <property name="text">
+                 <string/>
                 </property>
-                <item>
-                 <widget class="QPushButton" name="loadBackupBut">
-                  <property name="maximumSize">
-                   <size>
-                    <width>300</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Select backup to load</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="loadBackupLab">
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_3">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
+               </widget>
               </item>
              </layout>
-            </widget>
-            <widget class="QWidget" name="page_14">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>1051</width>
-               <height>376</height>
-              </rect>
-             </property>
-             <attribute name="label">
-              <string>Backup files</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_22">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_27">
-                <property name="leftMargin">
-                 <number>10</number>
+            </item>
+            <item>
+             <widget class="Line" name="line_13">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_32">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="customBackupBut">
+                <property name="minimumSize">
+                 <size>
+                  <width>150</width>
+                  <height>0</height>
+                 </size>
                 </property>
-                <property name="topMargin">
-                 <number>10</number>
+                <property name="maximumSize">
+                 <size>
+                  <width>150</width>
+                  <height>16777215</height>
+                 </size>
                 </property>
-                <property name="rightMargin">
-                 <number>10</number>
+                <property name="baseSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
                 </property>
-                <property name="bottomMargin">
-                 <number>10</number>
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
                 </property>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_32">
-                  <property name="leftMargin">
-                   <number>20</number>
-                  </property>
-                  <item>
-                   <widget class="QPushButton" name="customBackupBut">
-                    <property name="maximumSize">
-                     <size>
-                      <width>200</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="baseSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="text">
-                     <string>Backup files</string>
-                    </property>
-                    <property name="autoExclusive">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="customBackupInput">
-                    <property name="minimumSize">
-                     <size>
-                      <width>500</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="placeholderText">
-                     <string>Folder name for backup </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_6">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="QLabel" name="customBackupLab">
-                  <property name="font">
-                   <font>
-                    <italic>true</italic>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer_2">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
+                <property name="text">
+                 <string>Backup files</string>
+                </property>
+                <property name="autoExclusive">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="customBackupInput">
+                <property name="minimumSize">
+                 <size>
+                  <width>500</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="placeholderText">
+                 <string>Folder name for backup </string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
-            </widget>
-           </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="customBackupLab">
+              <property name="font">
+               <font>
+                <italic>true</italic>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -4401,6 +4380,9 @@
       <widget class="QWidget" name="tab_8">
        <attribute name="title">
         <string>XD Programs</string>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Run XD programs</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
@@ -4520,6 +4502,11 @@
               </item>
               <item row="4" column="0">
                <widget class="QLabel" name="pkgXDLab">
+                <property name="font">
+                 <font>
+                  <italic>true</italic>
+                 </font>
+                </property>
                 <property name="text">
                  <string/>
                 </property>
@@ -4752,7 +4739,7 @@
     <string>Mercury</string>
    </property>
    <property name="toolTip">
-    <string>Open structure in molecule viewer</string>
+    <string>Open structure in structure visualizer</string>
    </property>
   </action>
   <action name="menuLoadShelx">

@@ -5,7 +5,7 @@
 '''
 
 import os
-from utils import getCellParams
+from utils import getCellParams, atomTableBegins, atomTableEnds
 
 def check4errors():
     '''
@@ -84,7 +84,7 @@ def removePhantomAtoms():
             k = 0
 
             for line in mas:
-                if line.startswith('END ATOM') or line.startswith('DUM') or line.startswith('!'):
+                if atomTableEnds(line):
                     atomTab = False
                 elif line.startswith('KAPPA'):
                     keyTab = False
@@ -117,7 +117,7 @@ def removePhantomAtoms():
                 else:
                     newmas.write(line)
 
-                if line.startswith('ATOM     ATOM0'):
+                if atomTableBegins(line):
                     atomTab = True
 
                 elif line.startswith('KEY'):
