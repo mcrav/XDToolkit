@@ -141,8 +141,9 @@ def plot_area(x, y, z):
     zdim = float(zdim)
     
     if nz == 1:
-        coord = np.mgrid[xmin+xdim/(2*nx): xmax+xdim/(2*nx): xdim/nx,\
-                   ymin+ydim/(2*ny): ymax+ydim/(2*ny): ydim/ny]
+        coord = np.mgrid[xmin+xdim/(2*nx): xmax+xdim/(2*nx): (xdim/nx),\
+                   ymin+ydim/(2*ny): ymax+ydim/(2*ny): (ydim/ny)]
+
     else:
         coord = np.mgrid[xmin+xdim/(2*nx): xmax+xdim/(2*nx): xdim/nx,\
                    ymin+ydim/(2*ny): ymax+ydim/(2*ny): ydim/ny,\
@@ -170,7 +171,7 @@ def log_contour(a, b):
             pos_contours.append(float(a[i])*(10**float(b[j])))
             neg_contours.append(-1*float(a[i])*(10**float(b[j])))
     pos_contours.sort()
-    neg_contours.sort(reverse = True)
+    neg_contours.sort()
     pos_contours = np.array(pos_contours)
     neg_contours = np.array(neg_contours)
     

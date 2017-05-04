@@ -1,0 +1,19 @@
+# Edit this file to change atomic color and/or covalent radii for XDPlotter.
+# All lines starting with '#' are treated as comments.
+#
+# Colors: Section start with 'start_color' and ends with 'end_color'. 
+# One line per entry specifying first the atomic symbol as a string: e.g. Fe
+# equal to (=) color as an HEX code (e.g. ff0000 for red)
+# DO NOT USE '#' or ''s!
+# Fe = ff0000
+#
+# Radii: Section start with 'start_radius' and ends with 'end_radius'.
+# One line per entry specifying first the atomic symbol as a string: e.g. Fe
+# equal to (=) covalent radius as a float (in Aa), e.g. 1.25:
+# Fe = 1.25
+#
+# No empty lines between start and end statements!
+start_color
+end_color
+start_radii
+end_radii

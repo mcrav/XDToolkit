@@ -13,22 +13,13 @@ def backup(folderName):
     if not os.path.isdir('{}{}{}'.format(os.getcwd(), '/',folder)):                      #Check if new folder exists
         os.makedirs(folder)                             #If it doesn't exist, make it
 
-    try:                                                #Copy all files to backup folder
-        copyfile('xd.mas',folder + '/xd.mas')           #try and except used in case one of the files
-    except:                                             #doesn't exist i.e. xd.res
-        pass
-    try:
-        copyfile('xd.inp',folder + '/xd.inp')
-    except:
-        pass
-    try:
-        copyfile('xd.res',folder + '/xd.res')
-    except:
-        pass
-    try:
-        copyfile('xd_lsm.out',folder + '/xd_lsm.out')
-    except:
-        pass
+    backupFiles = ('xd.mas','xd.inp','xd.res','xd_lsm.out','xd.cov')
+
+    for file in backupFiles:
+        try:
+            copyfile(file, folder + '/' + file)
+        except Exception:
+            pass
 
 def loadBackup(folderName):
     '''

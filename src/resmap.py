@@ -33,8 +33,9 @@ class Ui_resmap(object):
         self.gridLayout = QtWidgets.QGridLayout(resmap)
         self.gridLayout.setObjectName("gridLayout")
         self.resmapLayout = QtWidgets.QVBoxLayout()
+        self.resmapLayout.setContentsMargins(10, 10, 10, 10)
         self.resmapLayout.setObjectName("resmapLayout")
-        self.gridLayout.addLayout(self.resmapLayout, 0, 1, 1, 1)
+        self.gridLayout.addLayout(self.resmapLayout, 0, 0, 1, 1)
 
         self.retranslateUi(resmap)
         QtCore.QMetaObject.connectSlotsByName(resmap)

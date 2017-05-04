@@ -102,7 +102,8 @@ def FOU3atoms(atom, atomLabs, atomPos):
 
     for lab, neebors in neebsRaw.items():
         neebs[lab] = [item.split(',')[0] for item in neebors if item.split(',')[1] == 'asym']
-
+    
+    print(neebs.keys())
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
 
         for line in mas:                    #Go through mas file line by line
@@ -447,6 +448,9 @@ def getDMSDA(lsmFile):
     return (str('{0:.1f}'.format(averageDMSDA)),str(max(dmsdaList)),dmsdaFull) #return tuple of average dmsda, max dmsda and the dmsda dict)
 
 def setupmasTOPXD(atom):
+    '''
+    WORK IN PROGRESS: Setup xd.mas to get integrated charges from TOPXD on a given atom.
+    '''
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
         
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
@@ -465,6 +469,9 @@ def setupmasTOPXD(atom):
     os.rename('xdnew.mas','xd.mas')
 
 def runTOPXD(atomList):
+    '''
+    WORK IN PROGRESS: Run TOPXD multiple times to get integrated charges for all atoms in structure.
+    '''
     for atom in atomList:
         setupmasTOPXD(atom)
         file = open('topxd_' + atom, 'w')
@@ -472,6 +479,33 @@ def runTOPXD(atomList):
         topxd.wait()
         file.close()
         
+def setup3AtomLapmap(atoms, npoints, stepsize):
+
+    i=-1
+    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+        for line in mas:
+            if line.startswith('! Function plots'):
+                i+=1
+                
+            if i>=0 and i <9:
+                if i==5:
+                    newLine = '{0:10}{1}\n'.format('MAP       atoms ', ' '.join([atoms[0], atoms[1], atoms[2], 'npts', npoints, 'stepsize', stepsize]))
+                    print(newLine)
+                    newmas.write(newLine)
+                else:
+                    if not line.startswith('!'):
+                        newmas.write('!' + line)
+                    else:
+                        newmas.write(line)
+                i+=1
+            else:
+                newmas.write(line)
+                
+    os.remove('xd.mas')
+    os.rename('xdnew.mas','xd.mas')
+                
+                
+                
         
-os.chdir('/home/matt/dev/XDTstuff/topxdtest')
-runTOPXD(getAtomList())
+#os.chdir('/home/matt/dev/XDTstuff/topxdtest')
+#runTOPXD(getAtomList())

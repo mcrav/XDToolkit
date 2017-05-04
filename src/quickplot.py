@@ -141,7 +141,7 @@ show_symm_bonds = False
 [labels]
 label_atoms = True
 # Atoms has to be plotted to show label 
-label_symm_atoms = False 
+label_symm_atoms = False
 label_color = k
 label_size = 15
 label_x_offset = 0.1
@@ -155,7 +155,7 @@ save_as = png
     print (os.path.join(os.getcwd(),"qp.par") + " created.\n")
 
 ################################################################################
-def makeResMap(saveFilename = None):
+def makeResMap(filename, saveFilename = None):
     
     # Set Default parameters  
     fig = plt.Figure()
@@ -214,40 +214,40 @@ def makeResMap(saveFilename = None):
     print_version()
     
     qp_par = None
-    if len(sys.argv) <= 1:
-        if os.path.isfile('xd_fou.grd'):
-            print ("No grd file given. Will use: 'xd_fou.grd'\n")
-            filename = 'xd_fou.grd'
-            print ("No parameter file given.\nWill create qp.par and use standard parameters.\n")
-            create_qp_par()
-        else:
-            print ("No grd file given.\nPlease specify grd file and the optional parameter file!\n")
-            sys.exit(0)
+    create_qp_par()
+#    if len(sys.argv) <= 1:
+#        if os.path.isfile('xd_fou.grd'):
+#            print ("No grd file given. Will use: 'xd_fou.grd'\n")
+#            filename = 'xd_fou.grd'
+#            print ("No parameter file given.\nWill create qp.par and use standard parameters.\n")
+#            create_qp_par()
+#        else:
+#            print ("No grd file given.\nPlease specify grd file and the optional parameter file!\n")
+#            sys.exit(0)
+#    
+#    if len(sys.argv) == 2:
+#        if os.path.isfile(sys.argv[1]):
+#            print (sys.argv[1] + " found! No parameter file given.\nWill create qp.par and use standard parameters.\n")
+#            filename = sys.argv[1]
+#            qp_par = None
+#            create_qp_par()
+#        else:
+#            print (sys.argv[1] + " not found!\nPlease specify grd file and the optional parameter file!\n")
+#            sys.exit(0)
+#    
+#    if len(sys.argv) >= 3:
+#        if os.path.isfile(sys.argv[1]) and os.path.isfile(sys.argv[1]):
+#            print (sys.argv[1] + " and " + sys.argv[2] + " found!\n")
+#            filename = sys.argv[1]
+#            qp_par = sys.argv[2]
+#        elif os.path.isfile(sys.argv[1]) and not os.path.isfile(sys.argv[2]):
+#            print (sys.argv[1] + "found!\n")
+#            print (sys.argv[2] + " not found!\nWill create qp.par and use standard parameters.\n")
+#            create_qp_par()
+#        else:
+#            print (sys.argv[1] + " not found!\nPlease specify grd file and the optional parameter file!\n")
+#            sys.exit(0)
     
-    if len(sys.argv) == 2:
-        if os.path.isfile(sys.argv[1]):
-            print (sys.argv[1] + " found! No parameter file given.\nWill create qp.par and use standard parameters.\n")
-            filename = sys.argv[1]
-            qp_par = None
-            create_qp_par()
-        else:
-            print (sys.argv[1] + " not found!\nPlease specify grd file and the optional parameter file!\n")
-            sys.exit(0)
-    
-    if len(sys.argv) >= 3:
-        if os.path.isfile(sys.argv[1]) and os.path.isfile(sys.argv[1]):
-            print (sys.argv[1] + " and " + sys.argv[2] + " found!\n")
-            filename = sys.argv[1]
-            qp_par = sys.argv[2]
-        elif os.path.isfile(sys.argv[1]) and not os.path.isfile(sys.argv[2]):
-            print (sys.argv[1] + "found!\n")
-            print (sys.argv[2] + " not found!\nWill create qp.par and use standard parameters.\n")
-            create_qp_par()
-        else:
-            print (sys.argv[1] + " not found!\nPlease specify grd file and the optional parameter file!\n")
-            sys.exit(0)
-    
-    #filename = '/home/matt/Dev/XDTStuff/test/carba/xd_fou.grd'
     ################################################################################
     # Retrive atom colors and covalent radii
     a_color = atomdata.get_atom_color()
@@ -324,25 +324,33 @@ def makeResMap(saveFilename = None):
     
     ################################################################################
     plt.subplot(111)
-    fig = plt.figure(facecolor = '#ddd9d5', figsize=(9,7), dpi=80)             
+    fig = plt.figure(facecolor = '#ddd9d5', figsize=(9,7), dpi=300)             
     # Dimensions for plot, and atoms
     dim, func, x, y, z, atoms, data = xd.read_xdgrd(filename)
-    atoms = xd.clean_atoms(atoms, x[1], y[1], z[1])
     
+    atoms = xd.clean_atoms(atoms, x[1], y[1], z[1])
+
     # Check dimensionality of plot
     if dim != 2:
         print ("Grid is not 2 dimensional. Please specify a 2D grid!")
         sys.exit()
     
     # Contours
-    if use_lin_contour:
+
+    if filename == 'xd_fou.grd':
         pos_contours, neg_contours = xd.linear_contour(\
                                         step, pos_lim, neg_lim)
     else:
         pos_contours, neg_contours = xd.log_contour(\
                                         base, exponent)
-    
+
     xgrid, ygrid = xd.plot_area(x, y, z)
+
+    if (xgrid.shape != data.shape):
+        xgrid = xgrid[:-1, :-1]
+        ygrid = ygrid[:-1, :-1]
+#    xgrid = xgrid[1:, 1:]
+#    ygrid = ygrid[1:, 1:]
     
     # Plot contours
     plt.contour(xgrid, ygrid, data, levels = pos_contours, colors = \
@@ -382,7 +390,7 @@ def makeResMap(saveFilename = None):
                                     plt.plot([x1,x2], [y1, y2], linewidth =\
                                                 bond_thickness, color = \
                                                 bond_color)
-                                                
+    
     # Plot atoms 
     for atom in atoms:
         if abs(float(atom[3])) <= atom_cut:
@@ -425,7 +433,7 @@ def makeResMap(saveFilename = None):
         print(saveFilename)
         print(save_as)
         
-        plt.savefig(saveFilename, bbox_inches='tight', pad_inches=0, dpi = 600)
+        plt.savefig(saveFilename, bbox_inches='tight', pad_inches=0, dpi = 300)
         print('saved')
     #print ('%s_%s%s%s.%s saved in %s/' % (func, atoms[0][0], atoms[1][0], \
      #     atoms[2][0], save_as, os.getcwd()))
@@ -433,3 +441,4 @@ def makeResMap(saveFilename = None):
 
     return fig
     
+#makeResMap('/home/matt/Work/Co(SPh)4 Final Files/xd_d2rho.grd')

@@ -58,11 +58,24 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>flatearth.jpg</normaloff>flatearth.jpg</iconset>
+    <normaloff>../res/flatearth.ico</normaloff>../res/flatearth.ico</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="1">
-    <layout class="QVBoxLayout" name="resmapLayout"/>
+   <item row="0" column="0">
+    <layout class="QVBoxLayout" name="resmapLayout">
+     <property name="leftMargin">
+      <number>10</number>
+     </property>
+     <property name="topMargin">
+      <number>10</number>
+     </property>
+     <property name="rightMargin">
+      <number>10</number>
+     </property>
+     <property name="bottomMargin">
+      <number>10</number>
+     </property>
+    </layout>
    </item>
   </layout>
  </widget>

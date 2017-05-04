@@ -1,0 +1,47 @@
+# Feel free to remove items to have a shorter file, but do NOT
+# remove the section headers (with [])!
+# Remember to rename file if edited!
+[contours]
+#Linear contours (FOU, DEF)
+use_lin_contour = True
+pos_lim = 2.0
+neg_lim = -2.0
+step = 0.05
+#Log contours (D2R) [base]*10**[exponent]
+base = [1, 2, 4, 8]
+exponent = [-2, -1, 0, 1, 2, 3, 4]
+# Show zero contour?
+zero_cont = False
+[lines]
+#Colors and contour line styles:
+#b: blue, g: green, r: red, c: cyan, m: magenta, y: yellow, k: black, w: white
+pos_color = b
+pos_line = solid
+neg_color = r
+neg_line = dashed
+zero_color = k 
+zero_line = dotted
+cont_line_width = 0.8
+[atoms]
+atom_size = 10
+# Swich on/off symmetry generated atoms
+show_symm_atoms = True
+# Cut-off for atoms out of plane:
+atom_cut = 0.2
+[bonds]
+show_bonds = False
+bond_color = k
+bond_thickness = 2
+#Bonds between symmetry generated atoms
+show_symm_bonds = False
+[labels]
+label_atoms = True
+# Atoms has to be plotted to show label 
+label_symm_atoms = False
+label_color = k
+label_size = 15
+label_x_offset = 0.1
+label_y_offset = 0.1
+[save]
+# Save file as: png, eps, pdf
+save_as = png

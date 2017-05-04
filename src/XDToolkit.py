@@ -43,7 +43,7 @@ from wizardfuncs import (seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHE
 
 from initfuncs import ins2all
 from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpops, getDorbs, readSUs,
-                     getRF2, getKrauseParam, getConvergence, getDMSDA)
+                     getRF2, getKrauseParam, getConvergence, getDMSDA, setup3AtomLapmap)
 
 from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat,
                    getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime,
@@ -2100,16 +2100,18 @@ class XDLSM(QThread):
         '''
 
         try:
-            self.xdlsmRunning = subprocess.Popen(xdlsmAbsPath, shell = False, cwd = os.getcwd())
+            self.xdlsmRunning = subprocess.Popen(xdlsmAbsPath, shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
             self.startSignal.emit()
-            self.xdlsmRunning.wait()
+            #self.xdlsmRunning.wait()
+            print(self.xdlsmRunning.communicate())
             try:
                 fixLsmCif()
             except Exception:
                 pass
             self.finishedSignal.emit()
 
-        except Exception:
+        except Exception as e:
+            print()
             self.warningSignal.emit()
 
 class XDProg(QThread):
@@ -2141,9 +2143,16 @@ class XDProg(QThread):
 
         if self.xdProg:
             try:
-                self.xdProgRunning = subprocess.Popen(self.xdProg, shell = False, cwd = os.getcwd())
+                if prog == 'topxd':
+                    self.xdProgRunning = subprocess.Popen([self.xdProg, 'topxd.out'], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
+                
+                elif prog == 'xdgeom':
+                    self.xdProgRunning = subprocess.Popen([self.xdProg, 'carba'], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
+                else:
+                    self.xdProgRunning = subprocess.Popen([self.xdProg], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
+                
                 self.startSignal.emit()
-                self.xdProgRunning.wait()
+                print(self.xdProgRunning.communicate())
                 self.finishedSignal.emit()
 
             except Exception:
@@ -2171,7 +2180,7 @@ class XDINI(QThread):
         '''
         fixBrokenLabels(copy.copy(globAtomLabs))
 
-        self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd())
+        self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
         self.startSignal.emit()
 
         try:
@@ -2179,8 +2188,8 @@ class XDINI(QThread):
 
         except Exception:
             pass
-
-        self.xdiniRunning.wait()
+        
+        print(self.xdiniRunning.communicate())
         removePhantomAtoms()
         self.finishedSignal.emit()
 
@@ -2356,11 +2365,12 @@ class resmap(QWidget, Ui_resmap):
     '''
     Residual density map window.
     '''
-    def __init__(self, parent=None):
+    def __init__(self, grdFile, parent=None):
         super(resmap, self).__init__(parent)
         self.setupUi(self)
+        self.grdFile = grdFile
         self.setup()
-
+        
     def setup(self):
         '''
         Create residual density map and display it with save button.
@@ -2370,12 +2380,13 @@ class resmap(QWidget, Ui_resmap):
         while os.path.isfile(self.tempFileName):
             i+=1
             self.tempFileName = 'temp_quickplot{}.png'.format(i)
-        fig = makeResMap(self.tempFileName)
+        fig = makeResMap(self.grdFile, self.tempFileName)
+        fig.set_dpi(90)
         canvas = FigureCanvas(fig)
         canvas.setParent(self)
-        saveBut = QPushButton('Save PNG file')
+        saveBut = QPushButton('Save hi-res PNG file')
         saveBut.clicked.connect(self.savePng)
-        saveBut.setFixedWidth(150)
+        saveBut.setFixedWidth(200)
         self.saveLab = QLabel()
         self.resmapLayout.addWidget(canvas, 0)
         self.resmapLayout.addWidget(saveBut,1)
@@ -2389,8 +2400,10 @@ class resmap(QWidget, Ui_resmap):
         '''
         Save residual density map as png file.
         '''
-        filename = QFileDialog.getSaveFileName(self,"PNG of residual density map",os.getcwd(), "PNG Files (*.png)")
-        if filename[0]:
+        filename = QFileDialog.getSaveFileName(self,"PNG of residual density map",os.getcwd(), "PNG Files (*.png)")[0]
+        if filename:
+            if filename[:-4] != '.png':
+                filename += '.png'
             copyfile(self.tempFileName, filename[0])
             self.saveLab.setText('Residual map saved to <i>"{}"</i>'.format(filename[0]))
 
@@ -2749,6 +2762,15 @@ class wizardRunning(QDialog, Ui_wizard):
             print(e)
             self.wizStatusLab.setText("Couldn't setup xd.mas for {}".format(refName))
 
+#class AutoTOPXD(QWidget, Ui_AutoTOPXD):
+#    '''
+#    Modal window that shows while autoTOPXD is running.
+#    '''
+#    def __init__(self, parent=None):
+#        super(checkNeebs, self).__init__(parent)
+#        self.setupUi(self)
+        
+
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
     Main window.
@@ -2759,7 +2781,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
-
+        self.versionNum = '0.5.2'
         self.cwdStatusLab = QLabel()
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
@@ -2782,7 +2804,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.lstMissingErrorMsg = 'Select add shelx.ins to project folder and try again.'
         self.atomNoExistErrorMsg = 'Atom not in structure.'
         self.backupConfirmStr = 'Current files backed up to: '
-        self.labList = [self.cwdStatusLab, self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delResetBondLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.resBackupLab, self.getResLab, self.resNPPLab, self.loadBackupLab]
+        self.labList = [self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delRBLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.showResLab, self.resNPPLab, self.loadBackupLab]
         self.tabWidget.setCurrentIndex(0)
         toolboxes = [self.rbToolbox, self.resToolbox, self.toolsToolbox]
         for item in toolboxes:
@@ -2838,7 +2860,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.setupFOURInputText.returnPressed.connect(self.addFOURIns)
         self.setupFOURInputText.textChanged.connect(lambda: self.setupFOURInputBox.setChecked(True))
         #Laplacian tools
-        self.lapGrdBut.clicked.connect(self.lapMapFromGrd)
+        self.lapGrdBut.clicked.connect(lambda: self.showLapmap(self.grdLapmapLab))
+        self.taLapmapBut.clicked.connect(self.make3AtomLapmap)
+        
         self.delResetBondBut.clicked.connect(self.delResetBondPress)
         self.getResBut.clicked.connect(self.getResPress)
         #Dorb pops
@@ -3413,6 +3437,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.setText('Cancel')
             but.disconnect()
             but.clicked.connect(self.killXDLSM)
+            
+        self.runXDLSMBut.setText(' Cancel')
 
         self.disableXDButs(survivors = self.XDLSMButs)
         self.xdlsm.startTime = time.time()
@@ -3430,7 +3456,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 pass
             but.clicked.connect(lambda: self.xdlsm.start())    #Sets up button again to start XDLSM
             but.setText('Run XDLSM')
-
+            
+        self.runXDLSMBut.setText(' Run XDLSM')
+        
         for lab in self.XDLSMLabs:
             lab.setText('XDLSM finished')                         #Sets status label to 'XDLSM finished'
         try:
@@ -3473,6 +3501,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 but.setText('Run XDLSM')
                 but.disconnect()
                 but.clicked.connect(lambda: self.xdlsm.start())
+                
+            self.runXDLSMBut.setText(' Run XDLSM')
 
             for lab in self.XDLSMLabs:
                 lab.setText('XDLSM terminated')       #Sets status label to 'XDLSM terminated'
@@ -3606,6 +3636,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.clicked.connect(self.killXDPROP)
 
         self.disableXDButs(self.XDPROPButs)
+        self.xdprop.finishedSignal.disconnect(self.finishedXDPROP)
         self.xdprop.finishedSignal.connect(self.finishedXDPROP)   #Sets up the finishedSignal in case XDPROP.exe was killed the last time and the finishedSignal was disconnected
 
     def finishedXDPROP(self):
@@ -3933,7 +3964,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 else:
                     xdFolder = folder
 
-                if not os.environ.get['XD_DATADIR']:
+                if not os.environ.get('XD_DATADIR'):
                     self.msg = 'Make sure you have the XD_DATADIR environment variable setup. To do this go to the terminal and enter:\n\nsudo gedit /etc/environment\n\nNow add the following line to the environment file and save it:\n\nXD_DATADIR={}lib/xd\n\nLogout and log back in for the changes to take effect.'.format(xdFolder[:-3])
                     self.envMsg = QMessageBox()
                     self.envMsg.setWindowTitle('XD_DATADIR environment variable')
@@ -3997,10 +4028,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         os.chdir(folder)
         self.changeWizBackup()
+        self.setWindowTitle('{} - XD Toolkit {}'.format(os.path.basename(folder), self.versionNum))
         self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
         self.resetLabels()
         self.check4res()
-
+        
+        hkl = True
+        ins = True
         if not os.path.isfile('shelx.hkl'):
             hkl = False
         if not os.path.isfile('shelx.ins'):
@@ -4239,9 +4273,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         print(self.settings.value('senddata'))
         try:
             os.chdir(self.settings.value('lastcwd'))
+            self.setWindowTitle('{} - XD Toolkit {}'.format(os.path.basename(os.getcwd()), self.versionNum))
         except Exception:
             pass
         self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
+        
 
 
     def openPrefs(self):
@@ -4649,25 +4685,39 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
     def armRBPress(self):
         '''
-        Handle user clicking enable all reset bond instructions.
+        Handle user clicking "Enable all reset bond instructions".
         '''
         try:
             armRBs()
             self.armRBLab.setText('All reset bond instructions enabled.')
             self.disarmRBLab.setText('')
+            self.delResetBondLab.setText('')
         except Exception:
             self.armRBLab.setText('An error occurred.')
 
     def disarmRBPress(self):
         '''
-        Handle user clicking disable all reset bond instructions.
+        Handle user clicking "Disable all reset bond instructions".
         '''
         try:
             disarmRBs()
             self.disarmRBLab.setText('All reset bond instructions disabled.')
             self.armRBLab.setText('')
+            self.delResetBondLab.setText('')
         except Exception:
             self.disarmRBLab.setText('An error occurred.')
+            
+    def delResetBondPress(self):
+        '''
+        Handle user clicking "Remove all reset bond instructions".
+        '''
+        try:
+            delResetBond()
+            self.armRBLab.setText('')
+            self.disarmRBLab.setText('')
+            self.delResetBondLab.setText('All reset bond instructions removed from xd.mas.')
+        except:
+            self.delResetBondLab.setText('An error occurred.')
 
     def autoResetBondPress(self):
         '''
@@ -4761,16 +4811,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.resetHInput.setEnabled(False)
         else:
             self.resetHInput.setEnabled(True)
-
-    def delResetBondPress(self):
-        '''
-        Handle user clicking delete all reset bond instructions.
-        '''
-        try:
-            delResetBond()
-            self.delResetBondLab.setText('All reset bond instructions removed from xd.mas.')
-        except:
-            self.delResetBondLab.setText('An error occurred.')
 
 
 #########################################################################
@@ -4952,22 +4992,61 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 #--------------------RESULTS---------------------------------------------
 #########################################################################
 
-    def lapMapFromGrd(self):
+    def make3AtomLapmap(self):
+        atoms = []
+        try:
+            atoms = rawInput2labels(str(self.taLapmapInput.text()))
+
+            if len(atoms)>3:
+                self.taLapmapLab.setText('More than 3 atoms given.')
+                return
+            elif len(atoms)<3:
+                self.taLapmapLab.setText('Less than 3 atoms given.')
+                return
+        
+        except Exception as e:
+            print(e)
+            self.taLapmapLab.setText("Can't read atom labels. Try space separated labels i.e. 'C(1) C(2) C(3)'")
+
+        stepsize = str(self.taLapmapStepsize.text())
+        npoints = str(self.taLapmapNpoints.text())
+        
+        npointsFine = npoints.isdigit()
+        stepsizeFine = isfloat(stepsize)
+        
+        if not npointsFine:
+            self.taLapmapLab.setText('Invalid value given for number of points.')
+            return
+        elif not stepsizeFine:
+            self.taLapmapLab.setText('Invalid value given for stepsize.')
+            return
+        elif not stepsizeFine and not npointsFine:
+            self.taLapmapLab.setText('Invalid values given for number of points and stepsize.')
+            return
+        
+        setup3AtomLapmap(atoms, npoints, stepsize)
+        
+        self.xdprop.finishedSignal.connect(self.showLapmap(self.taLapmapLab))
+        self.taLapmapLab.setText('Running XDPROP...')
+        self.xdprop.start()
+        
+    
+    def showLapmap(self, statusLabel):
         '''
         Make 2D laplacian map from xd_d2rho.grd file.
-        NASTY HACK!
-        NEED TO WRITE SCRIPT THAT MAKES QUICKPLOT LOOK FOR xd_d2rho.grd INSTEAD OF xd_fou.grd.
         '''
+        statusLabel.setText('Making 2D laplacian map...')
+        statusLabel.repaint()
+        QApplication.processEvents()
+        try:
+            self.xdprop.finishedSignal.disconnect(self.showLapmap)
+        except Exception:
+            pass
         if os.path.isfile('xd_d2rho.grd'):
-            if os.path.isfile('xd_fou.grd'):
-#                copyfile('xd_fou.grd', 'xd_fouCopy.grd')
-                os.remove('xd_fou.grd')
-            os.rename('xd_d2rho.grd', 'xd_fou.grd')
-            try:
-                self.showResDensMap()
-            except Exception as e:
-                print(e)
-                self.setupFOURStatusLab.setText('An error occurred.')
+            self.lapmap = resmap('xd_d2rho.grd')
+            statusLabel.setText('')
+            self.lapmap.show()
+            self.lapmap.setWindowTitle('Quickplot laplacian map')
 
 
     def makeResStr(self, lsmOutFile):
@@ -5033,7 +5112,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if folder:
             resStr = self.makeResStr(folder + '/xd_lsm.out')
 
-        self.resBackupLab.setText(resStr)
+        self.showResLab.setText(resStr)
 
     def resBackupSum(self):
         '''
@@ -5070,7 +5149,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         for res in sorted(results):
             resStr += res
         resStr = '<pre>' + resStr + '</pre>'
-        self.resBackupLab.setText(resStr)
+        self.showResLab.setText(resStr)
 
 
     def getResPress(self):
@@ -5078,7 +5157,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Get results from xd_lsm.out and show them in results tab.
         '''
         resStr = self.makeResStr('xd_lsm.out')
-        self.getResLab.setText(resStr)
+        self.showResLab.setText(resStr)
 
 
     def FFT2FOUR(self):
@@ -5107,7 +5186,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.xdfour.finishedSignal.disconnect(self.showResDensMap)
         except Exception:
             pass
-        self.resmap = resmap()
+        self.resmap = resmap('xd_fou.grd')
         self.resmap.show()
 
     def addFOURIns(self):
@@ -5119,16 +5198,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             atom = rawInput2labels(rawInput)[0]
             try:
                 FOU3atoms(atom, copy.copy(globAtomLabs), copy.copy(globAtomPos))
-                print('1')
                 self.xdfour.finishedSignal.connect(self.showResDensMap)
-                print('2')
                 self.xdfour.start()
-                print('3')
             except PermissionError:
                 self.setupFOURStatusLab.setText(self.permErrorMsg)
             except FileNotFoundError:
                 self.setupFOURStatusLab.setText(self.lstMissingErrorMsg)
-            except KeyError:
+            except KeyError as e:
                 self.setupFOURStatusLab.setText(self.atomNoExistErrorMsg)
 
         elif self.setupFOURFFTBox.isChecked() == True:
@@ -5224,6 +5300,20 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         except:
             self.getDpopsStatusLab.setText('xd_pro.out missing or corrupted. Try running XDPROP again.')
 
+
+    def autoTopxd(self):
+        
+        if self.autoTopxdAll.isChecked():
+            atomList = getNumAtoms()
+            
+        else:
+            atomList = rawInput2labels(str(self.autoTopxdInput.text()))
+            
+        autoTopxd = AutoTOPXD(atomList)
+        autoTopxd.finishedSignal.connect(self.autoTopxdFinished)
+
+    def autoTopxdFinished(self):
+        pass
 
 #########################################################################
 #--------------------BACKUP----------------------------------------------
@@ -5356,8 +5446,6 @@ if __name__ == '__main__':
     splash.show()
 
     prog = XDToolGui()
-
-
     app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
     splash.finish(prog)
     prog.show()

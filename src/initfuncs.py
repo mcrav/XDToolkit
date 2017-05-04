@@ -390,14 +390,8 @@ def ins2all(trackBondAtoms = None):
 
     else:
         atomPos = insInfo[0]
-
-    a = insInfo[1]
-    b = insInfo[2]
-    c = insInfo[3]
-    alpha = np.radians(insInfo[4])
-    beta = np.radians(insInfo[5])
-    gamma = np.radians(insInfo[6])
-    unitCellParams = (a, b, c, alpha, beta, gamma)
+    
+    unitCellParams = insInfo[1:7]
     #Make all possible pairs of atoms in atomPairs
     atomPairs = getAtomPairs(atomPos.keys())
 
