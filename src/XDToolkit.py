@@ -25,6 +25,7 @@ from resmap import Ui_resmap
 from sendBug import Ui_sendBug
 from sendSugg import Ui_sendSugg
 from checkneebs import Ui_checkneebs
+from autoTOPXD import Ui_autoTOPXD
 
 from PyQt5.QtWidgets import (
         QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen,
@@ -43,7 +44,7 @@ from wizardfuncs import (seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHE
 
 from initfuncs import ins2all
 from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpops, getDorbs, readSUs,
-                     getRF2, getKrauseParam, getConvergence, getDMSDA, setup3AtomLapmap)
+                     getRF2, getKrauseParam, getConvergence, getDMSDA, setup3AtomLapmap, setupmasTOPXD)
 
 from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat,
                    getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime,
@@ -2122,10 +2123,13 @@ class XDProg(QThread):
     finishedSignal = pyqtSignal()
     warningSignal = pyqtSignal()
 
-    def __init__(self, prog):
+    def __init__(self, prog, args=None):
         QThread.__init__(self)
         self.xdProgName = prog
-
+        self.args = ''
+        if args:
+            self.args = args
+            
         global xdProgAbsPaths
         try:
             self.xdProg = xdProgAbsPaths[prog]
@@ -2144,10 +2148,7 @@ class XDProg(QThread):
         if self.xdProg:
             try:
                 if prog == 'topxd':
-                    self.xdProgRunning = subprocess.Popen([self.xdProg, 'topxd.out'], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
-                
-                elif prog == 'xdgeom':
-                    self.xdProgRunning = subprocess.Popen([self.xdProg, 'carba'], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
+                    self.xdProgRunning = subprocess.Popen([self.xdProg, self.args], shell = False, cwd = os.getcwd())
                 else:
                     self.xdProgRunning = subprocess.Popen([self.xdProg], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
                 
@@ -2762,14 +2763,56 @@ class wizardRunning(QDialog, Ui_wizard):
             print(e)
             self.wizStatusLab.setText("Couldn't setup xd.mas for {}".format(refName))
 
-#class AutoTOPXD(QWidget, Ui_AutoTOPXD):
-#    '''
-#    Modal window that shows while autoTOPXD is running.
-#    '''
-#    def __init__(self, parent=None):
-#        super(checkNeebs, self).__init__(parent)
-#        self.setupUi(self)
+class AutoTOPXD(QWidget, Ui_autoTOPXD):
+    '''
+    Modal window that shows while autoTOPXD is running.
+    '''
+    terminatedSignal = pyqtSignal()
+    finishedSignal = pyqtSignal()
+    
+    def __init__(self, atomList, parent=None):
+        super(AutoTOPXD, self).__init__(parent)
+        self.setupUi(self)
+        self.i=0
+        self.cancelBut.clicked.connect(lambda: self.terminatedSignal.emit())
+        self.atomList = atomList
+        self.atomsDone = 0
+        self.totalNumAtoms = len(atomList)
+        self.progressBar.setFormat('%p / {0}'.format(self.totalNumAtoms))
+
+    def run(self):
+        self.folder = 'topxd'
+        i=2
+        while os.path.isdir(self.folder):
+            self.folder = 'topxd{}'.format(i)
+            i+=1
+        os.makedirs(self.folder)
         
+        atom = self.atomList[self.i]
+        self.filename = 'topxd_{}.out'.format(atom)
+        print(self.filename)
+        setupmasTOPXD(atom)
+        self.topxd = XDProg('topxd', self.filename)
+        self.topxd.start()
+        self.statusLab.setText('TOPXD running on {}...'.format(atom))
+        self.topxd.finishedSignal.connect(self.topxdFinished)
+        
+    def topxdFinished(self):
+        os.rename(self.filename, '{}/{}'.format(self.folder, self.filename))
+        self.progressBar.atomsDone += 1
+        self.progressBar.setValue(self.atomsDone)
+        self.i+=1
+        if self.i < self.totalNumAtoms:
+            atom = self.atomList[self.i]
+            self.filename = 'topxd_{}.out'.format(atom)
+            setupmasTOPXD(atom)
+            self.topxd = XDProg('topxd', self.filename)
+            self.topxd.start()
+            self.statusLab.setText('TOPXD running on {}...'.format(atom))
+            
+        else:
+            self.finishedSignal.emit()             
+                
 
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
@@ -2862,6 +2905,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         #Laplacian tools
         self.lapGrdBut.clicked.connect(lambda: self.showLapmap(self.grdLapmapLab))
         self.taLapmapBut.clicked.connect(self.make3AtomLapmap)
+        
+        #Auto TOPXD
+        self.autoTopxdBut.clicked.connect(self.autoTopxd)
+        self.autoTopxdInput.textChanged.connect(self.autoTopxdInputHandler)
         
         self.delResetBondBut.clicked.connect(self.delResetBondPress)
         self.getResBut.clicked.connect(self.getResPress)
@@ -5029,7 +5076,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.xdprop.finishedSignal.connect(self.showLapmap(self.taLapmapLab))
         self.taLapmapLab.setText('Running XDPROP...')
         self.xdprop.start()
-        
     
     def showLapmap(self, statusLabel):
         '''
@@ -5047,6 +5093,12 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             statusLabel.setText('')
             self.lapmap.show()
             self.lapmap.setWindowTitle('Quickplot laplacian map')
+
+    def make3DLapGrd(self):
+        '''
+        WORK IN PROGRESS: Make a 3D laplacian grd file around a given atom.
+        '''            
+        pass
 
 
     def makeResStr(self, lsmOutFile):
@@ -5303,16 +5355,59 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
     def autoTopxd(self):
         
+        invalidLabels = []
+        trueAtomList = getAtomList()
         if self.autoTopxdAll.isChecked():
-            atomList = getNumAtoms()
+            atomList = trueAtomList
             
         else:
             atomList = rawInput2labels(str(self.autoTopxdInput.text()))
+            if atomList:
+                for item in atomList:
+                    if item not in trueAtomList:
+                        invalidLabels.append(item)
+                if invalidLabels:
+                    self.autoTopxdLab.setText('Following atoms not in structure: {}'.format(listjoin(invalidLabels, ', ')))
+                    return
+            else:
+                self.autoTopxdLab.setText('No atoms chosen.')
+                return
             
-        autoTopxd = AutoTOPXD(atomList)
-        autoTopxd.finishedSignal.connect(self.autoTopxdFinished)
+        estRunningMinsTotal = len(atomList)*30
+        estRunningMinsRemainder = estRunningMinsTotal%60
+        estRunningHours = (estRunningMinsTotal - estRunningMinsRemainder)/60
+        if estRunningHours != 0 and estRunningMinsRemainder != 0:
+            estRunningTimeMsg = 'Approximate running time will be {0:.0f} hrs {1:.0f} mins.\n\nDo you want to start?'.format(estRunningHours, estRunningMinsRemainder)
+        elif estRunningHours == 0 and estRunningMinsRemainder != 0:
+            estRunningTimeMsg = 'Approximate running time will be {0:.0f} mins.\n\nDo you want to start?'.format(estRunningMinsRemainder)
+        elif estRunningHours != 0 and estRunningMinsRemainder == 0:
+            estRunningTimeMsg = 'Approximate running time will be {0:.0f} hrs.\n\nDo you want to start?'.format(estRunningHours)
+            
+        warningMsg = QMessageBox.question(self, 'Auto TOPXD', estRunningTimeMsg, QMessageBox.Yes, QMessageBox.No)
+
+        if warningMsg == QMessageBox.Yes:
+            self.autoTopxd = AutoTOPXD(atomList)
+            self.autoTopxd.finishedSignal.connect(self.autoTopxdFinished)
+            self.autoTopxd.terminatedSignal.connect(self.autoTopxdTerminated)
+            self.autoTopxd.show()
+            self.autoTopxd.run()
+        else:
+            pass
+        
+    def autoTopxdInputHandler(self):
+        '''
+        Disables Auto TOPXD "All atoms" checkbox is there is input of specific atoms.
+        '''
+        rawInput = str(self.autoTopxdInput.text())
+        if not rawInput:
+            self.autoTopxdAll.setEnabled(True)
+        else:
+            self.autoTopxdAll.setEnabled(False)
 
     def autoTopxdFinished(self):
+        pass
+    
+    def autoTopxdTerminated(self):
         pass
 
 #########################################################################

@@ -448,39 +448,41 @@ def getDMSDA(lsmFile):
     return (str('{0:.1f}'.format(averageDMSDA)),str(max(dmsdaList)),dmsdaFull) #return tuple of average dmsda, max dmsda and the dmsda dict)
 
 def setupmasTOPXD(atom):
-    '''
-    WORK IN PROGRESS: Setup xd.mas to get integrated charges from TOPXD on a given atom.
-    '''
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
-        
-        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+        sizeNat = False
         for line in mas:
-            #Detect end of ATOM table
+            
             if line.startswith('ATBP *atoms'):
                 row = line.split()
                 row[2] = atom
                 newLine = ' '.join(row) + '\n'
                 newmas.write(newLine)
+                
+            elif line.startswith('!ATBP *atoms'):
+                row = line.split()
+                row[2] = atom
+                newLine = ' '.join(row) + '\n'
+                newmas.write(newLine[1:])
+            
+            elif line.startswith('SIZE nat'):
+                sizeNat = True
+            elif line.startswith('COMT just a comment for this run'):
+                if not sizeNat:
+                    newmas.write('SIZE nat 5000')
+                    newmas.write('line')
+                else:
+                    newmas.write(line)
 
             else:
                 newmas.write(line)
 
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
-
-def runTOPXD(atomList):
-    '''
-    WORK IN PROGRESS: Run TOPXD multiple times to get integrated charges for all atoms in structure.
-    '''
-    for atom in atomList:
-        setupmasTOPXD(atom)
-        file = open('topxd_' + atom, 'w')
-        topxd = sub.Popen('/home/matt/dev/XDTstuff/xd-distr/bin/topxd', shell = False, cwd = os.getcwd(), stdout = file)
-        topxd.wait()
-        file.close()
         
 def setup3AtomLapmap(atoms, npoints, stepsize):
-
+    '''
+    Setup up XDPROP instructions in xd.mas to create a 2D laplacian grd file for 3 atoms in a plane.
+    '''
     i=-1
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
         for line in mas:
@@ -504,7 +506,49 @@ def setup3AtomLapmap(atoms, npoints, stepsize):
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
                 
-                
+def setup3DLapGrd(centerAtom, npoints, stepsize):
+    '''
+    Setup up XDPROP instructions in xd.mas to produce a 3D laplacian grd file around a given atom.
+    '''
+    centerAtomCoords = []
+    if os.path.isfile('xd_lsm.out'):
+        with open('xd_lsm.out','r') as lsmout:
+            cartCoords = False
+            for line in lsmout:
+
+                    
+                if cartCoords:
+                    if line:
+                        row = line.split()
+                    if row[0].upper() == centerAtom.upper():
+                        centerAtomCoords = row[1:4]
+                        break
+                    
+                if line.startswith('           Atomic parameters in Cartesian crystal system'):
+                    cartCoords = True
+                    
+        i=-1
+        with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+            for line in mas:
+                if line.startswith('! Function plots'):
+                    i+=1
+                    
+                if i>=0 and i<9:
+                    if i==7:
+                        newLine = 'CUBE      centre {0} {1} {2}  npts {3}  stepsize {4}\n'.format(centerAtomCoords[0], centerAtomCoords[1], centerAtomCoords[2], npoints, stepsize)
+                        newmas.write(newLine)
+                    else:
+                        if not line.startswith('!'):
+                            newmas.write('!' + line)
+                        else:
+                            newmas.write(line)
+                    i+=1
+                else:
+                    newmas.write(line)
+                    
+        os.remove('xd.mas')
+        os.rename('xdnew.mas','xd.mas')
+
                 
         
 #os.chdir('/home/matt/dev/XDTstuff/topxdtest')

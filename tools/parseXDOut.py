@@ -1,5 +1,6 @@
 import os
 import csv
+import re
 
 def getCPSearch():
     with open('xd_pro.out','r', encoding = 'utf-8', errors = 'ignore') as pro, open('xd_pro.csv','w') as proCsv:
@@ -116,19 +117,41 @@ def sortTables(atomOrder, file):
             i+=1
         
         for element in atomOrder:
-            for row in sorted(rows[element], key = lambda row: int(row[0].split('(')[1].strip(')'))):
+            for row in sorted(rows[element], key = lambda row: int(re.sub("[^0-9]", "", row[0].split('(')[1].strip(')')))):
                 newFile.writerow(row)
-            
-    
-atomOrder = ['CO','S(','P(','C(']
+
+def readTOPXDFolder(folder):
+    os.chdir(folder)
+    with open('topxdRes.csv','w') as topxdcsv:
+        topxdcsv = csv.writer(topxdcsv)
+        topxdcsv.writerow(['Atom', 'Q', 'L'])
+        
+        for file in os.listdir(folder):
+            splitFile = os.path.splitext(file)
+            if splitFile[1] == '.out':
+                atom = splitFile[0].split('_')[1]
+                newRow = [atom]
+                with open(file, 'r', encoding='utf-8', errors = 'ignore') as topxdout:
+                    
+                    for line in topxdout:
+                        if line.startswith('              Q'):
+                            newRow.append(float(line.split()[1]))
+                            
+                        elif line.startswith('              L'):
+                            newRow.append(float(line.split()[1]))
+                            break
+                    topxdcsv.writerow(newRow)
+                    print(newRow)
+ 
 
 
-    
-os.chdir('/home/matt/Work/cosph_cov')
-sortTables(atomOrder, 'xd_pro.csv')
+os.chdir('/home/matt/Work/cosph_cov/topxd_files')
+atomOrder = ['CO','S(','P(','C(','H(']
+sortTables(atomOrder, 'topxdRes.csv')
+#sortTables(atomOrder, 'xd_pro.csv')
 #geom2Angles()
 #geom2Lengths()
-addLengthsToProOut()
+#addLengthsToProOut()
 #getCPSearch()
                 
 
