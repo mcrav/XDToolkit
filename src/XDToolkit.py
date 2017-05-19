@@ -16,6 +16,8 @@ from shutil import copyfile, rmtree
 from collections import Counter
 import multiprocessing as mp
 from functools import partial
+import datetime
+import csv
 
 from xdcool import Ui_MainWindow
 from pref import Ui_pref
@@ -30,13 +32,13 @@ from autoTOPXD import Ui_autoTOPXD
 from PyQt5.QtWidgets import (
         QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen,
         QPushButton, QApplication, QDialog, QFileDialog, QMainWindow, QGridLayout,
-        QScrollArea, QSizePolicy, QSpacerItem)
-from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject
+        QScrollArea, QSizePolicy, QSpacerItem, QFileSystemModel, QTreeView)
+from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject, QDir, pyqtSlot, QModelIndex
 from PyQt5.QtGui import QPixmap, QFont, QStandardItem, QStandardItemModel
 from devtools import resetmas, timeDec
 from backup import backup, loadBackup
 from emailfuncs import sendEmail
-from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, initializeMas
+from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, fixCuNobleGasError
 from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable, addDUM, addCustomLocCoords
 from resetbond import armRBs, disarmRBs, check4RBHs, check4RB, resetBond, autoResetBond, delResetBond
 from wizardfuncs import (seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHEMCON, wizAddMultipoles,
@@ -44,11 +46,13 @@ from wizardfuncs import (seqMultRef, wizAddResetBond, wizAddLocCoords, wizAddCHE
 
 from initfuncs import ins2all
 from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpops, getDorbs, readSUs,
-                     getRF2, getKrauseParam, getConvergence, getDMSDA, setup3AtomLapmap, setupmasTOPXD)
+                     getRF2, getKrauseParam, getConvergence, getDMSDA, setup3AtomLapmap, setupmasTOPXD,
+                     geom2Angles, tabPropSetupMas)
 
 from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat,
                    getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime,
-                   coords2tuple, listjoin, getAtomList, atomTableBegins, atomTableEnds)
+                   coords2tuple, listjoin, getAtomList, atomTableBegins, atomTableEnds, seconds2TimeStr,
+                   sevenSpacedListjoin, printExc)
 
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
                      findCHEMCONbyInputAtoms, CPPgetEnvSig)
@@ -56,7 +60,7 @@ from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, find
 '''
 This file contains the GUI and functions that rely on global variables.
 Some functions that do not rely on global variables are included here as they
-are related to functions that do (i.e. refinement setup functions).
+are related to functions that heavily rely on global variables (i.e. refinement setup functions).
 Likewise, some functions that rely on global variables are contained in other files
 to maintain ordered grouping (i.e. chemcon functions).
 '''
@@ -66,9 +70,9 @@ to maintain ordered grouping (i.e. chemcon functions).
 #####################################################################
 '''
 
-def getmd5Hash(file):
+def makeHklHash(file):
     '''
-    Create md5 hash of shelx.hkl file. Return hash as string.
+    Create sha256 hash of shelx.hkl file. Return hash as string.
     '''
     hklHash = ''
 
@@ -87,7 +91,7 @@ def inCache(file):
     global cacheHashPath
     inCache = False
 
-    hklHash = getmd5Hash(file)
+    hklHash = makeHklHash(file)
     cacheHashPath = '{}/{}'.format(cachePath, hklHash)
     if os.path.isdir(cacheHashPath):
         inCache = True
@@ -98,6 +102,7 @@ def clearCache():
     '''
     Delete everything from cache.
     '''
+    print('Clearing cache')
     rmtree(cachePath)
     os.makedirs(cachePath)
 
@@ -112,6 +117,7 @@ def initialiseGlobVars():
     global globAtomPos
     global cachePath
 
+    print('init globvar')
     if os.path.isfile('shelx.hkl'):
         cacheRes = inCache('shelx.hkl')
         hklHash = cacheRes[1]
@@ -139,6 +145,7 @@ def initialiseGlobVars():
 
         except Exception as e:
             if os.path.isfile('shelx.ins'):
+                print('starting ins2all')
                 x = ins2all()
                 print(str(e))
                 globAtomLabs = x[0]
@@ -194,6 +201,7 @@ def findCHEMCON():
     '''
     Find chemical equivalency in structure. Return CHEMCON dictionary.
     '''
+    print('finding chemcon')
     global globAtomEnv          #Global dictionary of atoms and their chemical environment hash values i.e. {'C(1)':'f11390f0a9cadcbb4f234c8e8ea8d236'}
     global cacheHashPath
     globAtomEnv = {}
@@ -210,12 +218,13 @@ def findCHEMCON():
             globAtomEnv = literal_eval(envCache.read())
 
     else:
+        print(' in else')
         envs = {}
         CHEMCON = {}
         pool = mp.Pool(5)
         atomEnv = pool.map_async(partial(getEnvSig, atomLabs), atoms).get()
+        print(atomEnv)
         pool.close()
-
         for item in atomEnv:
             globAtomEnv[spec2norm(item[0])] = item[1]
             envs.setdefault(item[1],[]).append(item[0])
@@ -240,13 +249,13 @@ def findCHEMCON():
                 elif atomTableBegins(line):
                     atomTab = True
 
-
         with open(chemconFilePath, 'w') as chemconCache:
             chemconCache.write(str(CHEMCON))
 
         with open(atomEnvFilePath, 'w') as envCache:
             envCache.write(str(globAtomEnv))
-
+    print(CHEMCON)
+    print('CHEMCON\n~~~~~~~')
     return CHEMCON
 
 
@@ -1930,7 +1939,10 @@ def makeLCS():
     x = getLocalCoordSys()
 
     if globAtomEnv:
-        y = writeLocalCoordSys(getCHEMCONLocalCoordSys(x[0], x[1]))
+        try:
+            y = writeLocalCoordSys(getCHEMCONLocalCoordSys(x[0], x[1]))
+        except KeyError:
+            y = writeLocalCoordSys(x[0])
     else:
         y = writeLocalCoordSys(x[0])
 
@@ -2129,7 +2141,7 @@ class XDProg(QThread):
         self.args = ''
         if args:
             self.args = args
-            
+
         global xdProgAbsPaths
         try:
             self.xdProg = xdProgAbsPaths[prog]
@@ -2144,15 +2156,15 @@ class XDProg(QThread):
         '''
         Run XD program
         '''
-
         if self.xdProg:
             try:
                 if prog == 'topxd':
-                    self.xdProgRunning = subprocess.Popen([self.xdProg, self.args], shell = False, cwd = os.getcwd())
+                    self.xdProgRunning = subprocess.Popen([self.xdProg, 'topxd.out'], shell = False, cwd = os.getcwd(), stdout = subprocess.PIPE)
                 else:
-                    self.xdProgRunning = subprocess.Popen([self.xdProg], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
-                
+                    self.xdProgRunning = subprocess.Popen([self.xdProg], shell = False, cwd = os.getcwd(), stdout = subprocess.PIPE)
+
                 self.startSignal.emit()
+                #self.xdProgRunning.wait()
                 print(self.xdProgRunning.communicate())
                 self.finishedSignal.emit()
 
@@ -2179,19 +2191,24 @@ class XDINI(QThread):
         '''
         Run XDINI
         '''
+        print('starting XDINI')
         fixBrokenLabels(copy.copy(globAtomLabs))
-
-        self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd(), stdout=subprocess.PIPE)
+        print('Fixed broken labels XDINI')
+        self.xdiniRunning = subprocess.Popen([xdiniAbsPath, ''.join(compoundID4XDINI.split()), 'shelx'], shell = False, cwd = os.getcwd())
+        print('Running XDINI')
         self.startSignal.emit()
-
+        print('Waiting for XDINI')
+        self.xdiniRunning.wait()
+        #print(self.xdiniRunning.communicate())
+        removePhantomAtoms()
+        print('removed phantoms')
         try:
             initialiseGlobVars()
-
-        except Exception:
+            print('initialized globs')
+        except Exception as e:
+            print(e)
             pass
-        
-        print(self.xdiniRunning.communicate())
-        removePhantomAtoms()
+
         self.finishedSignal.emit()
 
 
@@ -2236,6 +2253,14 @@ class prefGui(QDialog, Ui_pref):
         self.chooseMercPathBut.clicked.connect(self.chooseMerc)
         self.chooseTextPathBut.clicked.connect(self.chooseTextEd)
         self.chooseXDPathBut.clicked.connect(self.chooseXD)
+        self.clearCacheBut.clicked.connect(self.prefClearCache)
+
+    def prefClearCache(self):
+        '''
+        Clear cache.
+        '''
+        clearCache()
+        self.clearCacheLab.setText('Cache emptied')
 
     def chooseXD(self):
         '''
@@ -2371,7 +2396,7 @@ class resmap(QWidget, Ui_resmap):
         self.setupUi(self)
         self.grdFile = grdFile
         self.setup()
-        
+
     def setup(self):
         '''
         Create residual density map and display it with save button.
@@ -2405,8 +2430,8 @@ class resmap(QWidget, Ui_resmap):
         if filename:
             if filename[:-4] != '.png':
                 filename += '.png'
-            copyfile(self.tempFileName, filename[0])
-            self.saveLab.setText('Residual map saved to <i>"{}"</i>'.format(filename[0]))
+            copyfile(self.tempFileName, filename)
+            self.saveLab.setText('Residual map saved to <i>"{}"</i>'.format(filename))
 
     def closeEvent(self, event):
         for file in os.listdir(os.getcwd()):
@@ -2500,7 +2525,7 @@ class checkNeebs(QWidget, Ui_checkneebs):
         tableStr = '\n{0:10}{1}\n'.format('ATOM', 'NEIGHBOURS')
         for i, atom in enumerate(atomList):
             neebs = globAtomLabs[atom]
-            tableStr += '\n<b>{1:10}</b><i>{2}</i>'.format(i, atom, listjoin([spec2norm(item) for item in neebs], ', '))
+            tableStr += '\n<b>{1:10}</b><i>{2}</i>'.format(i, atom, sevenSpacedListjoin([spec2norm(item) for item in neebs], ' '))
         tableStr = '<pre>' + tableStr + '</pre>'
 
         return tableStr
@@ -2554,10 +2579,10 @@ class wizardRunning(QDialog, Ui_wizard):
         print(self.folder)
         try:
             os.makedirs('Backup/' + self.folder)
-        except Exception:
+        except Exception as e:
+            print(printExc(e))
             print("Invalid backup folder name. Can't continue.")
         if os.path.isfile('shelx.ins') and os.path.isfile('shelx.hkl'):
-            print('is shelx.ins')
             self.wizStatusLab.setText('Initializing compound...')
             self.xdini.finishedSignal.connect(self.xdWizRef)
             self.xdini.start()
@@ -2621,7 +2646,7 @@ class wizardRunning(QDialog, Ui_wizard):
                         return
 
                 elif error[1].startswith('Noble gas configuration not recognized for element Cu'):
-                    initializeMas()
+                    fixCuNobleGasError()
                     self.i = self.i-2
                     if self.xxxDanger < 4:
                         self.errorFixed = True
@@ -2763,56 +2788,85 @@ class wizardRunning(QDialog, Ui_wizard):
             print(e)
             self.wizStatusLab.setText("Couldn't setup xd.mas for {}".format(refName))
 
+class AutoTOPXDThread(QThread):
+    finishedSignal = pyqtSignal()
+    def __init__(self, atom):
+        QThread.__init__(self)
+        self.atom = atom
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        if sys.platform.startswith('linux'):
+                with open('topxd_' + self.atom + '.out','w') as outputFile:
+                    self.topxd = subprocess.Popen([topxdAbsPath], shell=False, cwd = os.getcwd(), stdout=outputFile)
+                    self.topxd.communicate()
+
+        elif sys.platform=='win32':
+            self.topxd = subprocess.Popen([topxdAbsPath, 'topxd_' + self.atom + '.out'], shell=False, cwd=os.getcwd())
+            self.topxd.wait()
+
+        self.finishedSignal.emit()
+
 class AutoTOPXD(QWidget, Ui_autoTOPXD):
     '''
     Modal window that shows while autoTOPXD is running.
     '''
     terminatedSignal = pyqtSignal()
     finishedSignal = pyqtSignal()
-    
-    def __init__(self, atomList, parent=None):
+
+    def __init__(self, atomList, phi, theta, parent=None):
         super(AutoTOPXD, self).__init__(parent)
         self.setupUi(self)
         self.i=0
+        self.phi = phi
+        self.theta = theta
         self.cancelBut.clicked.connect(lambda: self.terminatedSignal.emit())
         self.atomList = atomList
         self.atomsDone = 0
+        self.runTimes = []
         self.totalNumAtoms = len(atomList)
         self.progressBar.setFormat('%p / {0}'.format(self.totalNumAtoms))
+        self.progressBar.setMaximum(self.totalNumAtoms)
 
     def run(self):
-        self.folder = 'topxd'
-        i=2
-        while os.path.isdir(self.folder):
-            self.folder = 'topxd{}'.format(i)
-            i+=1
-        os.makedirs(self.folder)
-        
-        atom = self.atomList[self.i]
-        self.filename = 'topxd_{}.out'.format(atom)
-        print(self.filename)
-        setupmasTOPXD(atom)
-        self.topxd = XDProg('topxd', self.filename)
-        self.topxd.start()
-        self.statusLab.setText('TOPXD running on {}...'.format(atom))
+        self.atom = self.atomList[self.i]
+        setupmasTOPXD(self.atom, self.phi, self.theta)
+        self.statusLab.setText('TOPXD running on {}...'.format(self.atom))
+        self.startTime = time.time()
+        self.topxd = AutoTOPXDThread(self.atom)
         self.topxd.finishedSignal.connect(self.topxdFinished)
-        
+        self.topxd.start()
+
     def topxdFinished(self):
-        os.rename(self.filename, '{}/{}'.format(self.folder, self.filename))
-        self.progressBar.atomsDone += 1
+        self.endTime = time.time()
+        self.topxd.terminate()
+        self.atomsDone += 1
         self.progressBar.setValue(self.atomsDone)
         self.i+=1
-        if self.i < self.totalNumAtoms:
-            atom = self.atomList[self.i]
-            self.filename = 'topxd_{}.out'.format(atom)
-            setupmasTOPXD(atom)
-            self.topxd = XDProg('topxd', self.filename)
+        self.runTimes.append(self.endTime-self.startTime)
+        self.avgRunTime = sum(self.runTimes)/len(self.runTimes)
+        self.estRemTime = len(self.atomList[self.i:])*self.avgRunTime
+        self.now = datetime.datetime.now()
+        self.estFinTime = self.now + datetime.timedelta(seconds = self.estRemTime)
+
+        self.statusStr = 'Estimated finishing time: {}'.format(self.estFinTime.strftime('%Y-%m-%d %H:%M:%S'))
+
+        os.rename('topxd_' + self.atom + '.out', 'topxd/topxd_' + self.atom + '.out')
+
+        if self.i<len(self.atomList):
+            self.atom = self.atomList[self.i]
+            setupmasTOPXD(self.atom, self.phi, self.theta)
+            self.statusStr += '\n\nTOPXD running on {}...'.format(self.atom)
+            self.statusLab.setText(self.statusStr)
+            self.topxd = AutoTOPXDThread(self.atom)
+            self.topxd.finishedSignal.connect(self.topxdFinished)
             self.topxd.start()
-            self.statusLab.setText('TOPXD running on {}...'.format(atom))
-            
+            self.startTime = time.time()
         else:
-            self.finishedSignal.emit()             
-                
+            self.finishedSignal.emit()
+
 
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
@@ -2837,7 +2891,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         #Check for XD files and if they are not there prompt user to find directory.
         if not self.settings.value('xdpath'):
             self.findXD()
-
+        
+        self.treeModel = QFileSystemModel()
+        self.treeModel.setRootPath(QDir.rootPath())
+        self.folderTree.setModel(self.treeModel)
+        self.folderTree.setRootIndex(self.treeModel.index(QDir.currentPath()))
+        self.folderTree.setColumnHidden(1, True)
+        self.folderTree.setColumnHidden(2, True)
+        self.folderTree.setColumnHidden(3, True)
+        self.folderTree.doubleClicked.connect(self.folderTreeDoubleClicked)
         self.addedLocCoords = {}
         self.ins = ''
         self.forbiddenChars = ['*', '?', '"', '/', '\\', '<', '>', ':', '|']
@@ -2905,11 +2967,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         #Laplacian tools
         self.lapGrdBut.clicked.connect(lambda: self.showLapmap(self.grdLapmapLab))
         self.taLapmapBut.clicked.connect(self.make3AtomLapmap)
-        
+
+        #Tabulate properties
+        self.tabPropBut.clicked.connect(self.tabPropRun)
+
         #Auto TOPXD
         self.autoTopxdBut.clicked.connect(self.autoTopxd)
         self.autoTopxdInput.textChanged.connect(self.autoTopxdInputHandler)
-        
+
         self.delResetBondBut.clicked.connect(self.delResetBondPress)
         self.getResBut.clicked.connect(self.getResPress)
         #Dorb pops
@@ -3038,7 +3103,39 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         self.wizAdvOptBut.clicked.connect(self.wizAdvOptToggle)
         self.wizAdvOptOpen = False
+        
+        self.showMaximized()
 
+
+    def folderTreeDoubleClicked(self, index):
+        '''
+        Handle item in folder tree being double clicked.
+        '''
+        filePath = self.treeModel.filePath(index)
+        fileName = self.treeModel.fileName(index)
+        
+        global textEdAbsPath
+        
+        #Don't open if a folder has been clicked/
+        if os.path.isdir(filePath):
+            pass
+        
+        #Opens everything in chosen text editor on windows, on OSX and Linux opens in default opener.
+        #Would be nice to tailor it more to the files that windows doesn't open as text as default.
+        else:
+            try:
+                if sys.platform == 'win32':
+                    subprocess.call([textEdAbsPath, filePath])
+    
+                else:
+                    opener ="open" if sys.platform == "darwin" else "xdg-open"
+                    subprocess.call([opener, filePath])
+                    
+            except Exception as e:
+                printExc(e)
+                pass
+
+ 
     def wizAdvOptToggle(self):
         '''
         Handler to expand/collapse advanced wizard options.
@@ -3167,10 +3264,14 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.manRefIDInput.setText(str(self.xdWizCmpID.text()))
             try:
                 writeCHEMCON(findCHEMCON())
+                print('wrote chemcon')
                 autoResetBond(copy.copy(globAtomLabs), copy.copy(globAtomTypes))
+                print('reset bonded')
                 multipoleMagician()
+                print('avadacadavra')
                 self.wizTest()
             except Exception as e:
+                print('wizCheckIni Exception')
                 print(e)
                 pass
 
@@ -3281,7 +3382,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         procMsg = '\nProceed anyway?'
         rWarnMsg = 'No bond restraints detected for {}.\n'.format(listjoin(testRes[1], ', '))
         cWarnMsg = 'No chemical constraints detected.\n'
-        mWarnMsg = 'No local coordinate system added for {}'.format(', '.join(testRes[2][1]).strip(', '))
+        mWarnMsg = 'No local coordinate system added for {}'.format(listjoin(testRes[2][1], ', '))
         testPassed = True
 
         if testRes[1] or not testRes[0] or testRes[2][1] or not testRes[3] or not testRes[4]:
@@ -3314,50 +3415,54 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Start wizard with given settings.
         '''
-        if self.wizFinalTest():
-            self.xdWizRunning = wizardRunning()
+        try:
+            if self.wizFinalTest():
+                self.xdWizRunning = wizardRunning()
 
-            try:
-                if self.settings.value('senddata') == 'yes':
-                    self.xdWizRunning.collectDat = True
-                    print(self.xdWizRunning.collectDat)
-                else:
+                try:
+                    if self.settings.value('senddata') == 'yes':
+                        self.xdWizRunning.collectDat = True
+                        print(self.xdWizRunning.collectDat)
+                    else:
+                        self.xdWizRunning.collectDat = False
+                except Exception:
                     self.xdWizRunning.collectDat = False
-            except Exception:
-                self.xdWizRunning.collectDat = False
 
-            self.xdWizRunning.rejected.connect(self.xdWizFinished)
-            self.xdWizRunning.finishedSignal.connect(self.xdWizFinished)
-            if self.wizSeqMultBox.checkState():
-                self.xdWizRunning.refList = ['0 - XDINI', '1 - Scale factors', '2 - High angle non-H positions and ADPs',
-                            '3 - Low angle H positions and isotropic ADPs', '4 - Kappa and monopoles', '5 - Dipoles',
-                            '6 - Quadrupoles', '7 - Octupoles', '8 - Hexadecapoles',
-                            '9 - Multipoles, and non-H positions and ADPs', '10 - Lower symmetry',
-                            '11 - Final refinement']
+                self.xdWizRunning.rejected.connect(self.xdWizFinished)
+                self.xdWizRunning.finishedSignal.connect(self.xdWizFinished)
+                if self.wizSeqMultBox.checkState():
+                    self.xdWizRunning.refList = ['0 - XDINI', '1 - Scale factors', '2 - High angle non-H positions and ADPs',
+                                '3 - Low angle H positions and isotropic ADPs', '4 - Kappa and monopoles', '5 - Dipoles',
+                                '6 - Quadrupoles', '7 - Octupoles', '8 - Hexadecapoles',
+                                '9 - Multipoles, and non-H positions and ADPs', '10 - Lower symmetry',
+                                '11 - Final refinement']
 
-            if not self.wizLowerSymBox.checkState():
-                self.xdWizRunning.refList = self.xdWizRunning.refList[:-2]
+                if not self.wizLowerSymBox.checkState():
+                    self.xdWizRunning.refList = self.xdWizRunning.refList[:-2]
 
-            global wizHighSnlMin
-            wizHighSnlMin = float(str(self.wizHighSnlMin.text()))
-            global wizHighSnlMax
-            wizHighSnlMax = float(str(self.wizHighSnlMax.text()))
-            global wizLowSnlMin
-            wizLowSnlMin = float(str(self.wizLowSnlMin.text()))
-            global wizLowSnlMax
-            wizLowSnlMax = float(str(self.wizLowSnlMax.text()))
-            global wizUniSnlMax
-            if str(self.wizUniSnlMax.text()):
-                wizUniSnlMax = float(str(self.wizUniSnlMax.text()))
-            else:
-                wizUniSnlMax = 2.0
+                global wizHighSnlMin
+                wizHighSnlMin = float(str(self.wizHighSnlMin.text()))
+                global wizHighSnlMax
+                wizHighSnlMax = float(str(self.wizHighSnlMax.text()))
+                global wizLowSnlMin
+                wizLowSnlMin = float(str(self.wizLowSnlMin.text()))
+                global wizLowSnlMax
+                wizLowSnlMax = float(str(self.wizLowSnlMax.text()))
+                global wizUniSnlMax
+                if str(self.wizUniSnlMax.text()):
+                    wizUniSnlMax = float(str(self.wizUniSnlMax.text()))
+                else:
+                    wizUniSnlMax = 2.0
 
-            self.xdWizRunning.customLCS = check4CustomLCS()
+                self.xdWizRunning.customLCS = check4CustomLCS()
 
-            copyfile('xd.mas','xdwiz.mas')
+                copyfile('xd.mas','xdwiz.mas')
 
-            self.xdWizRunning.show()
-            self.xdWizRunning.xdWiz(str(self.wizBackupInput.text()))
+                self.xdWizRunning.show()
+                self.xdWizRunning.xdWiz(str(self.wizBackupInput.text()))
+        except Exception as e:
+            print(e)
+            self.wizTestStatusLab.setText('An error occured, cannot run wizard.')
 
 
     def xdWizFinished(self):
@@ -3440,7 +3545,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         for but in self.xdProgButs:
             if but not in survivors:
                 but.setEnabled(False)
-        self.xdWizCmpID.returnPressed.disconnect()
+        self.xdWizCmpID.returnPressed.disconnect(self.xdWizINI)
 
     def enableXDButs(self):
         '''
@@ -3484,7 +3589,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             but.setText('Cancel')
             but.disconnect()
             but.clicked.connect(self.killXDLSM)
-            
+
         self.runXDLSMBut.setText(' Cancel')
 
         self.disableXDButs(survivors = self.XDLSMButs)
@@ -3503,9 +3608,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 pass
             but.clicked.connect(lambda: self.xdlsm.start())    #Sets up button again to start XDLSM
             but.setText('Run XDLSM')
-            
+
         self.runXDLSMBut.setText(' Run XDLSM')
-        
+
         for lab in self.XDLSMLabs:
             lab.setText('XDLSM finished')                         #Sets status label to 'XDLSM finished'
         try:
@@ -3523,7 +3628,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
                     elif error[1].startswith('Noble gas configuration not recognized for element Cu'):
 
-                        initializeMas()
+                        fixCuNobleGasError()
                         self.xdlsm.start()
         except Exception:
             pass
@@ -3548,7 +3653,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 but.setText('Run XDLSM')
                 but.disconnect()
                 but.clicked.connect(lambda: self.xdlsm.start())
-                
+
             self.runXDLSMBut.setText(' Run XDLSM')
 
             for lab in self.XDLSMLabs:
@@ -3901,6 +4006,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Handle XDINI finishing.
         '''
+        print('finishedINI')
         self.XDINILab.setText('Compound initialized successfully. Ready to begin refinement.')                         #Sets status label to 'XDINI finished'
         self.xdWizINILab.setText('Compound initialized successfully. Follow instructions below and click "Test".')
         self.xdWizCmpID.setText(str(self.manRefIDInput.text()))
@@ -3909,7 +4015,6 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.check4res()
         self.enableXDButs()
         self.changeUserIns()
-        removePhantomAtoms()
         self.runXDINIBut.disconnect()                         #Sets button back to 'Run XDINI'
         self.runXDINIBut.clicked.connect(self.runXDINI)    #Sets up button again to start XDINI
 
@@ -4066,7 +4171,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.check4res()
         self.changeUserIns()
 
-
+    def updateFolderTree(self):
+        self.folderTree.setRootIndex(self.treeModel.index(QDir.currentPath()))
+        
     def setFolder(self):
         '''
         Prompt user to choose a folder and change current working directory to the folder.
@@ -4074,12 +4181,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         folder = str(QFileDialog.getExistingDirectory(None, "Select Directory"))
 
         os.chdir(folder)
+        self.updateFolderTree()
         self.changeWizBackup()
         self.setWindowTitle('{} - XD Toolkit {}'.format(os.path.basename(folder), self.versionNum))
         self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
         self.resetLabels()
         self.check4res()
-        
+
         hkl = True
         ins = True
         if not os.path.isfile('shelx.hkl'):
@@ -4133,7 +4241,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             else:
                 opener ="open" if sys.platform == "darwin" else "xdg-open"
                 subprocess.call([opener, 'xd.mas'])
-        except Exception:
+        except Exception as e:
+            printExc(e)
             pass
 
     def loadIAM(self):
@@ -4324,7 +4433,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         except Exception:
             pass
         self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
-        
+
 
 
     def openPrefs(self):
@@ -4753,7 +4862,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.delResetBondLab.setText('')
         except Exception:
             self.disarmRBLab.setText('An error occurred.')
-            
+
     def delResetBondPress(self):
         '''
         Handle user clicking "Remove all reset bond instructions".
@@ -5039,6 +5148,49 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 #--------------------RESULTS---------------------------------------------
 #########################################################################
 
+    def tabPropCheckInput(self):
+        inputOk = True
+        if not isfloat(str(self.tabPropCpRmin.text())) or not isfloat(str(self.tabPropCpRmin.text())):
+            inputOk = False
+
+        return inputOk
+
+    def tabPropRun(self):
+
+        if self.tabPropCheckInput():
+
+            tabPropSetupMas(float(str(self.tabPropCpRmin.text())), float(str(self.tabPropCpRmax.text())))
+            self.xdgeom.finishedSignal.connect(self.tabPropRunXDPROP)
+            self.xdgeom.start()
+            self.tabPropLab.setText('Running XDGEOM...')
+        else:
+            self.tabPropLab.setText('Invalid input given.')
+
+    def tabPropRunXDPROP(self):
+        self.xdprop.finishedSignal.connect(self.tabPropFinish)
+        self.xdprop.start()
+        self.tabPropLab.setText('Running XDPROP...')
+
+    def tabPropFinish(self):
+
+        self.tabPropLab.setText('Creating CSV file')
+
+        if self.tabPropLength.isChecked():
+            length = True
+        if self.tabPropAngle.isChecked():
+            angle = True
+        if self.tabPropRho.isChecked():
+            rho = True
+        if self.tabPropD2rho.isChecked():
+            d2rho = True
+        if self.tabPropEllip.isChecked():
+            ellip = True
+
+        if angle:
+            geom2Angles()
+
+        self.tabPropLab.setText('Finished. Results saved to <i>"{}/bond_properties.csv"</i>'.format(os.getcwd()))
+
     def make3AtomLapmap(self):
         atoms = []
         try:
@@ -5050,17 +5202,17 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             elif len(atoms)<3:
                 self.taLapmapLab.setText('Less than 3 atoms given.')
                 return
-        
+
         except Exception as e:
             print(e)
             self.taLapmapLab.setText("Can't read atom labels. Try space separated labels i.e. 'C(1) C(2) C(3)'")
 
         stepsize = str(self.taLapmapStepsize.text())
         npoints = str(self.taLapmapNpoints.text())
-        
+
         npointsFine = npoints.isdigit()
         stepsizeFine = isfloat(stepsize)
-        
+
         if not npointsFine:
             self.taLapmapLab.setText('Invalid value given for number of points.')
             return
@@ -5070,13 +5222,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         elif not stepsizeFine and not npointsFine:
             self.taLapmapLab.setText('Invalid values given for number of points and stepsize.')
             return
-        
+
         setup3AtomLapmap(atoms, npoints, stepsize)
-        
-        self.xdprop.finishedSignal.connect(self.showLapmap(self.taLapmapLab))
+
+        self.xdprop.finishedSignal.connect(lambda: self.showLapmap(self.taLapmapLab))
         self.taLapmapLab.setText('Running XDPROP...')
         self.xdprop.start()
-    
+
     def showLapmap(self, statusLabel):
         '''
         Make 2D laplacian map from xd_d2rho.grd file.
@@ -5097,7 +5249,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
     def make3DLapGrd(self):
         '''
         WORK IN PROGRESS: Make a 3D laplacian grd file around a given atom.
-        '''            
+        '''
         pass
 
 
@@ -5270,8 +5422,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         elif self.quickplotGrdBox.isChecked():
             try:
-                self.setupFOURStatusLab.setText('')
+                self.setupFOURStatusLab.setText('Making residual density map...')
+                self.setupFOURStatusLab.repaint()
+                QApplication.processEvents()
                 self.showResDensMap()
+                self.setupFOURStatusLab.setText('')
             except Exception as e:
                 print(e)
                 self.setupFOURStatusLab.setText('An error occurred.')
@@ -5354,12 +5509,12 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 
     def autoTopxd(self):
-        
+
         invalidLabels = []
         trueAtomList = getAtomList()
         if self.autoTopxdAll.isChecked():
             atomList = trueAtomList
-            
+
         else:
             atomList = rawInput2labels(str(self.autoTopxdInput.text()))
             if atomList:
@@ -5372,28 +5527,69 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             else:
                 self.autoTopxdLab.setText('No atoms chosen.')
                 return
-            
-        estRunningMinsTotal = len(atomList)*30
-        estRunningMinsRemainder = estRunningMinsTotal%60
-        estRunningHours = (estRunningMinsTotal - estRunningMinsRemainder)/60
-        if estRunningHours != 0 and estRunningMinsRemainder != 0:
-            estRunningTimeMsg = 'Approximate running time will be {0:.0f} hrs {1:.0f} mins.\n\nDo you want to start?'.format(estRunningHours, estRunningMinsRemainder)
-        elif estRunningHours == 0 and estRunningMinsRemainder != 0:
-            estRunningTimeMsg = 'Approximate running time will be {0:.0f} mins.\n\nDo you want to start?'.format(estRunningMinsRemainder)
-        elif estRunningHours != 0 and estRunningMinsRemainder == 0:
-            estRunningTimeMsg = 'Approximate running time will be {0:.0f} hrs.\n\nDo you want to start?'.format(estRunningHours)
-            
+
+        phiInput = str(self.autoTopxdPhi.text())
+        thetaInput = str(self.autoTopxdTheta.text())
+
+        if not phiInput.isdigit() or not thetaInput.isdigit():
+            self.autoTopxdLab.setText('Invalid input given for phi/theta.')
+            return
+
+        estRunningTime = datetime.timedelta(minutes = (((int(phiInput)*int(thetaInput))/768)*30)*len(atomList))
+
+        rawTimeStr = str(estRunningTime)
+
+        days = 0
+        hours = 0
+        minutes = 0
+        if '.' in rawTimeStr:
+            rawTimeStr = rawTimeStr.split('.')[0]
+        if ',' in rawTimeStr:
+            rawTimeStrSplit = rawTimeStr.split(',')
+            days = rawTimeStrSplit[0].split(' ')[0]
+            time = rawTimeStrSplit[1].strip().split(':')
+
+        else:
+            time = rawTimeStr.strip().split(':')
+        hours = time[0].lstrip('0')
+        minutes = time[1].lstrip('0')
+        print(time)
+
+        estRunningTimeMsg = 'Estimated running time: '
+        if days:
+            if days=='1':
+                estRunningTimeMsg += '{} day, '.format(days)
+            else:
+                estRunningTimeMsg += '{} days, '.format(days)
+        if hours:
+            if hours=='1':
+                estRunningTimeMsg += '{} hour, '.format(hours)
+            else:
+                estRunningTimeMsg += '{} hours, '.format(hours)
+        if minutes:
+            if minutes=='1':
+                estRunningTimeMsg += '{} minute, '.format(minutes)
+            else:
+                estRunningTimeMsg += '{} minutes, '.format(minutes)
+
+        estRunningTimeMsg = estRunningTimeMsg.strip(', ')
+        estRunningTimeMsg += '\n\nDo you want to start?'
+
+        if not os.path.isdir('topxd'):
+            os.makedirs('topxd')
+
+
         warningMsg = QMessageBox.question(self, 'Auto TOPXD', estRunningTimeMsg, QMessageBox.Yes, QMessageBox.No)
 
         if warningMsg == QMessageBox.Yes:
-            self.autoTopxd = AutoTOPXD(atomList)
+            self.autoTopxd = AutoTOPXD(atomList, phiInput, thetaInput)
             self.autoTopxd.finishedSignal.connect(self.autoTopxdFinished)
             self.autoTopxd.terminatedSignal.connect(self.autoTopxdTerminated)
             self.autoTopxd.show()
             self.autoTopxd.run()
         else:
             pass
-        
+
     def autoTopxdInputHandler(self):
         '''
         Disables Auto TOPXD "All atoms" checkbox is there is input of specific atoms.
@@ -5405,8 +5601,31 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.autoTopxdAll.setEnabled(False)
 
     def autoTopxdFinished(self):
-        pass
-    
+        '''
+        When auto TOPXD finishes create csv file of Q and L from result files.
+        '''
+        with open('topxd/topxd_results.csv','w') as topxdcsv:
+            topxdcsv = csv.writer(topxdcsv)
+            topxdcsv.writerow(['Atom', 'Q', 'L'])
+
+            for file in os.listdir('topxd'):
+                splitFile = os.path.splitext(file)
+                if splitFile[1] == '.out' and splitFile[0].startswith('topxd_'):
+                    atom = splitFile[0].split('_')[1]
+                    newRow = [atom]
+                    with open('topxd/' + file, 'r', encoding='utf-8', errors = 'ignore') as topxdout:
+
+                        for line in topxdout:
+                            if line.startswith('              Q'):
+                                newRow.append(float(line.split()[1]))
+
+                            elif line.startswith('              L'):
+                                newRow.append(float(line.split()[1]))
+                                break
+                        topxdcsv.writerow(newRow)
+        self.autoTopxdLab.setText('csv file of atom Q and L values saved to "<i>{}</i>"'.format(os.path.abspath('topxd/topxd_results.csv')))
+
+
     def autoTopxdTerminated(self):
         pass
 
@@ -5519,6 +5738,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             pass
 
 def customExceptHook(Type, value, traceback):
+    print('Exception:')
     print_exception(Type, value, traceback)
     pass
 
@@ -5529,7 +5749,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     #Splash screen
-    splash_pix = QPixmap('res/flatearth.png')
+    splash_pix = QPixmap(os.path.split(os.getcwd())[-2] + '/res/splash.png')
     splash = QSplashScreen(splash_pix)
     splash.setMask(splash_pix.mask())
     font = QFont()
@@ -5539,10 +5759,11 @@ if __name__ == '__main__':
                            Qt.AlignBottom | Qt.AlignLeft,
                            Qt.white)
     splash.show()
-
+    app.processEvents()
     prog = XDToolGui()
-    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
     splash.finish(prog)
+    app.aboutToQuit.connect(app.deleteLater)  #Fixes Anaconda bug where program only works on every second launch
+
     prog.show()
 
     sys.exit(app.exec_())

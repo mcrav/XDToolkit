@@ -13,7 +13,7 @@ def backup(folderName):
     if not os.path.isdir('{}{}{}'.format(os.getcwd(), '/',folder)):                      #Check if new folder exists
         os.makedirs(folder)                             #If it doesn't exist, make it
 
-    backupFiles = ('xd.mas','xd.inp','xd.res','xd_lsm.out','xd.cov')
+    backupFiles = ('xd.mas','xd.inp','xd.res','xd_lsm.out','xd.cov', 'xd.fou')
 
     for file in backupFiles:
         try:

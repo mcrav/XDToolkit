@@ -54,6 +54,27 @@ def writeLabList():
     os.remove('XDToolkit.py')
     os.rename('XDToolkitnew2.py','XDToolkit.py')
 
-os.chdir('/home/matt/dev/XDToolkit/src')
-writeLabList()
+def getNumLinesCode():
+    i = 0
+    targetFiles = ['XDToolkit.py',
+                   'xdfiletools.py',
+                   'xderrfix.py',
+                   'wizardfuncs',
+                   'utils.py',
+                   'results.py',
+                   'resetbond.py',
+                   'initfuncs.py',
+                   'emailfuncs.py',
+                   'chemcon.py',
+                   'databank.py',
+                   'backup.py',
+                   'asym2unit.py']
+    for file in os.listdir(os.getcwd()):
+        if file in targetFiles:
+            i+=len(open(file,'r').readlines())
+            
+    return i
+
+#os.chdir('/home/matt/dev/XDToolkit/src')
+#print(getNumLinesCode())
     

@@ -37,7 +37,7 @@ pathStr = ''
 #Mn-dimer optimized w/ multiprocessing map          149.7411444s (2mins 30secs)
 #Mn-dimer optimized w/ multiprocessing map_async    146.1650229s (2mins 25secs)
 
-def CPPgetEnvSig(atom, atomNeebDict):
+def CPPgetEnvSig(atomNeebDict, atom):
     '''
     Create an md5 hash value for the chemical environment of a given atom. Return this hash value.
     This function calls a compiled C++ script.
@@ -53,7 +53,7 @@ def CPPgetEnvSig(atom, atomNeebDict):
     x = atom.split('(')[0].upper() +','.join(sorted(x.split('^')))
     y = hashlib.sha256(bytes(x, 'utf-8'))
     envHash = y.hexdigest()
-    return envHash
+    return (atom, envHash)
 
 def findAllPaths(atom, atomLabsDict):
     '''
@@ -66,14 +66,12 @@ def findAllPaths(atom, atomLabsDict):
     usedBranches = []
     lastPath = []
 
-
     for neebs in atomLabsDict.values():
         for neebLab in neebs:
             if neebLab not in atomNormLabs:
                 atomNormLabs[neebLab] = neebLab.split(',')[0]
     
     while True:
-        
         currAtom = atom             #Current atom as program walks through structure.
         passedAtoms=[]
         pathList=[]
@@ -134,14 +132,15 @@ def findAllPaths(atom, atomLabsDict):
 
 def getEnvSig(atomLabsDict, atom):
     '''
-    Create an md5 hash value for the chemical environment of a given atom. Return this hash value.
+    Create a sha256 hash value for the chemical environment of a given atom. 
+    Return this hash value.
     '''
     #Sort list of paths alphabetically so it is the same no matter what order paths were found in
     #Make string with starting atom types followed by , joined sorted list of all paths.
     pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom, atomLabsDict)))
     hashObj = hashlib.sha256(bytes(pathString,'utf-8'))        #Generate unique hash value of paths.
     envHash = (atom, hashObj.hexdigest())
-    return envHash                             #Return digest of hash value.
+    return envHash    
 
 def removeCHEMCON():
     '''
@@ -400,7 +399,6 @@ def writeCHEMCON(CHEMCONdict):
     '''
     atomTab = False
     CHEMCON = CHEMCONdict
-
     written = False
 
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:

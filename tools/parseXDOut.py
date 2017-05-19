@@ -1,6 +1,7 @@
 import os
 import csv
 import re
+import numpy as np
 
 def getCPSearch():
     with open('xd_pro.out','r', encoding = 'utf-8', errors = 'ignore') as pro, open('xd_pro.csv','w') as proCsv:
@@ -104,6 +105,7 @@ def addLengthsToProOut():
             
 def sortTables(atomOrder, file):
     rows = {}
+    atomOrder = [item + '(' for item in atomOrder if len(item)==1]
     newfilename = 'sorted_' + file
     with open(file,'r') as file, open(newfilename,'w') as newFile:
         file = csv.reader(file)
@@ -145,14 +147,75 @@ def readTOPXDFolder(folder):
  
 
 
-os.chdir('/home/matt/Work/cosph_cov/topxd_files')
-atomOrder = ['CO','S(','P(','C(','H(']
+os.chdir('/home/matt/Work/cucf3_final')
+#
+readTOPXDFolder(os.path.abspath('cucf3_highangle_topxd'))
+atomOrder = ['CU','F','N','C','H']
 sortTables(atomOrder, 'topxdRes.csv')
+
 #sortTables(atomOrder, 'xd_pro.csv')
 #geom2Angles()
 #geom2Lengths()
 #addLengthsToProOut()
 #getCPSearch()
-                
 
+
+
+def getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma):
+    '''
+    Get distance between 2 atoms. Return distance.
+    '''
+    delta1 = a*(atom1c[0] - atom2c[0])
+    delta2 = b*(atom1c[1] - atom2c[1])
+    delta3 = c*(atom1c[2] - atom2c[2])
+
+    return np.sqrt(delta1**2 + delta2**2 + delta3**2 + (2*delta1*delta2*np.cos(gamma)) + (2*delta1*delta3*np.cos(beta)) + (2*delta2*delta3*np.cos(alpha)))
+
+def findClosestAtom2ResidualPeak(residualPeakCoords, xd_fft):  
+    '''
+    Find closest atom to residual peak in xd_fft.out. 
+    Return atom and distance from atom to residual peak.
+    '''           
+    with open(xd_fft,'r') as fft:
+        atomTab = False
+        unitCellFound = False
+        atomPos = {}
+        i=0
+        for line in fft:
+            
+            if atomTab:
+                if i==2:
+                    break
+                elif line.startswith(' ------'):
+                    i+=1
+                    continue
+                else:
+                    row = line.split()
+                    atomPos[row[1]] = np.array([float(row[3]), float(row[4]), float(row[5])])
+                    
+            elif not unitCellFound and line.startswith(' Unit cell parameters'):
+                row = line.split()
+                a = float(row[3])
+                b = float(row[4])
+                c = float(row[5])
+                alpha = np.radians(float(row[6]))
+                beta = np.radians(float(row[7]))
+                gamma = np.radians(float(row[8]))
+                unitCellParams = (a, b, c, alpha, beta, gamma)
+                unitCellFound = True
+            
+            elif line.startswith('  no  atom'):
+                atomTab = True
+                
+    minDist = 1000
+    minAtom = ''
+    resPeak = residualPeakCoords
+    for atom, pos in atomPos.items():
+        bondDist = getBondDist(resPeak, pos, *unitCellParams)
+        if bondDist < minDist:
+            minDist = bondDist
+            minAtom = atom
     
+    print(minAtom)
+    print(minDist)
+    return(minAtom, minDist)

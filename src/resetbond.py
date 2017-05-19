@@ -7,7 +7,6 @@ from utils import lab2type, atomTableBegins, atomTableEnds
 import os
 import copy
 
-
 def armRBs():
     '''
     Enable all reset bond instructions.
@@ -411,14 +410,14 @@ def getPathAromatic(atom, atomNeebDict, usedBranches, lastPath=[], pathStr = '')
             for neeb in atomNeebs:
                 if neeb == atom:
                     aromaticConfirmed = True
-                    return (pathStr, newUsedBranches[-1:], usedBranches, aromaticConfirmed)    #Return the path string, last new branch, and edited list of used branches.
+            return (pathStr, newUsedBranches[-1:], usedBranches, aromaticConfirmed)    #Return the path string, last new branch, and edited list of used branches.
 
         for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.
             branchTag = '{0}~{1}'.format(neeb, str(steps))  #Make 'C(1),asym~2' format branch tag for current atom and number of steps.
 
             #If a neighbour of current atom is found that hasn't been visited,
             #and hasn't been branched too in other trips down the same path.
-            if lab2type(neeb) == 'C' and neeb not in passedAtoms and branchTag not in usedBranches:
+            if lab2type(neeb)=='C' and neeb not in passedAtoms and branchTag not in usedBranches:
 
                 try:
                     #If this path changes from the previous path at this atom,

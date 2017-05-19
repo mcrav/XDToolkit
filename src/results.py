@@ -6,7 +6,9 @@
 
 import os
 import subprocess as sub
-from utils import getAtomList
+from utils import getAtomList, getElementOrder
+import csv
+import re
 
 def FFTDetective():
     '''
@@ -447,29 +449,37 @@ def getDMSDA(lsmFile):
 
     return (str('{0:.1f}'.format(averageDMSDA)),str(max(dmsdaList)),dmsdaFull) #return tuple of average dmsda, max dmsda and the dmsda dict)
 
-def setupmasTOPXD(atom):
+def setupmasTOPXD(atom, phi, theta):
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
         sizeNat = False
         for line in mas:
             
-            if line.startswith('ATBP *atoms'):
+            if line.startswith('   MODULE TOPXD'):
+                newmas.write('   MODULE *TOPXD\n')
+                
+            elif line.startswith('ATBP *atoms'):
                 row = line.split()
                 row[2] = atom
+                row[12] = phi
+                row[14] = theta
                 newLine = ' '.join(row) + '\n'
                 newmas.write(newLine)
                 
             elif line.startswith('!ATBP *atoms'):
                 row = line.split()
                 row[2] = atom
+                row[12] = phi
+                row[14] = theta
                 newLine = ' '.join(row) + '\n'
                 newmas.write(newLine[1:])
             
             elif line.startswith('SIZE nat'):
                 sizeNat = True
+                newmas.write(line)
             elif line.startswith('COMT just a comment for this run'):
                 if not sizeNat:
-                    newmas.write('SIZE nat 5000')
-                    newmas.write('line')
+                    newmas.write('SIZE nat 5000\n')
+                    newmas.write(line)
                 else:
                     newmas.write(line)
 
@@ -484,12 +494,30 @@ def setup3AtomLapmap(atoms, npoints, stepsize):
     Setup up XDPROP instructions in xd.mas to create a 2D laplacian grd file for 3 atoms in a plane.
     '''
     i=-1
+    j=-1
     with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
         for line in mas:
-            if line.startswith('! Function plots'):
+            if line.startswith('   MODULE  XDPROP'):
+                j+=1
+                newmas.write('   MODULE  *XDPROP\n')
+                
+            elif line.startswith('   MODULE  *XDPROP'):
+                j+=1
+                newmas.write(line)
+            
+            elif j>=0:
+                if j==8:
+                    newmas.write('PROPERTY rho *d2rho defden gradrho valence core nucpot ef efg esp oep\n')
+                    j=-1
+                    print(line)
+                else:
+                    j+=1
+                    newmas.write(line)
+                    
+            elif line.startswith('! Function plots'):
                 i+=1
                 
-            if i>=0 and i <9:
+            elif i>=0 and i <9:
                 if i==5:
                     newLine = '{0:10}{1}\n'.format('MAP       atoms ', ' '.join([atoms[0], atoms[1], atoms[2], 'npts', npoints, 'stepsize', stepsize]))
                     print(newLine)
@@ -548,8 +576,91 @@ def setup3DLapGrd(centerAtom, npoints, stepsize):
                     
         os.remove('xd.mas')
         os.rename('xdnew.mas','xd.mas')
-
-                
         
-#os.chdir('/home/matt/dev/XDTstuff/topxdtest')
-#runTOPXD(getAtomList())
+def tabPropSetupMas(rmin, rmax):
+    '''
+    Setup xd.mas to get bond lengths and angles from XDGEOM and do a XDPROP bond critical point search.
+    '''
+    with open('xd.mas','r') as mas, open('xdnew.mas', 'w') as newmas:
+        prop = False
+        geom = False
+        i=-2
+        
+        for line in mas:
+            if not prop:
+                
+                if line.startswith('   MODULE XDPROP'):
+                    prop = True
+                    newmas.write('   MODULE *XDPROP\n')
+                elif line.startswith('   MODULE *XDPROP'):
+                    prop = True
+                    newmas.write(line)
+                elif line.startswith('   MODULE XDGEOM') or line.startswith('   MODULE *XDGEOM'):
+                    newmas.write('   MODULE *XDGEOM\n')
+                    geom = True
+                elif geom:
+                    print(line)
+                    newmas.write('SELECT   *rmin {0:.3f} *rmax {1:.3f}  tor *ato *bon *ang loc non export\n'.format(rmin, rmax))
+                    geom = False
+                else:
+                    newmas.write(line)
+                    
+            else:
+                if i==5:
+                    newmas.write('PROPERTY *rho d2rho defden gradrho valence core nucpot ef efg\n')
+                elif i==92:
+                    newmas.write('CPSEARCH bond rmin  {0:.3f} rmax  {1:.3f}\n'.format(rmin, rmax))
+                    prop = False
+                else:
+                    newmas.write(line)
+                    
+                i+=1
+                
+    os.remove('xd.mas')
+    os.rename('xdnew.mas','xd.mas')
+   
+def sortCsv(atomOrder, file):
+    rows = {}
+    newfilename = 'sorted_' + file
+    with open(file,'r') as file, open(newfilename,'w') as newFile:
+        file = csv.reader(file)
+        newFile = csv.writer(newFile)
+        i=0
+        for row in file:
+            if i>0:
+                rows.setdefault(row[1][:2],[]).append(row)
+            else:
+                newFile.writerow(row)
+            i+=1
+        
+        for element in atomOrder:
+            for row in sorted(rows[element], key = lambda row: int(re.sub("[^0-9]", "", row[1].split('(')[1].strip(')')))):
+                newFile.writerow(row)
+                 
+def geom2Angles():
+    with open('xd_geo.out','r') as geo, open('bond_angles.csv','w') as angCsv:
+        angCsv = csv.writer(angCsv, delimiter = ',')
+        angCsv.writerow(['Atom 1', 'Atom 2', 'Atom 3', 'Bond angle'])
+        bondAng = False
+        for line in geo:
+            
+            if bondAng:
+                if line.strip():
+                    row = line.split()
+                    csvRow = [line[1:7].replace('-','').strip(), line[9:15].replace('-','').strip(), line[17:24].replace('-','').strip(), row[-1]]
+                    print(csvRow)
+                    angCsv.writerow(csvRow)
+                    
+                else:
+                    bondAng = False
+                    break
+                
+            elif line.startswith(' Bond angles'):
+                bondAng = True 
+                
+    sortCsv(getElementOrder(), 'bond_angles.csv')
+    os.remove('bond_angles.csv')
+    os.rename('sorted_bond_angles.csv','bond_angles.csv')
+
+#os.chdir('/home/matt/dev/XDTstuff/test/serine')
+#tabPropSetupMas(1.2, 1.8)

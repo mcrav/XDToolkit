@@ -6,6 +6,9 @@
 
 import os
 
+def printExc(exception):
+    print('Exception: ' + exception)
+
 def atomTableEnds(line):
     return (line.startswith('END ATOM') or line.startswith('!') or line.startswith('DUM'))
 
@@ -14,6 +17,9 @@ def atomTableBegins(line):
 
 def listjoin(listItem, divider):
     return divider.join(listItem).strip(divider)
+
+def sevenSpacedListjoin(listItem, divider):
+    return (divider.join(['{0:6}'.format(item) for item in listItem])).strip(divider)
 
 def coords2tuple(coords):
     '''
@@ -124,7 +130,7 @@ def getCellParams():
     alpha = 0
     beta = 0
     gamma = 0
-    
+
     if os.path.isfile('shelx.ins'):
         with open('shelx.ins','r') as ins:
             ins = open('shelx.ins','r')
@@ -295,12 +301,13 @@ def getAtomList():
     '''
     Get list of atoms from xd.mas. Return list.
     '''
-    with open('xd.mas','r') as mas:  
-        
+    with open('xd.mas','r') as mas:
+
         atomTab = False
         atoms = []
         #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
         for line in mas:
+        
             if atomTableEnds(line):
                 atomTab = False
 
@@ -310,7 +317,43 @@ def getAtomList():
 
             if atomTableBegins(line):
                 atomTab = True
-                
+
     return atoms
 
+def getElementOrder():
+    '''
+    Get list of elements in order they appear in atom table in xd.mas. Return list.
+    '''
+    elements = []
+    with open('xd.mas','r') as mas:
 
+        atomTab = False
+        #Go through xd.mas and flip atomTab to true when you reach the start of the atom table and false when you reach the end of the atom table
+        for line in mas:
+            if atomTableEnds(line):
+                atomTab = False
+                break
+
+            if atomTab:
+                row = line.upper().split()
+                if row[0][:2] not in elements:
+                    elements.append(row[0][:2])
+
+            if atomTableBegins(line):
+                atomTab = True
+
+    return elements
+
+def seconds2TimeStr(seconds):
+    daysRem = seconds%(60*60*24)
+    days = int((seconds-daysRem)/(60*60*24))
+    hoursRem = daysRem%(60*60)
+    hours = int((daysRem-hoursRem)/(60*60))
+    minutesRem = hoursRem%60
+    minutes = int((hoursRem-minutesRem)/60)
+
+    return (days, hours, minutes)
+
+
+
+        

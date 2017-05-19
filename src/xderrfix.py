@@ -238,11 +238,12 @@ def addNCST():
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
 
-def initializeMas():
+def fixCuNobleGasMas(masFile):
     '''
-    Fix 'noble gas configuration for CU' error.
+    Give Cu 4s1 3d10 configuration in scattering table in given mas file.
+    3d10 written as valence electrons.
     '''
-    with open('xd.mas','r') as mas, open('xdnew.mas','w') as newmas:
+    with open(masFile,'r') as mas, open('xdnew.mas','w') as newmas:
 
         scatTab = False
 
@@ -271,9 +272,18 @@ def initializeMas():
             if line.startswith('SCAT'):
                 scatTab = True
 
-    os.remove('xd.mas')
-    os.rename('xdnew.mas','xd.mas')
-
+    os.remove(masFile)
+    os.rename('xdnew.mas',masFile)
+    
+def fixCuNobleGasError():
+    '''
+    Fix 'noble gas configuration for CU' error.
+    '''
+    print('~~~~~~~~~~~~~~~~~\n\nFIXING CU NOBLE GAS CONFIGURATION ERROR\n\n~~~~~~~~~~~~~~~~~~~')
+    fixCuNobleGasMas('xd.mas')
+    fixCuNobleGasMas('xdwiz.mas')
+    
+    #Add 10 to Cu valence monopole population in inp file.
     with open('xd.inp','r') as inp, open('xdnew.inp','w') as newinp:
 
         i = 0
@@ -286,7 +296,7 @@ def initializeMas():
             if cuFound:
                 i+=1
 
-            if i == 3:
+            if i==3:
                 row = str.split(line)
                 row[0] = 10.0000
                 rowStr = '{0:< 9.4f}{1}\n'.format(*row)
