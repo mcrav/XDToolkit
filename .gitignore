@@ -1,9 +1,12 @@
 /__pycache__
 /build
 /dist
+/src/build
+/src/dist
+/src/tools/lsmTimes.buckfast
 /sandbox.py
 /lsmTimes.buckfast
 /XDToolkit.zip
 /runningTimes
-/cache
+/src/cache
 

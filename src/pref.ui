@@ -27,6 +27,23 @@
     <normaloff>flatearth.ico</normaloff>flatearth.ico</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="3" column="0">
+    <widget class="QCheckBox" name="anonDatBox">
+     <property name="text">
+      <string>Send anonymous usage data</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <property name="leftMargin">
@@ -104,7 +121,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Select Mercury location</string>
+        <string>Select structure visualizer location</string>
        </property>
       </widget>
      </item>
@@ -143,13 +160,6 @@
       </widget>
      </item>
      <item>
-      <widget class="Line" name="line_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="verticalSpacer_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -164,73 +174,12 @@
      </item>
     </layout>
    </item>
-   <item row="5" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
+   <item row="2" column="0">
+    <widget class="Line" name="line_5">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
     </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QCheckBox" name="anonDatBox">
-     <property name="text">
-      <string>Send anonymous usage data</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QPushButton" name="clearCacheBut">
-       <property name="minimumSize">
-        <size>
-         <width>215</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>215</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Clear cache</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="clearCacheLab">
-       <property name="font">
-        <font>
-         <italic>true</italic>
-        </font>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
    </item>
   </layout>
  </widget>

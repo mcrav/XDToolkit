@@ -444,17 +444,29 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>XD Toolkit 0.7.0</string>
+   <string>XD Toolkit 0.8.0</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../res/flatearth.ico</normaloff>../res/flatearth.ico</iconset>
+    <normaloff>res/flatearth.ico</normaloff>res/flatearth.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <property name="spacing">
+       <number>10</number>
+      </property>
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>8</number>
+      </property>
       <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
        <number>0</number>
       </property>
       <item>
@@ -469,55 +481,10 @@
          <number>0</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_21">
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QPushButton" name="runXDLSMBut">
-            <property name="maximumSize">
-             <size>
-              <width>150</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string/>
-            </property>
-            <property name="text">
-             <string> Run XDLSM</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>../res/play.ico</normaloff>../res/play.ico</iconset>
-            </property>
-            <property name="shortcut">
-             <string>Ctrl+R</string>
-            </property>
-            <property name="checkable">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="XDLSMLab">
-            <property name="font">
-             <font>
-              <italic>true</italic>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
          <widget class="QTabWidget" name="tabWidget">
           <property name="minimumSize">
            <size>
-            <width>1000</width>
+            <width>882</width>
             <height>0</height>
            </size>
           </property>
@@ -527,10 +494,19 @@
           <property name="autoFillBackground">
            <bool>true</bool>
           </property>
+          <property name="tabPosition">
+           <enum>QTabWidget::North</enum>
+          </property>
+          <property name="tabShape">
+           <enum>QTabWidget::Rounded</enum>
+          </property>
           <property name="currentIndex">
            <number>7</number>
           </property>
           <property name="documentMode">
+           <bool>false</bool>
+          </property>
+          <property name="tabBarAutoHide">
            <bool>false</bool>
           </property>
           <widget class="QWidget" name="tab_7">
@@ -624,7 +600,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>964</width>
+                 <width>846</width>
                  <height>544</height>
                 </rect>
                </property>
@@ -750,7 +726,7 @@
                    <widget class="Line" name="line_3">
                     <property name="maximumSize">
                      <size>
-                      <width>700</width>
+                      <width>695</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1031,7 +1007,7 @@
                    <widget class="Line" name="line_4">
                     <property name="maximumSize">
                      <size>
-                      <width>700</width>
+                      <width>695</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1198,7 +1174,7 @@
                    <widget class="Line" name="line_6">
                     <property name="maximumSize">
                      <size>
-                      <width>700</width>
+                      <width>695</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1239,12 +1215,12 @@
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>600</width>
+                      <width>300</width>
                       <height>16777215</height>
                      </size>
                     </property>
                     <property name="text">
-                     <string>Reuse reset bond and chemical constraints instructions from last run</string>
+                     <string>Reuse constraints from last run</string>
                     </property>
                    </widget>
                   </item>
@@ -1252,7 +1228,7 @@
                    <widget class="Line" name="line_7">
                     <property name="maximumSize">
                      <size>
-                      <width>700</width>
+                      <width>695</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1423,8 +1399,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>978</width>
-                 <height>470</height>
+                 <width>860</width>
+                 <height>495</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_10">
@@ -1568,7 +1544,7 @@
                    <widget class="Line" name="line_8">
                     <property name="maximumSize">
                      <size>
-                      <width>700</width>
+                      <width>695</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1585,19 +1561,34 @@
                    </widget>
                   </item>
                   <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_56">
+                   <layout class="QVBoxLayout" name="verticalLayout_10">
+                    <property name="spacing">
+                     <number>13</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
                     <property name="topMargin">
                      <number>0</number>
                     </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>10</number>
+                    </property>
                     <item>
                      <layout class="QHBoxLayout" name="horizontalLayout_38">
+                      <property name="spacing">
+                       <number>6</number>
+                      </property>
                       <property name="topMargin">
                        <number>0</number>
                       </property>
                       <item>
                        <widget class="QLabel" name="label_65">
                         <property name="text">
-                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;pre&gt;&lt;p&gt;   sin(θ/λ) min:&lt;/p&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;pre style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'monospace';&quot;&gt;   sin(θ/λ) min:&lt;/span&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;</string>
                         </property>
                        </widget>
                       </item>
@@ -1665,24 +1656,11 @@
                       </item>
                      </layout>
                     </item>
-                   </layout>
-                  </item>
-                  <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_10">
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>10</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>10</number>
-                    </property>
                     <item>
                      <layout class="QHBoxLayout" name="horizontalLayout_36">
+                      <property name="spacing">
+                       <number>6</number>
+                      </property>
                       <item>
                        <widget class="QLabel" name="label_6">
                         <property name="text">
@@ -1695,6 +1673,12 @@
                       </item>
                       <item>
                        <widget class="QComboBox" name="manRefDropMenu">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
                         <property name="minimumSize">
                          <size>
                           <width>400</width>
@@ -1703,7 +1687,7 @@
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>350</width>
+                          <width>400</width>
                           <height>16777215</height>
                          </size>
                         </property>
@@ -1768,13 +1752,13 @@
                        <widget class="QPushButton" name="manRefSetupBut">
                         <property name="minimumSize">
                          <size>
-                          <width>120</width>
+                          <width>160</width>
                           <height>0</height>
                          </size>
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>150</width>
+                          <width>160</width>
                           <height>16777215</height>
                          </size>
                         </property>
@@ -1799,16 +1783,55 @@
                      </layout>
                     </item>
                     <item>
-                     <widget class="QLabel" name="manRefSetupLab">
-                      <property name="font">
-                       <font>
-                        <italic>true</italic>
-                       </font>
+                     <layout class="QHBoxLayout" name="horizontalLayout">
+                      <property name="topMargin">
+                       <number>0</number>
                       </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                     </widget>
+                      <item>
+                       <widget class="QPushButton" name="runXDLSMBut">
+                        <property name="minimumSize">
+                         <size>
+                          <width>150</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>150</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="toolTip">
+                         <string/>
+                        </property>
+                        <property name="text">
+                         <string> Run XDLSM</string>
+                        </property>
+                        <property name="icon">
+                         <iconset>
+                          <normaloff>../res/play.ico</normaloff>../res/play.ico</iconset>
+                        </property>
+                        <property name="shortcut">
+                         <string>Ctrl+R</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>false</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="manRefSetupLab">
+                        <property name="font">
+                         <font>
+                          <italic>true</italic>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
                     </item>
                    </layout>
                   </item>
@@ -1816,7 +1839,7 @@
                    <widget class="Line" name="line_5">
                     <property name="maximumSize">
                      <size>
-                      <width>700</width>
+                      <width>695</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1875,8 +1898,14 @@
                        <widget class="QPushButton" name="manRefBackupBut">
                         <property name="minimumSize">
                          <size>
-                          <width>120</width>
+                          <width>160</width>
                           <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>160</width>
+                          <height>16777215</height>
                          </size>
                         </property>
                         <property name="text">
@@ -1917,7 +1946,7 @@
                    <widget class="Line" name="line_16">
                     <property name="maximumSize">
                      <size>
-                      <width>700</width>
+                      <width>695</width>
                       <height>16777215</height>
                      </size>
                     </property>
@@ -1948,7 +1977,7 @@
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>200</width>
+                        <width>150</width>
                         <height>16777215</height>
                        </size>
                       </property>
@@ -2018,19 +2047,19 @@
                  </font>
                 </property>
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>2</number>
                 </property>
                 <widget class="QWidget" name="page_11">
                  <property name="geometry">
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>938</width>
-                   <height>343</height>
+                   <width>820</width>
+                   <height>368</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>Automatically add bond constraints</string>
+                  <string>Automatic Bond Constraints</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_19">
                   <item row="0" column="0">
@@ -2050,7 +2079,7 @@
                     <item>
                      <widget class="QLabel" name="label_36">
                       <property name="text">
-                       <string>Automatically add reset bond instructions. This will search for H atoms in the H environments displayed below, and add the displayed bond lengths. Any Hs not in these environments will be displayed below so you can add them manually.</string>
+                       <string>Automatically add reset bond instructions. This will search for H atoms in the H environments displayed below, and add the displayed bond lengths. Any H atoms not in these environments will be listed below so you can add them manually.</string>
                       </property>
                       <property name="wordWrap">
                        <bool>true</bool>
@@ -2460,12 +2489,12 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>425</width>
-                   <height>305</height>
+                   <width>820</width>
+                   <height>368</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>Manually add bond constraints</string>
+                  <string>Manual Bond Constraints</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_20">
                   <item row="0" column="0">
@@ -2670,12 +2699,12 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>354</width>
-                   <height>131</height>
+                   <width>820</width>
+                   <height>368</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>Bulk edit bond constraints</string>
+                  <string>Edit Bond Constraints</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_18">
                   <item row="0" column="0">
@@ -2954,19 +2983,19 @@
               <item>
                <widget class="QToolBox" name="resToolbox">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>6</number>
                 </property>
                 <widget class="QWidget" name="page_6">
                  <property name="geometry">
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>883</width>
-                   <height>90</height>
+                   <width>820</width>
+                   <height>252</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>Results from xd_lsm.out</string>
+                  <string>XDLSM Results</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_13">
                   <item row="0" column="1">
@@ -2984,7 +3013,7 @@
                      <number>10</number>
                     </property>
                     <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout">
+                     <layout class="QVBoxLayout" name="verticalLayout_22">
                       <property name="topMargin">
                        <number>0</number>
                       </property>
@@ -2992,7 +3021,7 @@
                        <widget class="QPushButton" name="getResBut">
                         <property name="maximumSize">
                          <size>
-                          <width>300</width>
+                          <width>320</width>
                           <height>16777215</height>
                          </size>
                         </property>
@@ -3011,7 +3040,7 @@
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>300</width>
+                          <width>320</width>
                           <height>16777215</height>
                          </size>
                         </property>
@@ -3030,7 +3059,7 @@
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>300</width>
+                          <width>320</width>
                           <height>16777215</height>
                          </size>
                         </property>
@@ -3070,12 +3099,12 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>938</width>
-                   <height>227</height>
+                   <width>820</width>
+                   <height>252</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>Residual density </string>
+                  <string>Residual Density </string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_25">
                   <item row="0" column="0">
@@ -3199,7 +3228,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>351</width>
+                   <width>806</width>
                    <height>268</height>
                   </rect>
                  </property>
@@ -3443,12 +3472,12 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>371</width>
-                   <height>233</height>
+                   <width>820</width>
+                   <height>252</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>Tabulate properties</string>
+                  <string>Tabulate Properties</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_22">
                   <item row="0" column="0">
@@ -3671,7 +3700,7 @@
                        </size>
                       </property>
                       <property name="text">
-                       <string>Tabulate properties</string>
+                       <string>Tabulate Properties in CSV File</string>
                       </property>
                      </widget>
                     </item>
@@ -3704,12 +3733,12 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>265</width>
-                   <height>88</height>
+                   <width>820</width>
+                   <height>252</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>Normal probability plot</string>
+                  <string>Normal Probability Plot</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_9">
                   <item row="0" column="0">
@@ -3773,12 +3802,12 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>411</width>
-                   <height>107</height>
+                   <width>820</width>
+                   <height>252</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>d-orbital populations</string>
+                  <string>d-orbital Populations</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_17">
                   <item row="0" column="0">
@@ -3886,12 +3915,12 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>230</width>
-                   <height>177</height>
+                   <width>820</width>
+                   <height>252</height>
                   </rect>
                  </property>
                  <attribute name="label">
-                  <string>TOPXD integrated charges</string>
+                  <string>TOPXD Integrated Charges</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_21">
                   <item row="0" column="0">
@@ -4674,8 +4703,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>938</width>
-                   <height>343</height>
+                   <width>820</width>
+                   <height>368</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -5077,6 +5106,19 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="4" column="1">
+                   <spacer name="verticalSpacer_15">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
                  </layout>
                 </item>
                 <item>
@@ -5094,19 +5136,6 @@
                 </item>
                </layout>
               </item>
-              <item>
-               <spacer name="verticalSpacer_15">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
              </layout>
             </item>
            </layout>
@@ -5116,14 +5145,51 @@
        </layout>
       </item>
       <item>
-       <widget class="QTreeView" name="folderTree">
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777215</height>
-         </size>
+       <layout class="QVBoxLayout" name="verticalLayout_27">
+        <property name="topMargin">
+         <number>2</number>
         </property>
-       </widget>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>1</number>
+        </property>
+        <item>
+         <widget class="QTreeView" name="folderTree">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="animated">
+           <bool>true</bool>
+          </property>
+          <property name="headerHidden">
+           <bool>true</bool>
+          </property>
+          <attribute name="headerDefaultSectionSize">
+           <number>200</number>
+          </attribute>
+          <attribute name="headerMinimumSectionSize">
+           <number>100</number>
+          </attribute>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
@@ -5170,6 +5236,7 @@
     <property name="title">
      <string>Options</string>
     </property>
+    <addaction name="menuClearCache"/>
     <addaction name="menuPref"/>
    </widget>
    <addaction name="menuFile"/>
@@ -5240,7 +5307,7 @@
   <action name="toolbarSettings">
    <property name="icon">
     <iconset>
-     <normaloff>../res/settings.png</normaloff>../res/settings.png</iconset>
+     <normaloff>res/settings.png</normaloff>res/settings.png</iconset>
    </property>
    <property name="text">
     <string>Preferences</string>
@@ -5262,7 +5329,7 @@
   <action name="toolbarMolecool">
    <property name="icon">
     <iconset>
-     <normaloff>../res/molecoolico_cropped.png</normaloff>../res/molecoolico_cropped.png</iconset>
+     <normaloff>res/molecoolico_cropped.png</normaloff>res/molecoolico_cropped.png</iconset>
    </property>
    <property name="text">
     <string>MoleCoolQt</string>
@@ -5288,7 +5355,7 @@
   <action name="toolbarSetFolder">
    <property name="icon">
     <iconset>
-     <normaloff>../res/folder.ico</normaloff>../res/folder.ico</iconset>
+     <normaloff>res/folder.ico</normaloff>res/folder.ico</iconset>
    </property>
    <property name="text">
     <string>Select project folder</string>
@@ -5302,7 +5369,7 @@
   <action name="toolbarRefreshCwd">
    <property name="icon">
     <iconset>
-     <normaloff>../res/refreshico.png</normaloff>../res/refreshico.png</iconset>
+     <normaloff>res/refreshico.png</normaloff>res/refreshico.png</iconset>
    </property>
    <property name="text">
     <string>Refresh Folder</string>
@@ -5322,7 +5389,7 @@
   <action name="toolbarMercury">
    <property name="icon">
     <iconset>
-     <normaloff>../res/mol_view_icon.png</normaloff>../res/mol_view_icon.png</iconset>
+     <normaloff>res/mol_view_icon.png</normaloff>res/mol_view_icon.png</iconset>
    </property>
    <property name="text">
     <string>Mercury</string>
@@ -5352,7 +5419,7 @@
   <action name="toolbarOpenmas">
    <property name="icon">
     <iconset>
-     <normaloff>../res/notepadico.png</normaloff>../res/notepadico.png</iconset>
+     <normaloff>res/notepadico.png</normaloff>res/notepadico.png</iconset>
    </property>
    <property name="text">
     <string>Openmas</string>
@@ -5382,6 +5449,31 @@
   <action name="actionTest">
    <property name="text">
     <string>test</string>
+   </property>
+  </action>
+  <action name="menuClearCache">
+   <property name="text">
+    <string>Clear cache</string>
+   </property>
+  </action>
+  <action name="actionOpen_structure_in_MoleCoolQt">
+   <property name="text">
+    <string>Open Structure in MoleCoolQt</string>
+   </property>
+  </action>
+  <action name="actionOpen_structure_in_structure_visualizer">
+   <property name="text">
+    <string>Open Structure in Structure Visuallizer</string>
+   </property>
+  </action>
+  <action name="actionOpen_xd_mas_in_text_editor">
+   <property name="text">
+    <string>Open xd.mas in Text Editor</string>
+   </property>
+  </action>
+  <action name="actionOpen_project_folder">
+   <property name="text">
+    <string>Open Project Folder</string>
    </property>
   </action>
  </widget>

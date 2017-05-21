@@ -1,13 +1,13 @@
-from quickplot import makeResMap
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from scipy.stats import probplot
 import matplotlib.pyplot as plt
+from quickplot import makeResMap
 from ast import literal_eval
 from traceback import print_exception
 import subprocess
 import hashlib
 import time
-import numpy as np
 import copy
 import os
 import sys
@@ -2253,14 +2253,6 @@ class prefGui(QDialog, Ui_pref):
         self.chooseMercPathBut.clicked.connect(self.chooseMerc)
         self.chooseTextPathBut.clicked.connect(self.chooseTextEd)
         self.chooseXDPathBut.clicked.connect(self.chooseXD)
-        self.clearCacheBut.clicked.connect(self.prefClearCache)
-
-    def prefClearCache(self):
-        '''
-        Clear cache.
-        '''
-        clearCache()
-        self.clearCacheLab.setText('Cache emptied')
 
     def chooseXD(self):
         '''
@@ -2878,7 +2870,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
-        self.versionNum = '0.5.2'
+        self.versionNum = '0.8.0'
         self.cwdStatusLab = QLabel()
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
@@ -2891,7 +2883,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         #Check for XD files and if they are not there prompt user to find directory.
         if not self.settings.value('xdpath'):
             self.findXD()
-        
+
         self.treeModel = QFileSystemModel()
         self.treeModel.setRootPath(QDir.rootPath())
         self.folderTree.setModel(self.treeModel)
@@ -2922,6 +2914,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.toolbarOpenmas.triggered.connect(self.openMas)
         self.menuSendBug.triggered.connect(self.bugRepDialog)
         self.menuSendSugg.triggered.connect(self.sendSuggDialog)
+        self.menuClearCache.triggered.connect(lambda: clearCache())
         #Run addDUM() with user input when button is pressed.
         self.dumBut.clicked.connect(self.addDUMPress)
         self.DUMnum.returnPressed.connect(self.addDUMPress)
@@ -3038,7 +3031,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.manRefSnlMax.returnPressed.connect(self.setupRef)
 
         #XD package
-        self.XDLSMLabs = [self.XDLSMLab, self.pkgXDLab]
+        self.XDLSMLabs = [self.manRefSetupLab, self.pkgXDLab]
         self.XDLSMButs = [self.runXDLSMBut, self.pkgXDLSMBut]
         self.pkgXDButs = [self.pkgTOPXDBut, self.pkgXDFFTBut, self.pkgXDFOURBut, self.pkgXDGEOMBut,
                           self.pkgXDLSMBut, self.pkgXDPROPBut]
@@ -3103,39 +3096,40 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         self.wizAdvOptBut.clicked.connect(self.wizAdvOptToggle)
         self.wizAdvOptOpen = False
-        
+
         self.showMaximized()
 
+        self.menubar.setNativeMenuBar(True)
 
     def folderTreeDoubleClicked(self, index):
         '''
         Handle item in folder tree being double clicked.
         '''
         filePath = self.treeModel.filePath(index)
-        fileName = self.treeModel.fileName(index)
-        
+       #fileName = self.treeModel.fileName(index)
+
         global textEdAbsPath
-        
+
         #Don't open if a folder has been clicked/
         if os.path.isdir(filePath):
             pass
-        
+
         #Opens everything in chosen text editor on windows, on OSX and Linux opens in default opener.
         #Would be nice to tailor it more to the files that windows doesn't open as text as default.
         else:
             try:
                 if sys.platform == 'win32':
                     subprocess.call([textEdAbsPath, filePath])
-    
+
                 else:
                     opener ="open" if sys.platform == "darwin" else "xdg-open"
                     subprocess.call([opener, filePath])
-                    
+
             except Exception as e:
                 printExc(e)
                 pass
 
- 
+
     def wizAdvOptToggle(self):
         '''
         Handler to expand/collapse advanced wizard options.
@@ -4173,7 +4167,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
     def updateFolderTree(self):
         self.folderTree.setRootIndex(self.treeModel.index(QDir.currentPath()))
-        
+
     def setFolder(self):
         '''
         Prompt user to choose a folder and change current working directory to the folder.
@@ -4329,7 +4323,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global manualAbsPath
         global cachePath
 
-        projDir = '/'.join(os.getcwd().split('/')[:-1])
+        projDir = os.getcwd()
+#        if not os.path.isdir(projDir + '/res') and not os.path.isdir(projDir + '/tools'):         #Makes it works with different relative locations of res, cache etc when building or running from python
+#            projDir = '/'.join(projDir.split('/')[:-1])
+
         cachePath = projDir + '/cache'
 
         if not os.path.isdir(cachePath):
@@ -4339,6 +4336,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         manualAbsPath = projDir + '/res/XD Toolkit Manual.pdf'
 
         if not os.path.isfile(timeFileAbsPath):
+            if not os.path.isdir('tools'):
+                os.mkdir('tools')
             with open('{}/tools/lsmTimes.buckfast'.format(projDir),'w') as bucky:
                 pass
 
@@ -5399,17 +5398,23 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         if self.setupFOURInputBox.isChecked() == True:
             rawInput = str(self.setupFOURInputText.text()).strip().upper()
-            atom = rawInput2labels(rawInput)[0]
-            try:
-                FOU3atoms(atom, copy.copy(globAtomLabs), copy.copy(globAtomPos))
-                self.xdfour.finishedSignal.connect(self.showResDensMap)
-                self.xdfour.start()
-            except PermissionError:
-                self.setupFOURStatusLab.setText(self.permErrorMsg)
-            except FileNotFoundError:
-                self.setupFOURStatusLab.setText(self.lstMissingErrorMsg)
-            except KeyError as e:
-                self.setupFOURStatusLab.setText(self.atomNoExistErrorMsg)
+
+            if rawInput:
+                atom = rawInput2labels(rawInput)[0]
+
+                try:
+                    FOU3atoms(atom, copy.copy(globAtomLabs), copy.copy(globAtomPos))
+                    self.xdfour.finishedSignal.connect(self.showResDensMap)
+                    self.xdfour.start()
+                except PermissionError:
+                    self.setupFOURStatusLab.setText(self.permErrorMsg)
+                except FileNotFoundError:
+                    self.setupFOURStatusLab.setText(self.lstMissingErrorMsg)
+                except KeyError as e:
+                    self.setupFOURStatusLab.setText(self.atomNoExistErrorMsg)
+
+            else:
+                self.setupFOURStatusLab.setText('No atom selected.')
 
         elif self.setupFOURFFTBox.isChecked() == True:
             try:
@@ -5749,7 +5754,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     #Splash screen
-    splash_pix = QPixmap(os.path.split(os.getcwd())[-2] + '/res/splash.png')
+    splash_pix = QPixmap('res/splash.png')
     splash = QSplashScreen(splash_pix)
     splash.setMask(splash_pix.mask())
     font = QFont()

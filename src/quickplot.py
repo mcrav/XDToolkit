@@ -391,8 +391,18 @@ def makeResMap(filename, saveFilename = None):
                                                 bond_thickness, color = \
                                                 bond_color)
     
-    # Plot atoms 
+    # Plot atoms
+    
     for atom in atoms:
+        #JUST THERE FOR CUSTOM LABELS BECAUSE OF PROJECT WHERE SHELX.INS LABELS DON'T MATCH XD.MAS LABELS
+#        if atom[0]=='S(007)':
+#            atom[0] = 'S(4)'
+#        elif atom[0]=='CO(01)':
+#            atom[0]='CO(1)'
+#        elif atom[0]=='C(01A)':
+#            atom[0]='C(19)'
+            
+    
         if abs(float(atom[3])) <= atom_cut:
             if show_symm_atoms: # Show all atoms
                 a_type = re.sub('.*?(_)', '', atom[0]).split('(')[0]
