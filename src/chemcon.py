@@ -86,7 +86,7 @@ def findAllPaths(atom, atomLabsDict):
     
             passAppend(currAtom)          #Add current atoms to visited atoms list.
             steps += 1                            #Add step to total number of steps in path
-    
+            
             atomNeebs = atomLabsDict[atomNormLabs[currAtom]]        #Get neighbours of current atom.
     
             for neeb in atomNeebs:                              #Go through neighbours of current atom one by one.

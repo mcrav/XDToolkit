@@ -105,7 +105,13 @@ def addLengthsToProOut():
             
 def sortTables(atomOrder, file):
     rows = {}
-    atomOrder = [item + '(' for item in atomOrder if len(item)==1]
+    newAtomOrder = []
+    for item in atomOrder:
+        if len(item)==1:
+            newAtomOrder.append(item + '(')
+        else:
+            newAtomOrder.append(item)
+    atomOrder = newAtomOrder
     newfilename = 'sorted_' + file
     with open(file,'r') as file, open(newfilename,'w') as newFile:
         file = csv.reader(file)
@@ -119,8 +125,10 @@ def sortTables(atomOrder, file):
             i+=1
         
         for element in atomOrder:
+            print(element)
             for row in sorted(rows[element], key = lambda row: int(re.sub("[^0-9]", "", row[0].split('(')[1].strip(')')))):
                 newFile.writerow(row)
+                print(row)
 
 def readTOPXDFolder(folder):
     os.chdir(folder)
@@ -130,7 +138,7 @@ def readTOPXDFolder(folder):
         
         for file in os.listdir(folder):
             splitFile = os.path.splitext(file)
-            if splitFile[1] == '.out':
+            if splitFile[1] == '.out' and file.startswith('topxd'):
                 atom = splitFile[0].split('_')[1]
                 newRow = [atom]
                 with open(file, 'r', encoding='utf-8', errors = 'ignore') as topxdout:
@@ -147,11 +155,12 @@ def readTOPXDFolder(folder):
  
 
 
-os.chdir('/home/matt/Work/cucf3_final')
+os.chdir('/home/matt/Work')
 #
-readTOPXDFolder(os.path.abspath('cucf3_highangle_topxd'))
-atomOrder = ['CU','F','N','C','H']
-sortTables(atomOrder, 'topxdRes.csv')
+#readTOPXDFolder(os.path.abspath('cosph__22-05-17_topxd'))
+#print(os.getcwd())
+#atomOrder = ['CO','S','P','C','H']
+#sortTables(atomOrder, 'topxdRes.csv')
 
 #sortTables(atomOrder, 'xd_pro.csv')
 #geom2Angles()
@@ -159,8 +168,38 @@ sortTables(atomOrder, 'topxdRes.csv')
 #addLengthsToProOut()
 #getCPSearch()
 
+def getSmallestLs(csv1, csv2):
+    with open(csv1,'r') as csv1, open(csv2,'r') as csv2, open('lowL_sorted_topxdRes.csv','w') as newCsv:
+        csv1 = csv.reader(csv1)
+        csv2 = csv.reader(csv2)
+        newCsv = csv.writer(newCsv)
+        csv1Rows = []
+        csv2Rows = []
+        minLRows = []
+        overallCharge = 0
+        for i,line in enumerate(csv1):
+            if i>0:
+                csv1Rows.append(line)
+        for i,line in enumerate(csv2):
+            if i>0:
+                csv2Rows.append(line)
+            
+        newCsv.writerow(['Atom', 'Q', 'L'])
+        for i,row in enumerate(csv1Rows):
+            if row[2]<csv2Rows[i][2]:
+                newCsv.writerow(row)
+                overallCharge += float(row[1])
+            else:
+                newCsv.writerow(csv2Rows[i])
+                overallCharge += float(csv2Rows[i][1])
+                
+    print('Overall charge: {0:.3f}'.format(overallCharge))
+            
+#getSmallestLs('cucf3_22-05-17_topxd/sorted_topxdRes.csv',
+#              'cucf3_final/lowangle_topxd(N(1)broken)/sorted_topxdRes.csv')
 
-
+getSmallestLs('cosph__22-05-17_topxd/sorted_topxdRes.csv',
+              'cosph_cov/topxd_files/sorted_topxdRes.csv')
 def getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma):
     '''
     Get distance between 2 atoms. Return distance.

@@ -218,12 +218,11 @@ def findCHEMCON():
             globAtomEnv = literal_eval(envCache.read())
 
     else:
-        print(' in else')
+        print('Finding chemical equivalency')
         envs = {}
         CHEMCON = {}
         pool = mp.Pool(5)
         atomEnv = pool.map_async(partial(getEnvSig, atomLabs), atoms).get()
-        print(atomEnv)
         pool.close()
         for item in atomEnv:
             globAtomEnv[spec2norm(item[0])] = item[1]
@@ -2211,7 +2210,23 @@ class XDINI(QThread):
 
         self.finishedSignal.emit()
 
+class FindCHEMCONThread(QThread):
+    '''
+    Find CHEMCON in a separate thread so it doesn't freeze the whole program.
+    '''
+    finishedSignal = pyqtSignal()
+    chemcon = {}
+    def __init__(self):
+        QThread.__init__(self)
 
+    def __del__(self):
+        self.wait()
+        
+    def run(self):
+        self.chemcon = findCHEMCON()
+        self.finishedSignal.emit()
+        
+        
 class aboutBox(QWidget, Ui_aboutBox):
     '''
     About XD Toolkit window.
@@ -2572,7 +2587,7 @@ class wizardRunning(QDialog, Ui_wizard):
         try:
             os.makedirs('Backup/' + self.folder)
         except Exception as e:
-            print(printExc(e))
+            printExc('xdWiz',e)
             print("Invalid backup folder name. Can't continue.")
         if os.path.isfile('shelx.ins') and os.path.isfile('shelx.hkl'):
             self.wizStatusLab.setText('Initializing compound...')
@@ -2871,6 +2886,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
         self.versionNum = '0.8.0'
+        
+        #Set font depending on OS
+        if sys.platform=='win32':
+            self.programFont = QFont()
+            self.programFont.setFamily("Consolas")
+        elif sys.platform.startswith('linux'):
+            self.programFont = QFont()
+            self.programFont.setFamily("Bitstream Vera Sans Mono")
+            
         self.cwdStatusLab = QLabel()
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
@@ -3126,7 +3150,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     subprocess.call([opener, filePath])
 
             except Exception as e:
-                printExc(e)
+                printExc('folderTreeDoubleClicked',e)
                 pass
 
 
@@ -3258,15 +3282,11 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             self.manRefIDInput.setText(str(self.xdWizCmpID.text()))
             try:
                 writeCHEMCON(findCHEMCON())
-                print('wrote chemcon')
                 autoResetBond(copy.copy(globAtomLabs), copy.copy(globAtomTypes))
-                print('reset bonded')
                 multipoleMagician()
-                print('avadacadavra')
                 self.wizTest()
             except Exception as e:
-                print('wizCheckIni Exception')
-                print(e)
+                printExc('wizCheckIni',e)
                 pass
 
             for item in self.wiz2ndStageObjects:
@@ -4153,8 +4173,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Handle res2inp button press.
         '''
         if os.path.isfile('xd.res'):
-            res2inp()
             self.toolbarRes2Inp.setDisabled(True)
+            res2inp()
+            
 
 
     def refreshFolder(self):
@@ -4236,7 +4257,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 opener ="open" if sys.platform == "darwin" else "xdg-open"
                 subprocess.call([opener, 'xd.mas'])
         except Exception as e:
-            printExc(e)
+            printExc('openMas',e)
             pass
 
     def loadIAM(self):
@@ -4532,7 +4553,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 try:
                     scaleFacRef()
                     self.manRefSetupLab.setText(successStr)
-                except:
+                except Exception as e:
+                    printExc('setupRef',e)
                     self.manRefSetupLab.setText(failureStr)
 
             elif refNum == 2:               #High angle non-H positions and ADPs
@@ -4556,7 +4578,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     else:
                         self.manRefSetupLab.setText(snlErrMsg)
 
-                except:
+                except Exception as e:
+                    printExc('setupRef',e)
                     self.manRefSetupLab.setText(failureStr)
 
             elif refNum == 3:               #Low angle H positions
@@ -4579,7 +4602,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     else:
                         self.manRefSetupLab.setText(snlErrMsg)
 
-                except:
+                except Exception as e:
+                    printExc('setupRef',e)
                     self.manRefSetupLab.setText(failureStr)
 
             elif refNum == 4:               #Kappa and monopoles
@@ -4600,7 +4624,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                         kapMonRef()
                         self.manRefSetupLab.setText(successStr)
 
-                except:
+                except Exception as e:
+                    printExc('setupRef',e)
                     self.manRefSetupLab.setText(failureStr)
 
             elif refNum == 5:               #Dipoles
@@ -4655,7 +4680,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                         else:
                             self.manRefSetupLab.setText(successStr)
 
-                except:
+                except Exception as e:
+                    printExc('setupRef',e)
                     self.manRefSetupLab.setText(failureStr)
 
             elif refNum == 10:              #Lower symmetry
@@ -4666,7 +4692,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     self.manRefSetupLab.setText(successStr)
 
 
-                except:
+                except Exception as e:
+                    printExc('setupRef',e)
                     self.manRefSetupLab.setText(failureStr)
 
             elif refNum == 11:              #Final refinement
@@ -4674,7 +4701,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                     checkMultRes()
                     self.manRefSetupLab.setText(successStr)
 
-                except:
+                except Exception as e:
+                    printExc('setupRef',e)
                     self.manRefSetupLab.setText(failureStr)
 
             if snlMin:
@@ -4981,8 +5009,24 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         if self.autoCHEMCON.isChecked():
             try:
-                writeCHEMCON(findCHEMCON())
-                self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas updated')
+#                findCHEMCON()
+                self.autoCHEMCONRunning = FindCHEMCONThread()
+                    
+                self.autoCHEMCONRunning.finishedSignal.connect(lambda: self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas udpated.'))
+                self.autoCHEMCONRunning.start()
+                self.msg = QMessageBox()
+                self.autoCHEMCONRunning.finishedSignal.connect(lambda: self.msg.accept())
+                self.autoCHEMCONRunning.finishedSignal.connect(lambda: writeCHEMCON(self.autoCHEMCONRunning.chemcon))
+                self.msg.addButton(QMessageBox.Cancel)
+                self.msg.setText('Finding chemical equivalent atoms...')
+                self.msg.setFont(self.programFont)
+                self.msg.setWindowTitle('Chemical constraints')
+                self.msg.show()
+                    
+                if self.msg == QMessageBox.Cancel:
+                    self.autoCHEMCONRunning.finishedSignal.disconnect(lambda: writeCHEMCON(self.autoCHEMCONRunning.chemcon))
+                    self.autoCHEMCONRunning.finishedSignal.disconnect(lambda: self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas udpated.'))
+
             except PermissionError:
                 self.CHEMCONStatusLab.setText(self.permErrorMsg)
             except Exception as e:
@@ -5265,7 +5309,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             else:
                 conv = 'No'
 
-            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence - {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(lsmOutFile), conv, dmsda[0], dmsda[1])
+            resStr = 'RF<sup>2</sup> = {0: .2f} %<br>Convergence – {1}<br>Average DMSDA = {2}<br>Max DMSDA = {3}'.format(getRF2(lsmOutFile), conv, dmsda[0], dmsda[1])
             print(resStr)
             SUs = readSUs(lsmOutFile)
             resStr+='<br><br>Largest standard uncertainties<br>'
@@ -5672,7 +5716,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if folder:
             try:
                 loadBackup(folder)
-                self.loadBackupLab.setText('Backup loaded from: "' + folder + '"')
+                self.loadBackupLab.setText('Backup loaded from: <i>"' + folder + '"</i>')
             except PermissionError:
                 self.loadBackupLab.setText(self.permErrorMsg)
             except Exception:
@@ -5757,8 +5801,14 @@ if __name__ == '__main__':
     splash_pix = QPixmap('res/splash.png')
     splash = QSplashScreen(splash_pix)
     splash.setMask(splash_pix.mask())
-    font = QFont()
-    font.setFamily("Bitstream Vera Sans Mono")
+    
+    if sys.platform.startswith('linux'):
+        font = QFont()
+        font.setFamily('Bitstream Vera Sans Mono')
+    elif sys.platform==('win32'):
+        font = QFont()
+        font.setFamily('Consolas')
+        
     splash.setFont(font)
     splash.showMessage('Initializing...',
                            Qt.AlignBottom | Qt.AlignLeft,

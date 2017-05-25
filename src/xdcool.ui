@@ -501,7 +501,7 @@
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>7</number>
+           <number>6</number>
           </property>
           <property name="documentMode">
            <bool>false</bool>
@@ -600,7 +600,7 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>846</width>
+                 <width>723</width>
                  <height>544</height>
                 </rect>
                </property>
@@ -1399,8 +1399,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>860</width>
-                 <height>495</height>
+                 <width>765</width>
+                 <height>457</height>
                 </rect>
                </property>
                <layout class="QGridLayout" name="gridLayout_10">
@@ -2054,8 +2054,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>368</height>
+                   <width>593</width>
+                   <height>314</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -2489,8 +2489,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>368</height>
+                   <width>425</width>
+                   <height>305</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -2699,8 +2699,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>368</height>
+                   <width>354</width>
+                   <height>131</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -2990,8 +2990,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>252</height>
+                   <width>350</width>
+                   <height>148</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -3099,8 +3099,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>252</height>
+                   <width>485</width>
+                   <height>173</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -3228,7 +3228,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>806</width>
+                   <width>351</width>
                    <height>268</height>
                   </rect>
                  </property>
@@ -3472,8 +3472,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>252</height>
+                   <width>371</width>
+                   <height>233</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -3733,8 +3733,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>252</height>
+                   <width>265</width>
+                   <height>88</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -3802,8 +3802,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>252</height>
+                   <width>411</width>
+                   <height>107</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -3915,8 +3915,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>252</height>
+                   <width>230</width>
+                   <height>177</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -4703,8 +4703,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>820</width>
-                   <height>368</height>
+                   <width>344</width>
+                   <height>209</height>
                   </rect>
                  </property>
                  <attribute name="label">
@@ -4855,7 +4855,7 @@
                  <widget class="QLabel" name="loadBackupLab">
                   <property name="font">
                    <font>
-                    <italic>true</italic>
+                    <italic>false</italic>
                    </font>
                   </property>
                   <property name="text">

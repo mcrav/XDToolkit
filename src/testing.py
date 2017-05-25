@@ -1,6 +1,6 @@
 import os
 from test import Ui_MainWindow
-from XDToolkit import rawInput2labels, customExceptHook
+from XDToolkit import rawInput2labels, customExceptHook, findCHEMCON
 from PyQt5.QtWidgets import QWidget, QMessageBox, QLabel, QGridLayout, QDialogButtonBox, QSplashScreen, QPushButton, QApplication, QDialog, QLineEdit, QFileDialog, QMainWindow
 from PyQt5.QtCore import QCoreApplication, QSettings, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QFont
@@ -8,8 +8,11 @@ import PyQt5.QtCore
 import sys
 import shutil
 from ast import literal_eval
-from utils import spec2norm
+from utils import spec2norm, getNumAtoms
 from initfuncs import ins2all
+import csv
+import time
+import subprocess
 
 def listjoin(listItem, splitter = ' '):
     return splitter.join(listItem).strip(splitter)
@@ -45,7 +48,7 @@ def checkNeebs(testDictRaw):
             problems[atom] = neebs
 
     print(problems)
-    return problems
+    return (problems,x)
 
 def getDistances(atom, dists):
     
@@ -176,6 +179,10 @@ class TestMainWindow(QMainWindow, Ui_MainWindow):
         problems = []
         resStr = ''
         testDataDir = '/home/matt/dev/XDTstuff/testData'
+ #       with open('/home/matt/dev/XDTstuff/chemconTimes.csv','w') as timeCsv:
+#            timeCsv = csv.writer(timeCsv)
+#            
+            
         for item in os.listdir(testDataDir):
 
             self.atomLabs = {}
@@ -184,8 +191,23 @@ class TestMainWindow(QMainWindow, Ui_MainWindow):
             if os.path.isfile('atomLabs.test'):
                 with open('atomLabs.test','r') as atomLabs:
                     self.atomLabs = literal_eval(atomLabs.read())
+            
             result = checkNeebs(self.atomLabs)
-            if result:
+            
+            
+            
+#                try:
+#                    ini = subprocess.Popen(['/home/matt/dev/XDTstuff/xd-distr/bin/xdini','id','shelx'], cwd = os.getcwd(), shell=False)
+#                    ini.wait()
+#                    x = time.time()
+#                    findCHEMCON(result[1][0])
+#                    y = time.time()
+#                    timeCsv.writerow([getNumAtoms(), y-x])
+#                except Exception as e:
+#                    print(e)
+#                    print('Couldn"t find CHEMCON')
+            
+            if result[0]:
                 problems.append(item)
                 comment = 'Fail'
             else:

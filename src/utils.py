@@ -6,8 +6,8 @@
 
 import os
 
-def printExc(exception):
-    print('Exception: ' + exception)
+def printExc(function, exception):
+    print('{} Exception: {}'.format(function,exception))
 
 def atomTableEnds(line):
     return (line.startswith('END ATOM') or line.startswith('!') or line.startswith('DUM'))
