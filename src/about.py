@@ -18,7 +18,7 @@ class Ui_aboutBox(object):
         font.setPointSize(10)
         aboutBox.setFont(font)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("flatearth.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("res/flatearth.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         aboutBox.setWindowIcon(icon)
         self.gridLayout = QtWidgets.QGridLayout(aboutBox)
         self.gridLayout.setObjectName("gridLayout")
@@ -27,7 +27,6 @@ class Ui_aboutBox(object):
         self.label.setWordWrap(True)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-
         self.retranslateUi(aboutBox)
         QtCore.QMetaObject.connectSlotsByName(aboutBox)
 

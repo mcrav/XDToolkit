@@ -135,6 +135,7 @@ def getEnvSig(atomLabsDict, atom):
     Create a sha256 hash value for the chemical environment of a given atom. 
     Return this hash value.
     '''
+    print(atom)
     #Sort list of paths alphabetically so it is the same no matter what order paths were found in
     #Make string with starting atom types followed by , joined sorted list of all paths.
     pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom, atomLabsDict)))

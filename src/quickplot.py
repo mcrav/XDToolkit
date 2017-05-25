@@ -447,7 +447,6 @@ def makeResMap(filename, saveFilename = None):
         print('saved')
     #print ('%s_%s%s%s.%s saved in %s/' % (func, atoms[0][0], atoms[1][0], \
      #     atoms[2][0], save_as, os.getcwd()))
-    plt.show()
 
     return fig
     

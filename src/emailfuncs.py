@@ -3,13 +3,20 @@
 #-------------------EMAIL--------------------------------------------
 #####################################################################
 '''
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+from email.mime.text import MIMEText
+import os
 
-def sendEmail(body = '', email = '', attachments = [], subject = ''):
+def sendEmail(body = '', email = '', attachments = [], subject = '', toaddr = ''):
     '''
     Send email to my email account from xdtoolkit@gmail.com
     '''
+    print('Sending email')
     fromaddr = "xdtoolkit@gmail.com"
-    toaddr = "mcrav@chem.au.dk"
+    if not toaddr:
+        toaddr = "mcrav@chem.au.dk"
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = toaddr
@@ -27,11 +34,13 @@ def sendEmail(body = '', email = '', attachments = [], subject = ''):
 
     bodyText = '{0}<br><br>Email Address: {1}'.format(body,email)
     msg.attach(MIMEText(bodyText, 'html'))
-
+    print('starting smtp')
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login("xdtoolkit@gmail.com", '***')
+    server.login("xdtoolkit@gmail.com", '****')
+    print('logged in')
     text = msg.as_string()
-    server.sendmail("xdtoolkit@gmail.com", "mcrav@chem.au.dk", text)
+    server.sendmail("xdtoolkit@gmail.com", toaddr, text)
+    print('sent')
 
     server.quit()

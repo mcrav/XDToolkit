@@ -4,7 +4,7 @@ from scipy.stats import probplot
 import matplotlib.pyplot as plt
 from quickplot import makeResMap
 from ast import literal_eval
-from traceback import print_exception
+from traceback import print_exception, format_exception
 import subprocess
 import hashlib
 import time
@@ -34,7 +34,7 @@ from PyQt5.QtWidgets import (
         QPushButton, QApplication, QDialog, QFileDialog, QMainWindow, QGridLayout,
         QScrollArea, QSizePolicy, QSpacerItem, QFileSystemModel, QTreeView)
 from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject, QDir, pyqtSlot, QModelIndex
-from PyQt5.QtGui import QPixmap, QFont, QStandardItem, QStandardItemModel
+from PyQt5.QtGui import QPixmap, QFont, QStandardItem, QStandardItemModel, QPalette, QColor, QBrush, QIcon
 from devtools import resetmas, timeDec
 from backup import backup, loadBackup
 from emailfuncs import sendEmail
@@ -117,7 +117,6 @@ def initialiseGlobVars():
     global globAtomPos
     global cachePath
 
-    print('init globvar')
     if os.path.isfile('shelx.hkl'):
         cacheRes = inCache('shelx.hkl')
         hklHash = cacheRes[1]
@@ -126,8 +125,10 @@ def initialiseGlobVars():
         #If global dicts are in the cache folder, load them from there instead of making them again.
         try:
             if not isInCache:
+                print('Structure not in cache. Initializing compound.')
                 raise Exception
             else:
+                print('Structure found in cache.')
                 with open('{}/{}/atomLabs.buckfast'.format(cachePath, hklHash),'r') as atomLabs:
                     globAtomLabs = literal_eval(atomLabs.read())
 
@@ -188,6 +189,8 @@ def initialiseGlobVars():
         globAtomAngles = {}
         globAtomPos = {}
 
+    print(globAtomLabs)
+
 
 
 '''
@@ -201,7 +204,6 @@ def findCHEMCON():
     '''
     Find chemical equivalency in structure. Return CHEMCON dictionary.
     '''
-    print('finding chemcon')
     global globAtomEnv          #Global dictionary of atoms and their chemical environment hash values i.e. {'C(1)':'f11390f0a9cadcbb4f234c8e8ea8d236'}
     global cacheHashPath
     globAtomEnv = {}
@@ -209,8 +211,8 @@ def findCHEMCON():
     atoms = [atom + ',asym' for atom in getAtomList()]
     chemconFilePath = '{}/chemcon.buckfast'.format(cacheHashPath)
     atomEnvFilePath = '{}/atomEnv.buckfast'.format(cacheHashPath)
-    x=3
-    if os.path.isfile(chemconFilePath) and os.path.isfile(atomEnvFilePath) and x==4:
+
+    if os.path.isfile(chemconFilePath) and os.path.isfile(atomEnvFilePath):
         with open(chemconFilePath, 'r') as chemconCache:
             CHEMCON = literal_eval(chemconCache.read())
 
@@ -218,7 +220,8 @@ def findCHEMCON():
             globAtomEnv = literal_eval(envCache.read())
 
     else:
-        print('Finding chemical equivalency')
+
+        print('CHEMCON not in cache. Finding chemical equivalency...')
         envs = {}
         CHEMCON = {}
         pool = mp.Pool(5)
@@ -2086,6 +2089,25 @@ def check4CustomLCS():
     return customAtoms
 
 
+def getFont(size = 10):
+    '''
+    Choose font based on OS. Return QFont.
+    '''
+    font = QFont()
+    font.setPointSize(size)
+    if sys.platform.startswith('linux'):
+        font.setFamily("Bitstream Vera Sans Mono")
+
+    elif sys.platform=='win32':
+        font.setFamily("Consolas")
+
+    return font
+
+def getIcon():
+    icon = QIcon()
+    icon.addPixmap(QPixmap(iconAbsPath), QIcon.Normal, QIcon.Off)
+    return icon
+
 '''
 #########################################################################
 #--------------------GUI-------------------------------------------------
@@ -2221,12 +2243,12 @@ class FindCHEMCONThread(QThread):
 
     def __del__(self):
         self.wait()
-        
+
     def run(self):
         self.chemcon = findCHEMCON()
         self.finishedSignal.emit()
-        
-        
+
+
 class aboutBox(QWidget, Ui_aboutBox):
     '''
     About XD Toolkit window.
@@ -2234,6 +2256,8 @@ class aboutBox(QWidget, Ui_aboutBox):
     def __init__(self, parent=None):
         super(aboutBox, self).__init__(parent)
         self.setupUi(self)
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
 
 class sendBug(QDialog, Ui_sendBug):
     '''
@@ -2242,6 +2266,8 @@ class sendBug(QDialog, Ui_sendBug):
     def __init__(self, parent=None):
         super(sendBug, self).__init__(parent)
         self.setupUi(self)
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
 
 class sendSugg(QDialog, Ui_sendSugg):
@@ -2251,7 +2277,8 @@ class sendSugg(QDialog, Ui_sendSugg):
     def __init__(self, parent=None):
         super(sendSugg, self).__init__(parent)
         self.setupUi(self)
-
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
 
 class prefGui(QDialog, Ui_pref):
@@ -2264,6 +2291,8 @@ class prefGui(QDialog, Ui_pref):
         '''
         super(prefGui, self).__init__(parent)
         self.setupUi(self)
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         self.chooseMoleCoolPath.clicked.connect(self.chooseMCQt)
         self.chooseMercPathBut.clicked.connect(self.chooseMerc)
         self.chooseTextPathBut.clicked.connect(self.chooseTextEd)
@@ -2401,6 +2430,8 @@ class resmap(QWidget, Ui_resmap):
     def __init__(self, grdFile, parent=None):
         super(resmap, self).__init__(parent)
         self.setupUi(self)
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         self.grdFile = grdFile
         self.setup()
 
@@ -2455,9 +2486,10 @@ class NPP(QWidget, Ui_resmap):
 
         super(NPP, self).__init__(parent)
         self.setupUi(self)
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         self.setWindowTitle('Normal probability plot')
         self.setup()
-
 
     def setup(self):
         '''
@@ -2512,7 +2544,8 @@ class checkNeebs(QWidget, Ui_checkneebs):
     def __init__(self, parent=None):
         super(checkNeebs, self).__init__(parent)
         self.setupUi(self)
-
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         atomList = getAtomList()
         if len(atomList) < 30:
             self.tableLab.setText(self.writeNeebTable(atomList))
@@ -2549,6 +2582,8 @@ class wizardRunning(QDialog, Ui_wizard):
         '''
         super(wizardRunning, self).__init__(parent)
         self.setupUi(self)
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         self.xdini = XDINI()
         self.xdlsm = XDLSM()
         self.xdlsm.finishedSignal.connect(self.xdWizRef)
@@ -2606,30 +2641,30 @@ class wizardRunning(QDialog, Ui_wizard):
         '''
         print('xdWizRef called')
 
-        if self.collectDat:
-            global timeFileAbsPath
-            if self.i > 0 and self.i < len(self.refList):
-                try:
-                    with open(timeFileAbsPath, 'a') as timeFile:
-
-                        self.finishingTime = time.time()
-
-                        runningTime = self.finishingTime - self.startingTime
-                        numAtoms = getNumAtoms()
-                        ref = self.refList[self.i]
-                        refSplit = ref.split()
-                        refName = ''.join(refSplit[2:])
-
-                        try:
-                            refName = refName[:13]
-                        except Exception:
-                            pass
-
-                        timeStr = '{0:21}{1:10}{2:<13.2f}{3}\n'.format(refName, str(numAtoms), runningTime, sys.platform)
-                        timeFile.write(timeStr)
-
-                except Exception:
-                    pass
+#        if self.collectDat:
+#            global timeFileAbsPath
+#            if self.i > 0 and self.i < len(self.refList):
+#                try:
+#                    with open(timeFileAbsPath, 'a') as timeFile:
+#
+#                        self.finishingTime = time.time()
+#
+#                        runningTime = self.finishingTime - self.startingTime
+#                        numAtoms = getNumAtoms()
+#                        ref = self.refList[self.i]
+#                        refSplit = ref.split()
+#                        refName = ''.join(refSplit[2:])
+#
+#                        try:
+#                            refName = refName[:13]
+#                        except Exception:
+#                            pass
+#
+#                        timeStr = '{0:21}{1:10}{2:<13.2f}{3}\n'.format(refName, str(numAtoms), runningTime, sys.platform)
+#                        timeFile.write(timeStr)
+#
+#                except Exception:
+#                    pass
 
         global wizUniSnlMax
         self.i += 1
@@ -2826,6 +2861,8 @@ class AutoTOPXD(QWidget, Ui_autoTOPXD):
     def __init__(self, atomList, phi, theta, parent=None):
         super(AutoTOPXD, self).__init__(parent)
         self.setupUi(self)
+        self.setFont(getFont())
+        self.setWindowIcon(getIcon())
         self.i=0
         self.phi = phi
         self.theta = theta
@@ -2885,8 +2922,16 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
+
+        self.setFont(getFont())
+        brush = QBrush(QColor(221, 221, 221))
+        brush.setStyle(Qt.SolidPattern)
+        palette = self.tabWidget.palette()
+        palette.setBrush(QPalette.Inactive, QPalette.Base, brush)
+        self.tabWidget.setPalette(palette)
+
         self.versionNum = '0.8.0'
-        
+
         #Set font depending on OS
         if sys.platform=='win32':
             self.programFont = QFont()
@@ -2894,7 +2939,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         elif sys.platform.startswith('linux'):
             self.programFont = QFont()
             self.programFont.setFamily("Bitstream Vera Sans Mono")
-            
+
         self.cwdStatusLab = QLabel()
         self.settings = QSettings('prefs')
         self.initialiseSettings()	#Load user preferences
@@ -2930,6 +2975,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         toolboxes = [self.rbToolbox, self.resToolbox, self.toolsToolbox]
         for item in toolboxes:
             item.setCurrentIndex(0)
+        self.lsmResLine.setVisible(False)
         #Display current working directory on startup.
         self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
         self.statusbar.addWidget(self.cwdStatusLab)
@@ -3143,8 +3189,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         else:
             try:
                 if sys.platform == 'win32':
-                    subprocess.call([textEdAbsPath, filePath])
-
+                    if not filePath[-6:]=='xd.mas':
+                        os.startfile(filePath)
+                    else:
+                        subprocess.call([textEdAbsPath, filePath])
                 else:
                     opener ="open" if sys.platform == "darwin" else "xdg-open"
                     subprocess.call([opener, filePath])
@@ -4175,7 +4223,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         if os.path.isfile('xd.res'):
             self.toolbarRes2Inp.setDisabled(True)
             res2inp()
-            
+
 
 
     def refreshFolder(self):
@@ -4194,45 +4242,45 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Prompt user to choose a folder and change current working directory to the folder.
         '''
         folder = str(QFileDialog.getExistingDirectory(None, "Select Directory"))
-
-        os.chdir(folder)
-        self.updateFolderTree()
-        self.changeWizBackup()
-        self.setWindowTitle('{} - XD Toolkit {}'.format(os.path.basename(folder), self.versionNum))
-        self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
-        self.resetLabels()
-        self.check4res()
-
-        hkl = True
-        ins = True
-        if not os.path.isfile('shelx.hkl'):
-            hkl = False
-        if not os.path.isfile('shelx.ins'):
-            ins = False
-
-        if not hkl or not ins:
-            msg = QMessageBox()
-            msg.setWindowTitle('Files not found')
-            msgStr = ''
-            if not ins and hkl:
-                msgStr = "Couldn't find <i>shelx.ins</i>."
-            elif not hkl and ins:
-                msgStr = "Couldn't find <i>shelx.hkl</i>."
-
-            elif not ins and not hkl:
-                msgStr = "Couldn't find <i>shelx.ins</i> or <i>shelx.hkl</i>."
-
-            msg.setText(msgStr)
-            msg.exec_()
-
-        try:
-            initialiseGlobVars()
-            self.enableCheckNeebsButs()
-            self.changeUserIns()
-            self.resetWizInput()
-
-        except Exception:
+        if folder:
+            os.chdir(folder)
+            self.updateFolderTree()
+            self.changeWizBackup()
+            self.setWindowTitle('{} - XD Toolkit {}'.format(os.path.basename(folder), self.versionNum))
             self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
+            self.resetLabels()
+            self.check4res()
+
+            hkl = True
+            ins = True
+            if not os.path.isfile('shelx.hkl'):
+                hkl = False
+            if not os.path.isfile('shelx.ins'):
+                ins = False
+
+            if not hkl or not ins:
+                msg = QMessageBox()
+                msg.setWindowTitle('Files not found')
+                msgStr = ''
+                if not ins and hkl:
+                    msgStr = "Couldn't find <i>shelx.ins</i>."
+                elif not hkl and ins:
+                    msgStr = "Couldn't find <i>shelx.hkl</i>."
+
+                elif not ins and not hkl:
+                    msgStr = "Couldn't find <i>shelx.ins</i> or <i>shelx.hkl</i>."
+
+                msg.setText(msgStr)
+                msg.exec_()
+
+            try:
+                initialiseGlobVars()
+                self.enableCheckNeebsButs()
+                self.changeUserIns()
+                self.resetWizInput()
+
+            except Exception:
+                self.cwdStatusLab.setText('Current project folder: ' + os.getcwd())
 
     def openCwd(self):
         '''
@@ -4343,24 +4391,35 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         global xdProgAbsPaths
         global manualAbsPath
         global cachePath
+        global iconAbsPath
 
         projDir = os.getcwd()
-#        if not os.path.isdir(projDir + '/res') and not os.path.isdir(projDir + '/tools'):         #Makes it works with different relative locations of res, cache etc when building or running from python
-#            projDir = '/'.join(projDir.split('/')[:-1])
+        print('Installation folder: {}'.format(projDir))
 
-        cachePath = projDir + '/cache'
+        if sys.platform.startswith('win'):
 
+            #Make folder in ProgramData on Windows if one doesn't already exist.
+            XDTDataPath = 'C:/ProgramData/XDToolkit'
+            if not os.path.isdir(XDTDataPath):
+                os.makedirs(XDTDataPath)
+                
+        elif sys.platform.startswith('linux'):
+            XDTDataPath = projDir
+
+        #Make cache folder if one doesn't already exist.
+        cachePath = XDTDataPath + '/cache'
         if not os.path.isdir(cachePath):
             os.makedirs(cachePath)
 
-        timeFileAbsPath = projDir + '/tools/lsmTimes.buckfast'
+        iconAbsPath = projDir + '/res/flatearth.ico'
+       # timeFileAbsPath = projDir + '/tools/lsmTimes.buckfast'
         manualAbsPath = projDir + '/res/XD Toolkit Manual.pdf'
 
-        if not os.path.isfile(timeFileAbsPath):
-            if not os.path.isdir('tools'):
-                os.mkdir('tools')
-            with open('{}/tools/lsmTimes.buckfast'.format(projDir),'w') as bucky:
-                pass
+#        if not os.path.isfile(timeFileAbsPath):
+#            if not os.path.isdir('tools'):
+#                os.mkdir('tools')
+#            with open('{}/tools/lsmTimes.buckfast'.format(projDir),'w') as bucky:
+#                pass
 
         if self.settings.value('xdpath'):
 
@@ -4406,9 +4465,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
         try:
             xdProgAbsPaths = {'xdlsm':xdlsmAbsPath, 'xdfour':xdfourAbsPath, 'xdfft':xdfftAbsPath,
-                         'xdini':xdiniAbsPath, 'xdgeom':xdgeomAbsPath, 'xdprop':xdpropAbsPath,
-                         'xdpdf':xdpdfAbsPath, 'topxd': topxdAbsPath}
-
+                             'xdini':xdiniAbsPath, 'xdgeom':xdgeomAbsPath, 'xdprop':xdpropAbsPath,
+                             'xdpdf':xdpdfAbsPath, 'topxd': topxdAbsPath}
         except Exception:
             pass
 
@@ -4445,8 +4503,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.settings.setValue('senddata','yes')
             elif self.sendAnonData == QMessageBox.No:
                 self.settings.setValue('senddata','no')
-        print('senddata')
-        print(self.settings.value('senddata'))
+
         try:
             os.chdir(self.settings.value('lastcwd'))
             self.setWindowTitle('{} - XD Toolkit {}'.format(os.path.basename(os.getcwd()), self.versionNum))
@@ -4874,8 +4931,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             armRBs()
             self.armRBLab.setText('All reset bond instructions enabled.')
             self.disarmRBLab.setText('')
-            self.delResetBondLab.setText('')
-        except Exception:
+            self.delRBLab.setText('')
+        except Exception as e:
+            print(e)
             self.armRBLab.setText('An error occurred.')
 
     def disarmRBPress(self):
@@ -4886,8 +4944,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             disarmRBs()
             self.disarmRBLab.setText('All reset bond instructions disabled.')
             self.armRBLab.setText('')
-            self.delResetBondLab.setText('')
-        except Exception:
+            self.delRBLab.setText('')
+        except Exception as e:
+            print(e)
             self.disarmRBLab.setText('An error occurred.')
 
     def delResetBondPress(self):
@@ -4898,9 +4957,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             delResetBond()
             self.armRBLab.setText('')
             self.disarmRBLab.setText('')
-            self.delResetBondLab.setText('All reset bond instructions removed from xd.mas.')
-        except:
-            self.delResetBondLab.setText('An error occurred.')
+            self.delRBLab.setText('All reset bond instructions removed from xd.mas.')
+        except Exception as e:
+            print(e)
+            self.delRBLab.setText('An error occurred.')
 
     def autoResetBondPress(self):
         '''
@@ -4927,8 +4987,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             else:
                 resStr =  'Bond constraints added for all H atoms.'
             self.autoResetBondStatusLab.setText(resStr)
-        except:
-            self.autoResetBondStatusLab.setText('An error occurred. Please check ins file is in project folder.')
+            self.resetBondStatusLab.setText('')
+        except Exception as e:
+            print(e)
+            self.autoResetBondStatusLab.setText('An error occurred.')
         self.changeUserIns()
         self.wizTest()
 
@@ -4936,53 +4998,69 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Handle user manually adding reset bond instructions.
         '''
+        statusStr = ''
         try:
             #If 'All' is unchecked get atoms labels from the input and pass them to resetBond()
             if  self.allResetBox.isChecked() != True:
 
                 resetAtomRaw = str(self.resetHInput.text().upper())
-                if ',' in resetAtomRaw:
-                    resetAtomRaw = resetAtomRaw.replace(' ','').strip(',')
-                    resetAtomLabels = resetAtomRaw.split(',')
-                elif ' ' in resetAtomRaw:
-                    resetAtomLabels = resetAtomRaw.split()
-                else:
-                    resetAtomLabels = [resetAtomRaw.strip()]
-                resetAtomRawList = [label for label in resetAtomLabels]
-                resetAtomList = []
-                resetAtomStr = ''
-
-                for atomLab in resetAtomRawList:
-                    if '(' not in atomLab:
-                        if atomLab.startswith('H') and len(atomLab) > 1:
-                            newAtomLab = 'H({0})'.format(atomLab[1:])
-                        else:
-                            newAtomLab = 'H({0})'.format(atomLab)
-                        resetAtomList.append(newAtomLab)
-
-                        resetAtomStr += (newAtomLab + ', ')
+                if resetAtomRaw.strip():
+                    if ',' in resetAtomRaw:
+                        resetAtomRaw = resetAtomRaw.replace(' ','').strip(',')
+                        resetAtomLabels = resetAtomRaw.split(',')
+                    elif ' ' in resetAtomRaw:
+                        resetAtomLabels = resetAtomRaw.split()
                     else:
-                        resetAtomList.append(atomLab)
-                resetAtomList = sorted(list(set(resetAtomList)))
-                atomLabs = copy.copy(globAtomLabs)
-                atomLabs = atomLabs.keys()
-                wrongAtoms = [atom for atom in resetAtomList if atom not in atomLabs or atom[:2] != 'H(']
-                resetAtomList = [atom for atom in resetAtomList if atom not in wrongAtoms]
-                resetAtomStr = ', '.join(lab for lab in resetAtomList).strip(', ')
+                        resetAtomLabels = [resetAtomRaw.strip()]
+                    resetAtomRawList = [label for label in resetAtomLabels]
+                    resetAtomList = []
+                    resetAtomStr = ''
 
-                resetBond(str(self.resetLengthInput.text()),resetAtomList,False)
+                    for atomLab in resetAtomRawList:
+                        if '(' not in atomLab:
+                            if atomLab.startswith('H') and len(atomLab) > 1:
+                                newAtomLab = 'H({})'.format(atomLab[1:])
+                            else:
+                                newAtomLab = 'H({})'.format(atomLab)
+                            resetAtomList.append(newAtomLab)
+
+                            resetAtomStr += (newAtomLab + ', ')
+                        else:
+                            resetAtomList.append(atomLab)
+                    resetAtomList = sorted(list(set(resetAtomList)))
+                    atomLabs = copy.copy(globAtomLabs)
+                    atomLabs = atomLabs.keys()
+                    wrongAtoms = [atom for atom in resetAtomList if atom not in atomLabs or atom[:2] != 'H(']
+                    resetAtomList = [atom for atom in resetAtomList if atom not in wrongAtoms]
+
+                    resetAtomStr = listjoin(resetAtomList, ', ')
+
+                    resetBond(str(self.resetLengthInput.text()),resetAtomList,False)
+
+                    if resetAtomList:
+                        if len(resetAtomList)>1:
+                            statusStr += 'Bond constraints added for {}<br>Bond length: {}<br><br>'.format(resetAtomStr, str(self.resetLengthInput.text()))
+                        else:
+                            statusStr += 'Bond constraint added for {}<br>Bond length: {}<br><br>'.format(resetAtomStr, str(self.resetLengthInput.text()))
+
+                    if wrongAtoms:
+                        statusStr += 'Following atom labels are incorrect: {}'.format(listjoin(wrongAtoms, ', '))
+
+                else:
+                    statusStr += 'No atoms selected'
+
             #If 'All' is checked run resetBond() with allornot True
             else:
                 resetBond(str(self.resetLengthInput.text()),None,True)
-            statusStr = ''
-            if resetAtomList:
-                statusStr += '{}{}<br>Bond length: {}'.format('Bond constraints added for atoms ',resetAtomStr, str(self.resetLengthInput.text()))
-            if wrongAtoms:
-                statusStr += '<br><br>{}{}'.format('Following atom labels are incorrect: ', ', '.join(wrongAtoms).strip(', '))
-            self.resetBondStatusLab.setText(statusStr)
+                statusStr += 'Bond constraints added for all atoms<br>Bond length: {}'.format(str(self.resetLengthInput.text()))
 
-        except:
+            self.resetBondStatusLab.setText(statusStr)
+            self.autoResetBondStatusLab.setText('')
+
+        except Exception as e:
+            print(e)
             self.resetBondStatusLab.setText('An error occurred.')
+
         self.changeUserIns()
         self.wizTest()
 
@@ -5011,7 +5089,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             try:
 #                findCHEMCON()
                 self.autoCHEMCONRunning = FindCHEMCONThread()
-                    
+
                 self.autoCHEMCONRunning.finishedSignal.connect(lambda: self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas udpated.'))
                 self.autoCHEMCONRunning.start()
                 self.msg = QMessageBox()
@@ -5022,7 +5100,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 self.msg.setFont(self.programFont)
                 self.msg.setWindowTitle('Chemical constraints')
                 self.msg.show()
-                    
+
                 if self.msg == QMessageBox.Cancel:
                     self.autoCHEMCONRunning.finishedSignal.disconnect(lambda: writeCHEMCON(self.autoCHEMCONRunning.chemcon))
                     self.autoCHEMCONRunning.finishedSignal.disconnect(lambda: self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas udpated.'))
@@ -5360,6 +5438,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             resStr = self.makeResStr(folder + '/xd_lsm.out')
 
         self.showResLab.setText(resStr)
+        self.lsmResLine.setVisible(True)
 
     def resBackupSum(self):
         '''
@@ -5397,6 +5476,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             resStr += res
         resStr = '<pre>' + resStr + '</pre>'
         self.showResLab.setText(resStr)
+        self.lsmResLine.setVisible(True)
 
 
     def getResPress(self):
@@ -5405,6 +5485,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         resStr = self.makeResStr('xd_lsm.out')
         self.showResLab.setText(resStr)
+        self.lsmResLine.setVisible(True)
 
 
     def FFT2FOUR(self):
@@ -5780,7 +5861,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         for label in self.labList:
             label.setText('')
-
+        self.lsmResLine.setVisible(False)
         try:
             self.nppCanvas.setParent(None)
         except Exception:
@@ -5788,11 +5869,15 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 
 def customExceptHook(Type, value, traceback):
     print('Exception:')
+    #sendEmail('<br><br>'.join(format_exception(Type, value, traceback)),toaddr = 'mcrav@chem.au.dk')
     print_exception(Type, value, traceback)
     pass
 
 ##Run GUI
 if __name__ == '__main__':
+    if sys.platform.startswith('win'):
+        # On Windows calling this function is necessary.
+        mp.freeze_support()
     print(os.getcwd())
     sys.excepthook = customExceptHook               #Accept any errors so GUI doesn't quit.
     app = QApplication(sys.argv)
@@ -5801,14 +5886,14 @@ if __name__ == '__main__':
     splash_pix = QPixmap('res/splash.png')
     splash = QSplashScreen(splash_pix)
     splash.setMask(splash_pix.mask())
-    
+
     if sys.platform.startswith('linux'):
         font = QFont()
         font.setFamily('Bitstream Vera Sans Mono')
     elif sys.platform==('win32'):
         font = QFont()
         font.setFamily('Consolas')
-        
+
     splash.setFont(font)
     splash.showMessage('Initializing...',
                            Qt.AlignBottom | Qt.AlignLeft,

@@ -1,12 +1,20 @@
-# -*- mode: python -*-
+
+#Builds on windows on my account, with my python34 environment. 
+#To build on another computer the data paths will need to be changed and the python environment must be <=3.4
+#And have all necessary packages installed i.e. numpy, scipy, matplotlib, PyQt etc.
+#On my computer it is necessary to include the tk and tcl folders from the python environment folder
+#This may not always be necessary but you can try building without them and then drag them into the dist folder
+#if the exe doesn't work.
 
 block_cipher = None
 
 a = Analysis(['XDToolkit.py'],
              pathex=[],
              binaries=[],
-             datas=[('/home/matt/dev/XDToolkit/res','res'),
-		                ('/home/matt/dev/XDToolkit/LICENSE.txt','.')],
+             datas=[('res','res'),
+		                ('C:/Users/Matthew_2/Desktop/XDToolkit-master/LICENSE.txt','.'),
+                        ('C:/Users/Matthew_2/Anaconda3/envs/python34/Lib/tkinter','tk'),
+                        ('C:/Users/Matthew_2/Anaconda3/envs/python34/tcl','tcl')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
