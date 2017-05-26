@@ -1,8 +1,11 @@
-/__pycache__
-/build
-/dist
+/src/__pycache__
 /src/build
 /src/dist
+/src/build
+/src/dist
+/build
+/dist
+/__pycache__
 /src/tools/lsmTimes.buckfast
 /sandbox.py
 /lsmTimes.buckfast

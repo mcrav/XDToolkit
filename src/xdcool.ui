@@ -482,7 +482,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>786</width>
+           <width>886</width>
            <height>956</height>
           </rect>
          </property>
@@ -632,7 +632,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>5</number>
             </property>
             <property name="documentMode">
              <bool>false</bool>
@@ -734,7 +734,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>746</width>
+                   <width>846</width>
                    <height>891</height>
                   </rect>
                  </property>
@@ -1569,8 +1569,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>765</width>
-                   <height>877</height>
+                   <width>846</width>
+                   <height>891</height>
                   </rect>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_10">
@@ -2911,8 +2911,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>350</width>
-                     <height>157</height>
+                     <width>700</width>
+                     <height>648</height>
                     </rect>
                    </property>
                    <attribute name="label">
@@ -4167,13 +4167,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>700</width>
+                    <width>800</width>
                     <height>0</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>700</width>
+                    <width>16777215</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -4228,8 +4228,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>759</width>
-                     <height>331</height>
+                     <width>800</width>
+                     <height>718</height>
                     </rect>
                    </property>
                    <attribute name="label">
