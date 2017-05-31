@@ -5,7 +5,22 @@
 '''
 
 import os
+import sys
+from PyQt5.QtGui import QFont
 
+
+def getProgramFont():
+    '''Get font depending on OS. Return as QFont.'''
+    font = QFont()
+    if sys.platform.startswith('linux'):
+        font.setFamily('Ubuntu')
+    elif sys.platform.startswith('win'):
+        font.setFamily('Calibri')
+    elif sys.platform.startswith('darwin'):
+        font.setFamily('Helvetica Neue')
+    font.setPointSize(10)
+    return font
+        
 def printExc(function, exception):
     print('{} Exception: {}'.format(function,exception))
 

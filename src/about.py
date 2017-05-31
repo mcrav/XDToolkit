@@ -23,10 +23,15 @@ class Ui_aboutBox(object):
         self.gridLayout = QtWidgets.QGridLayout(aboutBox)
         self.gridLayout.setObjectName("gridLayout")
         self.label = QtWidgets.QLabel(aboutBox)
+        font = QtGui.QFont()
+        font.setFamily("Ubuntu")
+        font.setPointSize(10)
+        self.label.setFont(font)
         self.label.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.label.setWordWrap(True)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+
         self.retranslateUi(aboutBox)
         QtCore.QMetaObject.connectSlotsByName(aboutBox)
 

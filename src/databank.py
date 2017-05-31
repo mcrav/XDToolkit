@@ -91,6 +91,7 @@ covradii = {
  'ZN': 1.33,
  'ZR': 1.59
  }
+helpTexts = {'51': 'Add a dummy atom to xd.mas in the average position of the two given atoms.'}
 
 """
 {

@@ -33,10 +33,11 @@ from PyQt5.QtWidgets import (
         QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen,
         QPushButton, QApplication, QDialog, QFileDialog, QMainWindow, QGridLayout,
         QScrollArea, QSizePolicy, QSpacerItem, QFileSystemModel, QTreeView)
-from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject, QDir, pyqtSlot, QModelIndex
-from PyQt5.QtGui import QPixmap, QFont, QStandardItem, QStandardItemModel, QPalette, QColor, QBrush, QIcon
+from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject, QDir, pyqtSlot, QModelIndex, QRectF
+from PyQt5.QtGui import QPixmap, QFont, QStandardItem, QStandardItemModel, QPalette, QColor, QBrush, QIcon, QRegion, QPainterPath
 from devtools import resetmas, timeDec
 from backup import backup, loadBackup
+from databank import helpTexts
 from emailfuncs import sendEmail
 from xderrfix import check4errors, fixLsmCif, removePhantomAtoms, fixBrokenLabels, addNCST, fixCuNobleGasError
 from xdfiletools import addSnlCutoff, setupmas, resetKeyTable, multipoleKeyTable, addDUM, addCustomLocCoords
@@ -52,7 +53,7 @@ from results import (FFTDetective, FOUcell, FOU3atoms, grd2values, setupPROPDpop
 from utils import (convert2XDLabel, lab2type, spec2norm, rawInput2labels, labels2list, formatLabels, isfloat,
                    getCellParams, findElements, getNumAtoms, getEleNum, res2inp, findMasCHEMCON, totalEstTime,
                    coords2tuple, listjoin, getAtomList, atomTableBegins, atomTableEnds, seconds2TimeStr,
-                   sevenSpacedListjoin, printExc)
+                   sevenSpacedListjoin, printExc, getProgramFont)
 
 from chemcon import (getEnvSig, removeCHEMCON, check4CHEMCON, writeCHEMCON, findCHEMCONbyInputElement,
                      findCHEMCONbyInputAtoms, CPPgetEnvSig)
@@ -2089,7 +2090,7 @@ def check4CustomLCS():
     return customAtoms
 
 
-def getFont(size = 10):
+def getMonoFont(size = 10):
     '''
     Choose font based on OS. Return QFont.
     '''
@@ -2256,8 +2257,14 @@ class aboutBox(QWidget, Ui_aboutBox):
     def __init__(self, parent=None):
         super(aboutBox, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
+        self.setStyleSheet('''QWidget{background-color: #efebe7;
+                                                   border-style: outset;
+                                                   border-width: 2px;
+                                                   border-radius: 10px;
+                                                   border-color: transparent;
+                                                   padding: 6px;}''')
 
 class sendBug(QDialog, Ui_sendBug):
     '''
@@ -2266,7 +2273,7 @@ class sendBug(QDialog, Ui_sendBug):
     def __init__(self, parent=None):
         super(sendBug, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
 
@@ -2277,7 +2284,7 @@ class sendSugg(QDialog, Ui_sendSugg):
     def __init__(self, parent=None):
         super(sendSugg, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Send")
 
@@ -2291,7 +2298,7 @@ class prefGui(QDialog, Ui_pref):
         '''
         super(prefGui, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         self.chooseMoleCoolPath.clicked.connect(self.chooseMCQt)
         self.chooseMercPathBut.clicked.connect(self.chooseMerc)
@@ -2430,7 +2437,7 @@ class resmap(QWidget, Ui_resmap):
     def __init__(self, grdFile, parent=None):
         super(resmap, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         self.grdFile = grdFile
         self.setup()
@@ -2486,7 +2493,7 @@ class NPP(QWidget, Ui_resmap):
 
         super(NPP, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         self.setWindowTitle('Normal probability plot')
         self.setup()
@@ -2544,7 +2551,7 @@ class checkNeebs(QWidget, Ui_checkneebs):
     def __init__(self, parent=None):
         super(checkNeebs, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         atomList = getAtomList()
         if len(atomList) < 30:
@@ -2582,7 +2589,7 @@ class wizardRunning(QDialog, Ui_wizard):
         '''
         super(wizardRunning, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         self.xdini = XDINI()
         self.xdlsm = XDLSM()
@@ -2861,7 +2868,7 @@ class AutoTOPXD(QWidget, Ui_autoTOPXD):
     def __init__(self, atomList, phi, theta, parent=None):
         super(AutoTOPXD, self).__init__(parent)
         self.setupUi(self)
-        self.setFont(getFont())
+        self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
         self.i=0
         self.phi = phi
@@ -2910,8 +2917,7 @@ class AutoTOPXD(QWidget, Ui_autoTOPXD):
             self.startTime = time.time()
         else:
             self.finishedSignal.emit()
-
-
+        
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
     Main window.
@@ -2922,23 +2928,45 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
-
-        self.setFont(getFont())
         brush = QBrush(QColor(221, 221, 221))
         brush.setStyle(Qt.SolidPattern)
         palette = self.tabWidget.palette()
         palette.setBrush(QPalette.Inactive, QPalette.Base, brush)
-        self.tabWidget.setPalette(palette)
+        self.tabWidget.setPalette(palette)  
+        self.tabWidget.setStyleSheet('''QTabWidget:pane{background-color: #efebe7;
+                                                   border-style: outset;
+                                                   border-width: 0px;
+                                                   border-bottom-left-radius: 10px;
+                                                   border-bottom-right-radius: 10px;
+                                                   border-top-right-radius: 10px;
+                                                   border-color: transparent;
+                                                   padding: 6px;
+                                                   }
+                                        QTabBar:tab{
+                                                   background-color: #efebe7;
+                                                   border-top-left-radius: 5px;
+                                                   border-top-right-radius: 5px;
+                                                   margin-right: 3px;
+                                                   padding-top: 6px;
+                                                   padding-bottom: 6px;
+                                                   padding-left: 10px;
+                                                   padding-right: 10px;}
+                                        QTabBar:tab:!selected{
+                                                   background-color: #cccccc;}''')
 
         self.versionNum = '0.8.0'
+        self.helpLabel.setStyleSheet('''QLabel{background-color: #cccccc;
+                                               border-style: outset;
+                                               border-width: 2px;
+                                               border-radius: 10px;
+                                               border-color: transparent;
+                                               padding: 6px;}''')
+    
+        self.statusbar.setStyleSheet('''QStatusBar{background-color:#cccccc;}''')
 
+        self.helpTexts = helpTexts
         #Set font depending on OS
-        if sys.platform=='win32':
-            self.programFont = QFont()
-            self.programFont.setFamily("Consolas")
-        elif sys.platform.startswith('linux'):
-            self.programFont = QFont()
-            self.programFont.setFamily("Bitstream Vera Sans Mono")
+        self.setFont(getProgramFont())
 
         self.cwdStatusLab = QLabel()
         self.settings = QSettings('prefs')
@@ -2961,6 +2989,13 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.folderTree.setColumnHidden(2, True)
         self.folderTree.setColumnHidden(3, True)
         self.folderTree.doubleClicked.connect(self.folderTreeDoubleClicked)
+        self.folderTree.setStyleSheet('''QTreeView{background-color: #ffffff;
+                                                   alternate-background-color: #eeeeff;
+                                                   border-style: outset;
+                                                   border-width: 0px;
+                                                   border-radius: 10px;
+                                                   border-color: transparent;
+                                                   padding: 6px;}''')
         self.addedLocCoords = {}
         self.ins = ''
         self.forbiddenChars = ['*', '?', '"', '/', '\\', '<', '>', ':', '|']
@@ -2973,6 +3008,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.labList = [self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delRBLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.showResLab, self.resNPPLab, self.loadBackupLab]
         self.tabWidget.setCurrentIndex(0)
         toolboxes = [self.rbToolbox, self.resToolbox, self.toolsToolbox]
+        self.toolsToolbox.currentChanged.connect(self.updateHelpText)
+        self.tabWidget.currentChanged.connect(self.updateHelpText)
         for item in toolboxes:
             item.setCurrentIndex(0)
         self.lsmResLine.setVisible(False)
@@ -3162,7 +3199,19 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.model.appendRow(self.wizLowerSymBox)
         self.wizAdvList.setModel(self.model)
 
-        self.wizAdvList.setStyleSheet('padding: 10px;')
+        self.wizAdvList.setStyleSheet('''QListView{background-color: #dddddd;
+                                                   border-style: outset;
+                                                   border-width: 2px;
+                                                   border-radius: 10px;
+                                                   border-color: transparent;
+                                                   padding: 6px;}
+                                        QListView:item{background-color: #dddddd;
+                                                   border-style: outset;
+                                                   border-width: 2px;
+                                                   border-radius: 10px;
+                                                   border-color: transparent;
+                                                   padding: 3px;}
+                                                 ''')
 
         self.wizAdvOptBut.clicked.connect(self.wizAdvOptToggle)
         self.wizAdvOptOpen = False
@@ -3207,7 +3256,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         Handler to expand/collapse advanced wizard options.
         '''
         if not self.wizAdvOptOpen:
-            self.wizAdvList.setMaximumSize(2000, 400)
+            self.wizAdvList.setMaximumSize(2000, 70)
             self.wizAdvOptOpen = True
         else:
             self.wizAdvList.setMaximumSize(0,0)
@@ -3326,7 +3375,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         self.xdini.finishedSignal.disconnect(self.wizCheckIni)
         if os.path.isfile('xd.mas') and os.path.isfile('xd.inp') and os.path.isfile('xd.hkl'):
-            self.xdWizINILab.setText('Compound initialized successfully. Follow instructions below and click "Test".')
+            self.xdWizINILab.setText('Compound initialized successfully.')
             self.manRefIDInput.setText(str(self.xdWizCmpID.text()))
             try:
                 writeCHEMCON(findCHEMCON())
@@ -4402,7 +4451,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
             XDTDataPath = 'C:/ProgramData/XDToolkit'
             if not os.path.isdir(XDTDataPath):
                 os.makedirs(XDTDataPath)
-                
+
         elif sys.platform.startswith('linux'):
             XDTDataPath = projDir
 
@@ -5827,7 +5876,21 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         else:
             subprocess.call(['xdg-open', manualAbsPath])
 
-
+    def updateHelpText(self):
+        tab = self.tabWidget.currentIndex()
+        helpText = ''
+        if tab == 5:
+            toolbox = self.toolsToolbox         
+            try:
+                helpText = self.helpTexts['{}{}'.format(tab, toolbox.currentIndex())]
+            except KeyError:
+                helpText = ''
+                
+        else:
+            self.helpLabel.setText('')
+        
+        self.helpLabel.setText(helpText)
+    
     def closeEvent(self, event):
         '''
         When program closes, kill XDLSM, save current working directory to settings and send lsmTimes.
@@ -5887,14 +5950,7 @@ if __name__ == '__main__':
     splash = QSplashScreen(splash_pix)
     splash.setMask(splash_pix.mask())
 
-    if sys.platform.startswith('linux'):
-        font = QFont()
-        font.setFamily('Bitstream Vera Sans Mono')
-    elif sys.platform==('win32'):
-        font = QFont()
-        font.setFamily('Consolas')
-
-    splash.setFont(font)
+    splash.setFont(getProgramFont())
     splash.showMessage('Initializing...',
                            Qt.AlignBottom | Qt.AlignLeft,
                            Qt.white)
