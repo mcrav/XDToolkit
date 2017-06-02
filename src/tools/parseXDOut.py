@@ -157,10 +157,10 @@ def readTOPXDFolder(folder):
 
 os.chdir('/home/matt/Work')
 #
-#readTOPXDFolder(os.path.abspath('cosph__22-05-17_topxd'))
-#print(os.getcwd())
-#atomOrder = ['CO','S','P','C','H']
-#sortTables(atomOrder, 'topxdRes.csv')
+readTOPXDFolder(os.path.abspath('TOPXD_RES'))
+print(os.getcwd())
+atomOrder = ['CU','F','N','C','H']
+sortTables(atomOrder, 'topxdRes.csv')
 
 #sortTables(atomOrder, 'xd_pro.csv')
 #geom2Angles()
@@ -198,8 +198,8 @@ def getSmallestLs(csv1, csv2):
 #getSmallestLs('cucf3_22-05-17_topxd/sorted_topxdRes.csv',
 #              'cucf3_final/lowangle_topxd(N(1)broken)/sorted_topxdRes.csv')
 
-getSmallestLs('cosph__22-05-17_topxd/sorted_topxdRes.csv',
-              'cosph_cov/topxd_files/sorted_topxdRes.csv')
+#getSmallestLs('cosph__22-05-17_topxd/sorted_topxdRes.csv',
+#              'cosph_cov/topxd_files/sorted_topxdRes.csv')
 def getBondDist(atom1c, atom2c, a, b, c, alpha, beta, gamma):
     '''
     Get distance between 2 atoms. Return distance.

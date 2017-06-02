@@ -524,7 +524,7 @@ def delResetBond():
                 newmas.write(line)
 
     os.remove('xd.mas')
-    os.rename('xd.newmas','xd.mas')
+    os.rename('xdnew.mas','xd.mas')
     
 
 

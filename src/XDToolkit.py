@@ -28,12 +28,12 @@ from sendBug import Ui_sendBug
 from sendSugg import Ui_sendSugg
 from checkneebs import Ui_checkneebs
 from autoTOPXD import Ui_autoTOPXD
-
+from PyQt5 import QtOpenGL
 from PyQt5.QtWidgets import (
         QWidget, QMessageBox, QLabel, QDialogButtonBox, QSplashScreen,
         QPushButton, QApplication, QDialog, QFileDialog, QMainWindow, QGridLayout,
-        QScrollArea, QSizePolicy, QSpacerItem, QFileSystemModel, QTreeView)
-from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject, QDir, pyqtSlot, QModelIndex, QRectF
+        QScrollArea, QSizePolicy, QSpacerItem, QFileSystemModel, QTreeView, QOpenGLWidget)
+from PyQt5.QtCore import QSettings, QThread, pyqtSignal, Qt, QMetaObject, QDir, pyqtSlot, QSize, QModelIndex, QRectF
 from PyQt5.QtGui import QPixmap, QFont, QStandardItem, QStandardItemModel, QPalette, QColor, QBrush, QIcon, QRegion, QPainterPath
 from devtools import resetmas, timeDec
 from backup import backup, loadBackup
@@ -2917,7 +2917,7 @@ class AutoTOPXD(QWidget, Ui_autoTOPXD):
             self.startTime = time.time()
         else:
             self.finishedSignal.emit()
-        
+
 class XDToolGui(QMainWindow, Ui_MainWindow):
     '''
     Main window.
@@ -2932,6 +2932,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         brush.setStyle(Qt.SolidPattern)
         palette = self.tabWidget.palette()
         palette.setBrush(QPalette.Inactive, QPalette.Base, brush)
+
         self.tabWidget.setPalette(palette)  
         self.tabWidget.setStyleSheet('''QTabWidget:pane{background-color: #efebe7;
                                                    border-style: outset;
@@ -3005,9 +3006,9 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.lstMissingErrorMsg = 'Select add shelx.ins to project folder and try again.'
         self.atomNoExistErrorMsg = 'Atom not in structure.'
         self.backupConfirmStr = 'Current files backed up to: '
-        self.labList = [self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.armRBLab, self.disarmRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.delRBLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.showResLab, self.resNPPLab, self.loadBackupLab]
+        self.labList = [self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.editRBLab, self.editRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.editRBLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.showResLab, self.resNPPLab, self.loadBackupLab]
         self.tabWidget.setCurrentIndex(0)
-        toolboxes = [self.rbToolbox, self.resToolbox, self.toolsToolbox]
+        toolboxes = [self.resToolbox, self.toolsToolbox]
         self.toolsToolbox.currentChanged.connect(self.updateHelpText)
         self.tabWidget.currentChanged.connect(self.updateHelpText)
         for item in toolboxes:
@@ -3043,7 +3044,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.inputAtomCHEMCON.returnPressed.connect(self.runCHEMCON)
         self.inputElementCHEMCON.textChanged.connect(lambda: self.chooseElementCHEMCON.setChecked(True))
         self.inputAtomCHEMCON.textChanged.connect(lambda: self.chooseAtomCHEMCON.setChecked(True))
-
+        self.autoCHEMCONBut.clicked.connect(self.autoCHEMCONPress)
         #Run writeCHEMCON() with argument based on user input
         self.addCHEMCONBut.clicked.connect(self.runCHEMCON)
         #Run res2inp when button is pressed
@@ -4978,12 +4979,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             armRBs()
-            self.armRBLab.setText('All reset bond instructions enabled.')
-            self.disarmRBLab.setText('')
-            self.delRBLab.setText('')
+            self.editRBLab.setText('All reset bond instructions enabled.')
         except Exception as e:
             print(e)
-            self.armRBLab.setText('An error occurred.')
+            self.editRBLab.setText('An error occurred.')
 
     def disarmRBPress(self):
         '''
@@ -4991,12 +4990,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             disarmRBs()
-            self.disarmRBLab.setText('All reset bond instructions disabled.')
-            self.armRBLab.setText('')
-            self.delRBLab.setText('')
+            self.editRBLab.setText('All reset bond instructions disabled.')
         except Exception as e:
             print(e)
-            self.disarmRBLab.setText('An error occurred.')
+            self.editRBLab.setText('An error occurred.')
 
     def delResetBondPress(self):
         '''
@@ -5004,12 +5001,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         try:
             delResetBond()
-            self.armRBLab.setText('')
-            self.disarmRBLab.setText('')
-            self.delRBLab.setText('All reset bond instructions removed from xd.mas.')
+            self.editRBLab.setText('All reset bond instructions removed from xd.mas.')
         except Exception as e:
             print(e)
-            self.delRBLab.setText('An error occurred.')
+            self.editRBLab.setText('An error occurred.')
 
     def autoResetBondPress(self):
         '''
@@ -5040,6 +5035,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         except Exception as e:
             print(e)
             self.autoResetBondStatusLab.setText('An error occurred.')
+        self.editRBLab.setText('')
         self.changeUserIns()
         self.wizTest()
 
@@ -5127,40 +5123,46 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
 #--------------------CHEMICAL CONSTRAINTS--------------------------------
 #########################################################################
 
+    def autoCHEMCONPress(self):
+        '''Handle user clicking automatic chemical constraint button.'''
+        global globAtomEnv
+        try:
+            self.autoCHEMCONRunning = FindCHEMCONThread()
+            self.autoCHEMCONRunning.finishedSignal.connect(
+                    lambda: self.autoCHEMCONLab.setText(
+                            'Chemical constraints added and xd.mas udpated.'))
+            self.autoCHEMCONRunning.start()
+            self.msg = QMessageBox()
+            self.autoCHEMCONRunning.finishedSignal.connect(lambda: self.msg.accept())
+            self.autoCHEMCONRunning.finishedSignal.connect(
+                    lambda: writeCHEMCON(self.autoCHEMCONRunning.chemcon))
+            self.msg.addButton(QMessageBox.Cancel)
+            self.msg.setText('Finding chemical equivalent atoms...')
+            self.msg.setFont(self.programFont)
+            self.msg.setWindowTitle('Chemical constraints')
+            self.msg.show()
+    
+            if self.msg == QMessageBox.Cancel:
+                self.autoCHEMCONRunning.finishedSignal.disconnect(
+                        lambda: writeCHEMCON(self.autoCHEMCONRunning.chemcon))
+                self.autoCHEMCONRunning.finishedSignal.disconnect(
+                        lambda: self.autoCHEMCONLab.setText(
+                                'Chemical constraints added and xd.mas udpated.'))
+        except PermissionError:
+            self.autoCHEMCONLab.setText(self.permErrorMsg)
+        except Exception as e:
+            print(e)
+            self.autoCHEMCONLab.setText('An error occurred.')
+        self.CHEMCONStatusLab.setText('')
+
     def runCHEMCON(self):
         '''
         Handle user clicking 'Add chemical constraints'.
         '''
         global globAtomEnv
         chemcon = {}
-
-        if self.autoCHEMCON.isChecked():
-            try:
-#                findCHEMCON()
-                self.autoCHEMCONRunning = FindCHEMCONThread()
-
-                self.autoCHEMCONRunning.finishedSignal.connect(lambda: self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas udpated.'))
-                self.autoCHEMCONRunning.start()
-                self.msg = QMessageBox()
-                self.autoCHEMCONRunning.finishedSignal.connect(lambda: self.msg.accept())
-                self.autoCHEMCONRunning.finishedSignal.connect(lambda: writeCHEMCON(self.autoCHEMCONRunning.chemcon))
-                self.msg.addButton(QMessageBox.Cancel)
-                self.msg.setText('Finding chemical equivalent atoms...')
-                self.msg.setFont(self.programFont)
-                self.msg.setWindowTitle('Chemical constraints')
-                self.msg.show()
-
-                if self.msg == QMessageBox.Cancel:
-                    self.autoCHEMCONRunning.finishedSignal.disconnect(lambda: writeCHEMCON(self.autoCHEMCONRunning.chemcon))
-                    self.autoCHEMCONRunning.finishedSignal.disconnect(lambda: self.CHEMCONStatusLab.setText('Chemical constraints added and xd.mas udpated.'))
-
-            except PermissionError:
-                self.CHEMCONStatusLab.setText(self.permErrorMsg)
-            except Exception as e:
-                print(e)
-                self.CHEMCONStatusLab.setText('An error occurred.')
-
-        elif self.chooseElementCHEMCON.isChecked() == True:
+            
+        if self.chooseElementCHEMCON.isChecked() == True:
 
             inputText = str(self.inputElementCHEMCON.text().upper())
             inputElementList = labels2list(inputText)
@@ -5226,7 +5228,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 globAtomEnv[atom] = str(envSig)
                 for item in equis:
                     globAtomEnv[item] = str(envSig)
-
+        self.autoCHEMCONLab.setText('')
         self.changeUserIns()
         self.wizTest()
 
