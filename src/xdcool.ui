@@ -28,18 +28,18 @@
      <colorrole role="WindowText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Button">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
@@ -55,36 +55,36 @@
      <colorrole role="Midlight">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>238</red>
-        <green>238</green>
-        <blue>238</blue>
+        <red>251</red>
+        <green>251</green>
+        <blue>251</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Dark">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>110</red>
-        <green>110</green>
-        <blue>110</blue>
+        <red>123</red>
+        <green>123</green>
+        <blue>123</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Mid">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>147</red>
-        <green>147</green>
-        <blue>147</blue>
+        <red>165</red>
+        <green>165</green>
+        <blue>165</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Text">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
@@ -100,9 +100,9 @@
      <colorrole role="ButtonText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
@@ -118,9 +118,9 @@
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
@@ -136,9 +136,9 @@
      <colorrole role="AlternateBase">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>238</red>
-        <green>238</green>
-        <blue>238</blue>
+        <red>251</red>
+        <green>251</green>
+        <blue>251</blue>
        </color>
       </brush>
      </colorrole>
@@ -154,9 +154,9 @@
      <colorrole role="ToolTipText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
@@ -165,18 +165,18 @@
      <colorrole role="WindowText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Button">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
@@ -192,36 +192,36 @@
      <colorrole role="Midlight">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>238</red>
-        <green>238</green>
-        <blue>238</blue>
+        <red>251</red>
+        <green>251</green>
+        <blue>251</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Dark">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>110</red>
-        <green>110</green>
-        <blue>110</blue>
+        <red>123</red>
+        <green>123</green>
+        <blue>123</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Mid">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>147</red>
-        <green>147</green>
-        <blue>147</blue>
+        <red>165</red>
+        <green>165</green>
+        <blue>165</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Text">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
@@ -237,9 +237,9 @@
      <colorrole role="ButtonText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
@@ -255,9 +255,9 @@
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
@@ -273,9 +273,9 @@
      <colorrole role="AlternateBase">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>238</red>
-        <green>238</green>
-        <blue>238</blue>
+        <red>251</red>
+        <green>251</green>
+        <blue>251</blue>
        </color>
       </brush>
      </colorrole>
@@ -291,9 +291,9 @@
      <colorrole role="ToolTipText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
@@ -302,18 +302,18 @@
      <colorrole role="WindowText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>110</red>
-        <green>110</green>
-        <blue>110</blue>
+        <red>123</red>
+        <green>123</green>
+        <blue>123</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Button">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
@@ -329,36 +329,36 @@
      <colorrole role="Midlight">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>238</red>
-        <green>238</green>
-        <blue>238</blue>
+        <red>251</red>
+        <green>251</green>
+        <blue>251</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Dark">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>110</red>
-        <green>110</green>
-        <blue>110</blue>
+        <red>123</red>
+        <green>123</green>
+        <blue>123</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Mid">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>147</red>
-        <green>147</green>
-        <blue>147</blue>
+        <red>165</red>
+        <green>165</green>
+        <blue>165</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Text">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>110</red>
-        <green>110</green>
-        <blue>110</blue>
+        <red>123</red>
+        <green>123</green>
+        <blue>123</blue>
        </color>
       </brush>
      </colorrole>
@@ -374,27 +374,27 @@
      <colorrole role="ButtonText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>110</red>
-        <green>110</green>
-        <blue>110</blue>
+        <red>123</red>
+        <green>123</green>
+        <blue>123</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Base">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
@@ -410,9 +410,9 @@
      <colorrole role="AlternateBase">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>221</red>
-        <green>221</green>
-        <blue>221</blue>
+        <red>247</red>
+        <green>247</green>
+        <blue>247</blue>
        </color>
       </brush>
      </colorrole>
@@ -428,9 +428,9 @@
      <colorrole role="ToolTipText">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>20</red>
-        <green>20</green>
-        <blue>20</blue>
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
        </color>
       </brush>
      </colorrole>
@@ -449,7 +449,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>res/flatearth.ico</normaloff>res/flatearth.ico</iconset>
+    <normaloff>../../../.designer/backup/res/flatearth.ico</normaloff>../../../.designer/backup/res/flatearth.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -638,7 +638,7 @@
              <enum>QTabWidget::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>1</number>
             </property>
             <property name="documentMode">
              <bool>false</bool>
@@ -861,7 +861,7 @@
                         </property>
                         <property name="icon">
                          <iconset>
-                          <normaloff>../../../.designer/res/play.ico</normaloff>../../../.designer/res/play.ico</iconset>
+                          <normaloff>../../../../.designer/res/play.ico</normaloff>../../../../.designer/res/play.ico</iconset>
                         </property>
                        </widget>
                       </item>
@@ -1217,14 +1217,8 @@
                        <widget class="QLabel" name="label_53">
                         <property name="minimumSize">
                          <size>
-                          <width>140</width>
+                          <width>150</width>
                           <height>0</height>
-                         </size>
-                        </property>
-                        <property name="maximumSize">
-                         <size>
-                          <width>140</width>
-                          <height>16777215</height>
                          </size>
                         </property>
                         <property name="text">
@@ -1245,7 +1239,7 @@
                         </property>
                         <property name="icon">
                          <iconset>
-                          <normaloff>res/arrow_down.png</normaloff>res/arrow_down.png</iconset>
+                          <normaloff>../../../.designer/backup/res/arrow_down.png</normaloff>../../../.designer/backup/res/arrow_down.png</iconset>
                         </property>
                        </widget>
                       </item>
@@ -1633,7 +1627,7 @@
                         </property>
                         <property name="icon">
                          <iconset>
-                          <normaloff>../res/play.ico</normaloff>../res/play.ico</iconset>
+                          <normaloff>../../../.designer/res/play.ico</normaloff>../../../.designer/res/play.ico</iconset>
                         </property>
                         <property name="shortcut">
                          <string>Ctrl+R</string>
@@ -2461,15 +2455,15 @@
                    </palette>
                   </property>
                   <property name="currentIndex">
-                   <number>0</number>
+                   <number>6</number>
                   </property>
                   <widget class="QWidget" name="page_6">
                    <property name="geometry">
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>700</width>
-                     <height>670</height>
+                     <width>350</width>
+                     <height>154</height>
                     </rect>
                    </property>
                    <attribute name="label">
@@ -2732,8 +2726,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>455</width>
-                     <height>263</height>
+                     <width>427</width>
+                     <height>210</height>
                     </rect>
                    </property>
                    <attribute name="label">
@@ -2755,64 +2749,48 @@
                        <number>10</number>
                       </property>
                       <item>
-                       <layout class="QHBoxLayout" name="horizontalLayout_11">
+                       <layout class="QGridLayout" name="gridLayout_18">
                         <property name="topMargin">
                          <number>0</number>
                         </property>
-                        <item>
-                         <widget class="QLabel" name="label_4">
-                          <property name="text">
-                           <string>   3 Atom Labels</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLineEdit" name="taLapmapInput">
-                          <property name="minimumSize">
-                           <size>
-                            <width>310</width>
-                            <height>0</height>
-                           </size>
-                          </property>
+                        <item row="8" column="1" colspan="3">
+                         <widget class="QPushButton" name="lapGrdBut">
                           <property name="maximumSize">
                            <size>
-                            <width>330</width>
+                            <width>445</width>
                             <height>16777215</height>
                            </size>
                           </property>
+                          <property name="text">
+                           <string>Make 2D laplacian map from xd_d2rho.grd</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="9" column="4">
+                         <widget class="QLabel" name="tdLapGrdLab">
+                          <property name="text">
+                           <string/>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="3" column="0">
+                         <widget class="QLabel" name="label_16">
+                          <property name="text">
+                           <string>Number of points</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="1" colspan="3">
+                         <widget class="QLineEdit" name="taLapmapInput">
                           <property name="placeholderText">
                            <string>i.e. C(1) C(2) C(3)</string>
                           </property>
                          </widget>
                         </item>
-                        <item>
-                         <spacer name="horizontalSpacer_2">
-                          <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>40</width>
-                            <height>20</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                       </layout>
-                      </item>
-                      <item>
-                       <layout class="QHBoxLayout" name="horizontalLayout_13">
-                        <property name="topMargin">
-                         <number>0</number>
-                        </property>
-                        <item>
-                         <widget class="QLabel" name="label_16">
-                          <property name="text">
-                           <string>Number of points</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
+                        <item row="3" column="1">
                          <widget class="QLineEdit" name="taLapmapNpoints">
                           <property name="maximumSize">
                            <size>
@@ -2825,30 +2803,14 @@
                           </property>
                          </widget>
                         </item>
-                        <item>
-                         <spacer name="horizontalSpacer_12">
-                          <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeType">
-                           <enum>QSizePolicy::Fixed</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>40</width>
-                            <height>20</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <widget class="QLabel" name="label_14">
+                        <item row="4" column="1" colspan="3">
+                         <widget class="QPushButton" name="taLapmapBut">
                           <property name="text">
-                           <string>Stepsize</string>
+                           <string>Make 2D laplacian map of 3 atoms</string>
                           </property>
                          </widget>
                         </item>
-                        <item>
+                        <item row="3" column="3">
                          <widget class="QLineEdit" name="taLapmapStepsize">
                           <property name="maximumSize">
                            <size>
@@ -2861,8 +2823,8 @@
                           </property>
                          </widget>
                         </item>
-                        <item>
-                         <spacer name="horizontalSpacer_11">
+                        <item row="1" column="5">
+                         <spacer name="horizontalSpacer_2">
                           <property name="orientation">
                            <enum>Qt::Horizontal</enum>
                           </property>
@@ -2874,91 +2836,74 @@
                           </property>
                          </spacer>
                         </item>
+                        <item row="1" column="0">
+                         <widget class="QLabel" name="label_4">
+                          <property name="text">
+                           <string>   3 Atom Labels</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="3" column="2">
+                         <widget class="QLabel" name="label_14">
+                          <property name="text">
+                           <string>Stepsize</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="9" column="1" colspan="3">
+                         <widget class="QPushButton" name="tdLapGrdBut">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="maximumSize">
+                           <size>
+                            <width>445</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Make 3D laplacian grd file</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="6" column="1" colspan="3">
+                         <widget class="QLabel" name="taLapmapLab">
+                          <property name="font">
+                           <font>
+                            <italic>true</italic>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string/>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="7" column="1" colspan="4">
+                         <widget class="Line" name="line_14">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="8" column="4">
+                         <widget class="QLabel" name="grdLapmapLab">
+                          <property name="font">
+                           <font>
+                            <italic>true</italic>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string/>
+                          </property>
+                         </widget>
+                        </item>
                        </layout>
-                      </item>
-                      <item>
-                       <widget class="QPushButton" name="taLapmapBut">
-                        <property name="maximumSize">
-                         <size>
-                          <width>445</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                        <property name="text">
-                         <string>Make 2D laplacian map of 3 atoms</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QLabel" name="taLapmapLab">
-                        <property name="font">
-                         <font>
-                          <italic>true</italic>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="Line" name="line_14">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QPushButton" name="lapGrdBut">
-                        <property name="maximumSize">
-                         <size>
-                          <width>445</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                        <property name="text">
-                         <string>Make 2D laplacian map from xd_d2rho.grd</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QLabel" name="grdLapmapLab">
-                        <property name="font">
-                         <font>
-                          <italic>true</italic>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="Line" name="line_17">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QPushButton" name="tdLapGrdBut">
-                        <property name="maximumSize">
-                         <size>
-                          <width>445</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                        <property name="text">
-                         <string>Make 3D laplacian grd file</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QLabel" name="tdLapGrdLab">
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </widget>
                       </item>
                       <item>
                        <spacer name="verticalSpacer">
@@ -2982,8 +2927,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>300</width>
-                     <height>242</height>
+                     <width>293</width>
+                     <height>243</height>
                     </rect>
                    </property>
                    <attribute name="label">
@@ -3005,188 +2950,94 @@
                        <number>10</number>
                       </property>
                       <item>
-                       <layout class="QHBoxLayout" name="horizontalLayout_12">
-                        <property name="topMargin">
+                       <layout class="QGridLayout" name="gridLayout_29">
+                        <property name="bottomMargin">
                          <number>0</number>
                         </property>
-                        <item>
-                         <layout class="QVBoxLayout" name="verticalLayout_21">
-                          <property name="topMargin">
-                           <number>0</number>
+                        <item row="5" column="0">
+                         <widget class="QCheckBox" name="tabPropD2rho">
+                          <property name="text">
+                           <string>Bond d2rho</string>
                           </property>
-                          <item>
-                           <widget class="QCheckBox" name="tabPropLength">
-                            <property name="text">
-                             <string>Bond lengths</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="tabPropAngle">
-                            <property name="text">
-                             <string>Bond angles</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="tabPropRho">
-                            <property name="text">
-                             <string>Bond rho</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="tabPropD2rho">
-                            <property name="text">
-                             <string>Bond d2rho</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="tabPropEllip">
-                            <property name="text">
-                             <string>Bond ellipticity</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <spacer name="verticalSpacer_8">
-                            <property name="orientation">
-                             <enum>Qt::Vertical</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>20</width>
-                              <height>40</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <layout class="QVBoxLayout" name="verticalLayout_25">
-                          <property name="leftMargin">
-                           <number>0</number>
+                          <property name="checked">
+                           <bool>true</bool>
                           </property>
-                          <item>
-                           <widget class="QLabel" name="label_18">
-                            <property name="text">
-                             <string>Critical Point Search</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <layout class="QHBoxLayout" name="horizontalLayout_14">
-                            <property name="topMargin">
-                             <number>0</number>
-                            </property>
-                            <item>
-                             <widget class="QLabel" name="label_17">
-                              <property name="text">
-                               <string>Radius min</string>
-                              </property>
-                             </widget>
-                            </item>
-                            <item>
-                             <widget class="QLineEdit" name="tabPropCpRmin">
-                              <property name="maximumSize">
-                               <size>
-                                <width>100</width>
-                                <height>16777215</height>
-                               </size>
-                              </property>
-                              <property name="text">
-                               <string>1.2</string>
-                              </property>
-                             </widget>
-                            </item>
-                            <item>
-                             <spacer name="horizontalSpacer_14">
-                              <property name="orientation">
-                               <enum>Qt::Horizontal</enum>
-                              </property>
-                              <property name="sizeHint" stdset="0">
-                               <size>
-                                <width>40</width>
-                                <height>20</height>
-                               </size>
-                              </property>
-                             </spacer>
-                            </item>
-                           </layout>
-                          </item>
-                          <item>
-                           <layout class="QHBoxLayout" name="horizontalLayout_15">
-                            <property name="topMargin">
-                             <number>0</number>
-                            </property>
-                            <item>
-                             <widget class="QLabel" name="label_20">
-                              <property name="text">
-                               <string>Radius max</string>
-                              </property>
-                             </widget>
-                            </item>
-                            <item>
-                             <widget class="QLineEdit" name="tabPropCpRmax">
-                              <property name="maximumSize">
-                               <size>
-                                <width>100</width>
-                                <height>16777215</height>
-                               </size>
-                              </property>
-                              <property name="text">
-                               <string>1.8</string>
-                              </property>
-                             </widget>
-                            </item>
-                            <item>
-                             <spacer name="horizontalSpacer_15">
-                              <property name="orientation">
-                               <enum>Qt::Horizontal</enum>
-                              </property>
-                              <property name="sizeHint" stdset="0">
-                               <size>
-                                <width>40</width>
-                                <height>20</height>
-                               </size>
-                              </property>
-                             </spacer>
-                            </item>
-                           </layout>
-                          </item>
-                          <item>
-                           <spacer name="verticalSpacer_7">
-                            <property name="orientation">
-                             <enum>Qt::Vertical</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>20</width>
-                              <height>40</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
+                         </widget>
                         </item>
-                        <item>
+                        <item row="2" column="1">
+                         <widget class="QLabel" name="label_17">
+                          <property name="text">
+                           <string>Radius min</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="3" column="0">
+                         <widget class="QCheckBox" name="tabPropAngle">
+                          <property name="text">
+                           <string>Bond angles</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="2">
+                         <widget class="QLineEdit" name="tabPropCpRmin">
+                          <property name="maximumSize">
+                           <size>
+                            <width>60</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>1.2</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="0">
+                         <widget class="QCheckBox" name="tabPropLength">
+                          <property name="text">
+                           <string>Bond lengths</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="3" column="1">
+                         <widget class="QLabel" name="label_20">
+                          <property name="text">
+                           <string>Radius max</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="1" colspan="2">
+                         <widget class="QLabel" name="label_18">
+                          <property name="font">
+                           <font>
+                            <weight>75</weight>
+                            <bold>true</bold>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string>Critical Point Search</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="7" column="0" colspan="3">
+                         <widget class="QPushButton" name="tabPropBut">
+                          <property name="text">
+                           <string>Tabulate Properties in CSV File</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="2" column="3">
                          <spacer name="horizontalSpacer_13">
                           <property name="orientation">
                            <enum>Qt::Horizontal</enum>
@@ -3199,50 +3050,68 @@
                           </property>
                          </spacer>
                         </item>
+                        <item row="8" column="0" colspan="3">
+                         <widget class="QLabel" name="tabPropLab">
+                          <property name="font">
+                           <font>
+                            <italic>true</italic>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string/>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="0">
+                         <widget class="QLabel" name="label_24">
+                          <property name="font">
+                           <font>
+                            <weight>75</weight>
+                            <bold>true</bold>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string>Properties</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="3" column="2">
+                         <widget class="QLineEdit" name="tabPropCpRmax">
+                          <property name="maximumSize">
+                           <size>
+                            <width>60</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>1.8</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="4" column="0">
+                         <widget class="QCheckBox" name="tabPropRho">
+                          <property name="text">
+                           <string>Bond rho</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="6" column="0">
+                         <widget class="QCheckBox" name="tabPropEllip">
+                          <property name="text">
+                           <string>Bond ellipticity</string>
+                          </property>
+                          <property name="checked">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
                        </layout>
                       </item>
                       <item>
-                       <widget class="Line" name="line_15">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QPushButton" name="tabPropBut">
-                        <property name="maximumSize">
-                         <size>
-                          <width>300</width>
-                          <height>16777215</height>
-                         </size>
-                        </property>
-                        <property name="text">
-                         <string>Tabulate Properties in CSV File</string>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QLabel" name="tabPropLab">
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
                        <spacer name="verticalSpacer_4">
-                        <property name="orientation">
-                         <enum>Qt::Vertical</enum>
-                        </property>
-                        <property name="sizeHint" stdset="0">
-                         <size>
-                          <width>20</width>
-                          <height>40</height>
-                         </size>
-                        </property>
-                       </spacer>
-                      </item>
-                      <item>
-                       <spacer name="verticalSpacer_11">
                         <property name="orientation">
                          <enum>Qt::Vertical</enum>
                         </property>
@@ -3332,8 +3201,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>411</width>
-                     <height>106</height>
+                     <width>389</width>
+                     <height>69</height>
                     </rect>
                    </property>
                    <attribute name="label">
@@ -3341,83 +3210,50 @@
                    </attribute>
                    <layout class="QGridLayout" name="gridLayout_17">
                     <item row="0" column="0">
-                     <layout class="QVBoxLayout" name="verticalLayout_14">
+                     <layout class="QVBoxLayout" name="verticalLayout_30">
+                      <property name="rightMargin">
+                       <number>20</number>
+                      </property>
                       <item>
-                       <layout class="QHBoxLayout" name="horizontalLayout_30" stretch="0">
-                        <property name="leftMargin">
-                         <number>10</number>
+                       <widget class="QPushButton" name="getDpopsBut">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
                         </property>
-                        <property name="topMargin">
-                         <number>10</number>
+                        <property name="minimumSize">
+                         <size>
+                          <width>350</width>
+                          <height>0</height>
+                         </size>
                         </property>
-                        <property name="rightMargin">
-                         <number>10</number>
+                        <property name="maximumSize">
+                         <size>
+                          <width>300</width>
+                          <height>16777215</height>
+                         </size>
                         </property>
-                        <property name="bottomMargin">
-                         <number>10</number>
+                        <property name="toolTip">
+                         <string>Run XDPROP and show d-orbital populations</string>
                         </property>
-                        <item>
-                         <layout class="QVBoxLayout" name="verticalLayout_30">
-                          <property name="rightMargin">
-                           <number>20</number>
-                          </property>
-                          <item>
-                           <widget class="QPushButton" name="getDpopsBut">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>350</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="maximumSize">
-                             <size>
-                              <width>300</width>
-                              <height>16777215</height>
-                             </size>
-                            </property>
-                            <property name="toolTip">
-                             <string>Run XDPROP and show d-orbital populations</string>
-                            </property>
-                            <property name="text">
-                             <string>Get d-orbital populations</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLabel" name="getDpopsStatusLab">
-                            <property name="text">
-                             <string/>
-                            </property>
-                            <property name="textInteractionFlags">
-                             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <spacer name="verticalSpacer_22">
-                            <property name="orientation">
-                             <enum>Qt::Vertical</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>20</width>
-                              <height>40</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
-                        </item>
-                       </layout>
+                        <property name="text">
+                         <string>Get d-orbital populations</string>
+                        </property>
+                       </widget>
                       </item>
                       <item>
-                       <spacer name="verticalSpacer_21">
+                       <widget class="QLabel" name="getDpopsStatusLab">
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="textInteractionFlags">
+                         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <spacer name="verticalSpacer_22">
                         <property name="orientation">
                          <enum>Qt::Vertical</enum>
                         </property>
@@ -3428,13 +3264,6 @@
                          </size>
                         </property>
                        </spacer>
-                      </item>
-                      <item>
-                       <widget class="Line" name="line_2">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                       </widget>
                       </item>
                      </layout>
                     </item>
@@ -3445,139 +3274,34 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>362</width>
-                     <height>149</height>
+                     <width>700</width>
+                     <height>670</height>
                     </rect>
                    </property>
                    <attribute name="label">
                     <string>TOPXD Integrated Charges</string>
                    </attribute>
                    <layout class="QGridLayout" name="gridLayout_21">
-                    <item row="1" column="0">
-                     <layout class="QGridLayout" name="gridLayout_12">
-                      <property name="leftMargin">
-                       <number>10</number>
-                      </property>
-                      <property name="topMargin">
-                       <number>10</number>
-                      </property>
-                      <property name="rightMargin">
-                       <number>10</number>
-                      </property>
+                    <item row="0" column="0">
+                     <layout class="QGridLayout" name="gridLayout_34">
                       <property name="bottomMargin">
-                       <number>10</number>
+                       <number>0</number>
                       </property>
-                      <item row="0" column="1">
-                       <layout class="QHBoxLayout" name="horizontalLayout_7">
-                        <item>
-                         <widget class="QLabel" name="label">
-                          <property name="text">
-                           <string>Atoms</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLineEdit" name="autoTopxdInput"/>
-                        </item>
-                        <item>
-                         <widget class="QCheckBox" name="autoTopxdAll">
-                          <property name="text">
-                           <string>All</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
-                      </item>
-                      <item row="8" column="1">
-                       <widget class="QLabel" name="autoTopxdLab">
-                        <property name="font">
-                         <font>
-                          <italic>true</italic>
-                         </font>
+                      <item row="4" column="5">
+                       <spacer name="horizontalSpacer_11">
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
                         </property>
-                        <property name="text">
-                         <string/>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>40</width>
+                          <height>20</height>
+                         </size>
                         </property>
-                       </widget>
+                       </spacer>
                       </item>
-                      <item row="5" column="1">
-                       <layout class="QHBoxLayout" name="horizontalLayout_17">
-                        <property name="topMargin">
-                         <number>0</number>
-                        </property>
-                        <item>
-                         <widget class="QLabel" name="label_21">
-                          <property name="text">
-                           <string>  Phi</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLineEdit" name="autoTopxdPhi">
-                          <property name="maximumSize">
-                           <size>
-                            <width>100</width>
-                            <height>16777209</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>32</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="horizontalSpacer_17">
-                          <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeType">
-                           <enum>QSizePolicy::Fixed</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>20</width>
-                            <height>20</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <widget class="QLabel" name="label_22">
-                          <property name="text">
-                           <string>Theta</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLineEdit" name="autoTopxdTheta">
-                          <property name="maximumSize">
-                           <size>
-                            <width>100</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>24</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="horizontalSpacer_16">
-                          <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>40</width>
-                            <height>20</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                       </layout>
-                      </item>
-                      <item row="10" column="1">
-                       <spacer name="verticalSpacer_3">
+                      <item row="4" column="0">
+                       <spacer name="verticalSpacer_7">
                         <property name="orientation">
                          <enum>Qt::Vertical</enum>
                         </property>
@@ -3589,60 +3313,90 @@
                         </property>
                        </spacer>
                       </item>
-                      <item row="7" column="1">
-                       <layout class="QHBoxLayout" name="horizontalLayout_23">
-                        <property name="topMargin">
-                         <number>0</number>
+                      <item row="0" column="4">
+                       <widget class="QCheckBox" name="autoTopxdAll">
+                        <property name="text">
+                         <string>All</string>
                         </property>
-                        <item>
-                         <spacer name="horizontalSpacer_33">
-                          <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeType">
-                           <enum>QSizePolicy::Fixed</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>40</width>
-                            <height>20</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                        <item>
-                         <widget class="QPushButton" name="autoTopxdBut">
-                          <property name="minimumSize">
-                           <size>
-                            <width>270</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="maximumSize">
-                           <size>
-                            <width>200</width>
-                            <height>16777215</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>Run TOPXD</string>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <spacer name="horizontalSpacer_38">
-                          <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                           <size>
-                            <width>40</width>
-                            <height>20</height>
-                           </size>
-                          </property>
-                         </spacer>
-                        </item>
-                       </layout>
+                       </widget>
+                      </item>
+                      <item row="0" column="1" colspan="3">
+                       <widget class="QLineEdit" name="autoTopxdInput"/>
+                      </item>
+                      <item row="1" column="3">
+                       <widget class="QLineEdit" name="autoTopxdTheta">
+                        <property name="maximumSize">
+                         <size>
+                          <width>100</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>24</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="1">
+                       <widget class="QLineEdit" name="autoTopxdPhi">
+                        <property name="maximumSize">
+                         <size>
+                          <width>100</width>
+                          <height>16777209</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>32</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="2">
+                       <widget class="QLabel" name="label_22">
+                        <property name="text">
+                         <string>Theta</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="0">
+                       <widget class="QLabel" name="label">
+                        <property name="text">
+                         <string>Atoms</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="1" colspan="3">
+                       <widget class="QPushButton" name="autoTopxdBut">
+                        <property name="text">
+                         <string>Run TOPXD</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QLabel" name="label_21">
+                        <property name="text">
+                         <string>  Phi</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="1" colspan="4">
+                       <widget class="QLabel" name="autoTopxdLab">
+                        <property name="font">
+                         <font>
+                          <italic>true</italic>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                       </widget>
                       </item>
                      </layout>
                     </item>
@@ -3775,7 +3529,7 @@
                    <number>1</number>
                   </property>
                   <property name="currentIndex">
-                   <number>0</number>
+                   <number>2</number>
                   </property>
                   <property name="tabSpacing">
                    <number>6</number>
@@ -3786,7 +3540,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>806</width>
-                     <height>722</height>
+                     <height>314</height>
                     </rect>
                    </property>
                    <attribute name="label">
@@ -4341,8 +4095,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>344</width>
-                     <height>193</height>
+                     <width>800</width>
+                     <height>736</height>
                     </rect>
                    </property>
                    <attribute name="label">
@@ -4363,7 +4117,7 @@
                       <property name="bottomMargin">
                        <number>10</number>
                       </property>
-                      <item row="1" column="0">
+                      <item row="0" column="0">
                        <widget class="QPushButton" name="multKeyBut">
                         <property name="minimumSize">
                          <size>
@@ -4382,20 +4136,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="0" column="0" colspan="2">
-                       <widget class="QLabel" name="multKeyLab">
-                        <property name="text">
-                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add multipoles to the key table based on local symmetry and chemical constraints in atom table. Supports NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 3m, 6 and 6mm in SITESYM column.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                        </property>
-                        <property name="alignment">
-                         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                        </property>
-                        <property name="wordWrap">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                      <item row="3" column="0">
+                      <item row="2" column="0">
                        <spacer name="verticalSpacer_5">
                         <property name="orientation">
                          <enum>Qt::Vertical</enum>
@@ -4408,7 +4149,7 @@
                         </property>
                        </spacer>
                       </item>
-                      <item row="1" column="1">
+                      <item row="0" column="1">
                        <spacer name="horizontalSpacer_8">
                         <property name="orientation">
                          <enum>Qt::Horizontal</enum>
@@ -4421,7 +4162,7 @@
                         </property>
                        </spacer>
                       </item>
-                      <item row="2" column="0" colspan="2">
+                      <item row="1" column="0" colspan="2">
                        <widget class="QLabel" name="multKeyStatusLab">
                         <property name="minimumSize">
                          <size>

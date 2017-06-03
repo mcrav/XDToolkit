@@ -2934,7 +2934,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         palette.setBrush(QPalette.Inactive, QPalette.Base, brush)
 
         self.tabWidget.setPalette(palette)  
-        self.tabWidget.setStyleSheet('''QTabWidget:pane{background-color: #efebe7;
+        self.wizScrollArea.setStyleSheet('''background-color: #e8e8e8;''')
+        self.tabWidget.setStyleSheet('''QTabWidget:pane{background-color: #e8e8e8;
                                                    border-style: outset;
                                                    border-width: 0px;
                                                    border-bottom-left-radius: 10px;
@@ -2944,7 +2945,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                                                    padding: 6px;
                                                    }
                                         QTabBar:tab{
-                                                   background-color: #efebe7;
+                                                   background-color: #e8e8e8;
                                                    border-top-left-radius: 5px;
                                                    border-top-right-radius: 5px;
                                                    margin-right: 3px;
@@ -2963,7 +2964,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                                                border-color: transparent;
                                                padding: 6px;}''')
     
-        self.statusbar.setStyleSheet('''QStatusBar{background-color:#cccccc;}''')
+        self.statusbar.setStyleSheet('''QStatusBar{background-color:#d7d7d7;}''')
 
         self.helpTexts = helpTexts
         #Set font depending on OS
@@ -5405,18 +5406,21 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         Make 2D laplacian map from xd_d2rho.grd file.
         '''
-        statusLabel.setText('Making 2D laplacian map...')
-        statusLabel.repaint()
-        QApplication.processEvents()
-        try:
-            self.xdprop.finishedSignal.disconnect(self.showLapmap)
-        except Exception:
-            pass
         if os.path.isfile('xd_d2rho.grd'):
-            self.lapmap = resmap('xd_d2rho.grd')
-            statusLabel.setText('')
-            self.lapmap.show()
-            self.lapmap.setWindowTitle('Quickplot laplacian map')
+            statusLabel.setText('Making 2D laplacian map...')
+            statusLabel.repaint()
+            QApplication.processEvents()
+            try:
+                self.xdprop.finishedSignal.disconnect(self.showLapmap)
+            except Exception:
+                pass
+            if os.path.isfile('xd_d2rho.grd'):
+                self.lapmap = resmap('xd_d2rho.grd')
+                self.lapmap.show()
+                statusLabel.setText('')
+                self.lapmap.setWindowTitle('Quickplot laplacian map')
+        else:
+            statusLabel.setText('No file called "xd_d2rho.grd" found.')
 
     def make3DLapGrd(self):
         '''
