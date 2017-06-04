@@ -190,9 +190,6 @@ def initialiseGlobVars():
         globAtomAngles = {}
         globAtomPos = {}
 
-    print(globAtomLabs)
-
-
 
 '''
 #####################################################################
@@ -2259,7 +2256,7 @@ class aboutBox(QWidget, Ui_aboutBox):
         self.setupUi(self)
         self.setFont(getMonoFont())
         self.setWindowIcon(getIcon())
-        self.setStyleSheet('''QWidget{background-color: #efebe7;
+        self.setStyleSheet('''QWidget{background-color: #e8e8e8;
                                                    border-style: outset;
                                                    border-width: 2px;
                                                    border-radius: 10px;
@@ -2928,43 +2925,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         '''
         super(XDToolGui, self).__init__(parent)
         self.setupUi(self)
-        brush = QBrush(QColor(221, 221, 221))
-        brush.setStyle(Qt.SolidPattern)
-        palette = self.tabWidget.palette()
-        palette.setBrush(QPalette.Inactive, QPalette.Base, brush)
-
-        self.tabWidget.setPalette(palette)  
-        self.wizScrollArea.setStyleSheet('''background-color: #e8e8e8;''')
-        self.tabWidget.setStyleSheet('''QTabWidget:pane{background-color: #e8e8e8;
-                                                   border-style: outset;
-                                                   border-width: 0px;
-                                                   border-bottom-left-radius: 10px;
-                                                   border-bottom-right-radius: 10px;
-                                                   border-top-right-radius: 10px;
-                                                   border-color: transparent;
-                                                   padding: 6px;
-                                                   }
-                                        QTabBar:tab{
-                                                   background-color: #e8e8e8;
-                                                   border-top-left-radius: 5px;
-                                                   border-top-right-radius: 5px;
-                                                   margin-right: 3px;
-                                                   padding-top: 6px;
-                                                   padding-bottom: 6px;
-                                                   padding-left: 10px;
-                                                   padding-right: 10px;}
-                                        QTabBar:tab:!selected{
-                                                   background-color: #cccccc;}''')
 
         self.versionNum = '0.8.0'
-        self.helpLabel.setStyleSheet('''QLabel{background-color: #cccccc;
-                                               border-style: outset;
-                                               border-width: 2px;
-                                               border-radius: 10px;
-                                               border-color: transparent;
-                                               padding: 6px;}''')
-    
-        self.statusbar.setStyleSheet('''QStatusBar{background-color:#d7d7d7;}''')
 
         self.helpTexts = helpTexts
         #Set font depending on OS
