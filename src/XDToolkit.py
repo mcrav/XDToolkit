@@ -2953,6 +2953,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.folderTree.setColumnHidden(2, True)
         self.folderTree.setColumnHidden(3, True)
         self.folderTree.doubleClicked.connect(self.folderTreeDoubleClicked)
+        #StyleSheet should be moved to QtDesigner
         self.folderTree.setStyleSheet('''QTreeView{background-color: #ffffff;
                                                    alternate-background-color: #eeeeff;
                                                    border-style: outset;
@@ -2960,6 +2961,7 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                                                    border-radius: 10px;
                                                    border-color: transparent;
                                                    padding: 6px;}''')
+        
         self.addedLocCoords = {}
         self.ins = ''
         self.forbiddenChars = ['*', '?', '"', '/', '\\', '<', '>', ':', '|']
@@ -2970,10 +2972,10 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
         self.atomNoExistErrorMsg = 'Atom not in structure.'
         self.backupConfirmStr = 'Current files backed up to: '
         self.labList = [self.wizBackupInput, self.xdWizINILab, self.wizTestStatusLab, self.xdWizardStatusLab, self.pkgXDLab, self.setupFOURStatusLab, self.getDpopsStatusLab, self.XDINILab, self.manRefSetupLab, self.manRefBackupInput, self.manRefSnlMin, self.manRefSnlMax, self.manRefResLab, self.editRBLab, self.editRBLab, self.autoResetBondStatusLab, self.resetBondStatusLab, self.editRBLab, self.CHEMCONStatusLab, self.inputElementCHEMCON, self.inputAtomCHEMCON, self.addDUMLab, self.alcsStatusLab, self.multKeyStatusLab, self.showResLab, self.resNPPLab, self.loadBackupLab]
+        self.tabWidget.currentChanged.connect(self.updateHelpText)
         self.tabWidget.setCurrentIndex(0)
         toolboxes = [self.resToolbox, self.toolsToolbox]
         self.toolsToolbox.currentChanged.connect(self.updateHelpText)
-        self.tabWidget.currentChanged.connect(self.updateHelpText)
         for item in toolboxes:
             item.setCurrentIndex(0)
         self.lsmResLine.setVisible(False)
@@ -5853,7 +5855,8 @@ class XDToolGui(QMainWindow, Ui_MainWindow):
                 helpText = self.helpTexts['{}{}'.format(tab, toolbox.currentIndex())]
             except KeyError:
                 helpText = ''
-                
+        elif tab == 0:
+            helpText = self.helpTexts['1']
         else:
             self.helpLabel.setText('')
         

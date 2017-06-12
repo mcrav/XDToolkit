@@ -135,7 +135,6 @@ def getEnvSig(atomLabsDict, atom):
     Create a sha256 hash value for the chemical environment of a given atom. 
     Return this hash value.
     '''
-    print(atom)
     #Sort list of paths alphabetically so it is the same no matter what order paths were found in
     #Make string with starting atom types followed by , joined sorted list of all paths.
     pathString = atom.split('(')[0].upper() + ','.join(sorted(findAllPaths(atom, atomLabsDict)))
@@ -158,7 +157,7 @@ def removeCHEMCON():
                 atomTab = False
 
             if atomTab:
-                row = str.split(line)
+                row = line.split()
                 if len(row) == 13:
                     rowStr = '{0:9}{1:10}{2:3}{3:9}{4:9}{5:4}{6:4}{7:3}{8:4}{9:4}{10:3}{11:10}\n'.format(*row)
                     newmas.write(rowStr)
@@ -170,7 +169,7 @@ def removeCHEMCON():
             #Detect start of ATOM table
             if atomTableBegins(line):
                 atomTab = True
-
+    
     os.remove('xd.mas')
     os.rename('xdnew.mas','xd.mas')
 

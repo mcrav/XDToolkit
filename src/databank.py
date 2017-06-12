@@ -94,7 +94,9 @@ covradii = {
 helpTexts = {'51': 
     'Add a dummy atom to xd.mas in the average position of the two given atoms.',
     '52':
-    'Add multipoles to the key table based on local symmetry and chemical constraints in atom table. Supports <i>NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 3m, 6</i> and <i>6mm</i> in SITESYM column.'
+    'Add multipoles to the key table based on local symmetry and chemical constraints in atom table. Supports <i>NO, 1, cyl, 2, m, mm2, 4, 4mm, 3, 3m, 6</i> and <i>6mm</i> in SITESYM column.',
+    '1':
+    'Run through standard refinement strategy from start to finish and create a normal probability plot from the final model.'
     }
 
 """
