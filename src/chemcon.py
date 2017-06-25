@@ -9,6 +9,7 @@ import hashlib
 from subprocess import PIPE, Popen
 from utils import listjoin, atomTableBegins, atomTableEnds
 from devtools import timeDec
+from numba import jit
 '''
 ######################################
 Short guide to path finding algorithm:
@@ -480,7 +481,7 @@ def check4CHEMCON():
 
 
 
-#import timeit
+import time
 
 #def CPPwrapper(func, *args, **kwargs):
 #     def CPPwrapped():
@@ -495,10 +496,15 @@ def check4CHEMCON():
 #     def wrapped():
 #         return func(*args, **kwargs)
 #     return wrapped
-#wrapped = wrapper(getEnvSig, testAtom, testDict)
+#wrapped = wrapper(getEnvSig, testDict, testAtom)
 #print(timeit.timeit(wrapped, number=10000))
-#x = getEnvSig(testAtom, testDict)
+#s = time.time()
+#x = getEnvSig(testDict, testAtom)
+#f = time.time()
 #print(x)
+#print(f-s)
+#print('~'*50)
+
 #import multiprocessing as mp
 #from functools import partial
 #import time
