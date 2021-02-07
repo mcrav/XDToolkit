@@ -2,6 +2,16 @@
 A program for working with the charge density refinement software XD.
 ---------------------------------------------------------------------
 
+Warning!
+--------
+This is the first major software project I ever worked on. There are many questionable design decisions, and a distinct lack of linting and unit testing.
+
+**Potential employers**: Please do not take this as a good example of my current coding ability.
+
+**Potential users**: Please be aware that this software is not stable and may lead to incorrect results.
+
+**Potential developers**: If you want to turn this software into a stable application, feel free to get in touch and we can discuss.
+
 Installation
 ------------
 
